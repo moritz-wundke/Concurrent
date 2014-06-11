@@ -1,1 +1,1 @@
-python run_admin.py ..\\envs\\master\\ launchenv
+python run_admin.py examples\\envs\\master\\ launchenv
