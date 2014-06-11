@@ -77,12 +77,12 @@ class MasterNode(Component, BaseNode):
         super(MasterNode, self).app_init()
         
         # Start our TCPServer,
-        self.server = TCPServer("localhost", self.master_port, self)
-        self.server_thread = threading.Thread(name="tcp_server", target=self.server.serve_forever)
-        self.server_thread.daemon = True
+        #self.server = TCPServer("localhost", self.master_port, self)
+        #self.server_thread = threading.Thread(name="tcp_server", target=self.server.serve_forever)
+        #self.server_thread.daemon = True
         
         # Setup our ZeroMQ asyn server
-        #self.zmq_server = TCPServerZMQ(self.master_port, self.log, 5)
+        self.zmq_server = TCPServerZMQ(self.master_port, self.log, 5)
         
         # The node registry holds updated into about slaves/clients and its processing
         # we week track of number of tasks submitted to each slave, how they perform
@@ -132,15 +132,15 @@ class MasterNode(Component, BaseNode):
             return result
 
         # Start the main server thread
-        self.server_thread.start()
-        #self.zmq_server.start()
+        #self.server_thread.start()
+        self.zmq_server.start()
             
         # Enter mail loop
         self.main_loop()
         
         # Stop all threads processes
         #self.server.shutdown()
-        #self.zmq_server.stop()
+        self.zmq_server.stop()
         self.notify_shutdown()
         self.stop_api_thread()
         #self.stop_master_thread()
@@ -174,8 +174,8 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('register_slave')
                 return self.register_node(node_id, web.ctx['ip'], port, data, NodeType.slave)
             
-            #@tcpremote(self.zmq_server, name='register_slave')
-            @tcpremote(self.server, name='register_slave')
+            @tcpremote(self.zmq_server, name='register_slave')
+            #@tcpremote(self.server, name='register_slave')
             def register_slave_tcp(handler, request, node_id):
                 self.stats.add_avg('register_slave_tcp')
                 return self.register_node_tcp(handler, request, node_id, NodeType.slave)
@@ -185,8 +185,8 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('register_client')
                 return self.register_node(node_id, web.ctx['ip'], port, data, NodeType.client)
             
-            #@tcpremote(self.zmq_server, name='register_client')
-            @tcpremote(self.server, name='register_client')
+            @tcpremote(self.zmq_server, name='register_client')
+            #@tcpremote(self.server, name='register_client')
             def register_client_tcp(handler, request, node_id):
                 self.stats.add_avg('register_client_tcp')
                 return self.register_node_tcp(handler, request, node_id, NodeType.client)
@@ -211,8 +211,8 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('heartbeat_client')
                 return self.heartbeat(node_id, NodeType.client)
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def task_finished(handler, request, task, result, error):
                 self.stats.add_avg('task_finished')
                 start = time.time()
@@ -223,20 +223,20 @@ class MasterNode(Component, BaseNode):
                 # This is an end method for the interaction
                 raise NoResponseRequired()
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def push_task_response(handler, request, result):
                 # TODO: Handle failure when result is False!
                 pass
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def push_task_failed(handler, request, result):
                 # TODO: Handle failure when pushing tasks failed!
                 pass
 
-        #@tcpremote(self.zmq_server)
-        @tcpremote(self.server)
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
         def push_tasksystem(handler, request, tasksystem):
             """
             Push a application onto the computation framework

@@ -140,11 +140,11 @@ def send_to_zmq(sock, method, *args, **kwargs):
     """
     send_to_zmq_zipped(sock, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
 
-def send_to_zmq_multi(sock, identity, msg):
+def send_to_zmq_multi(sock, method, *args, **kwargs):
     """
     Send data to a zmq socket
     """
-    send_to_zmq_zipped_multi(sock, identity, msg, flags=0, protocol=2)
+    send_to_zmq_zipped_multi(sock, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
     
 def receive_from_zmq(sock, map=None):
     """
@@ -164,20 +164,19 @@ class TCPSocketZMQ(IClientSocket):
         # Create our ZMQ socket
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.DEALER)
-        self.host = host
-        self.port = port
+        self.address = (host, port)
         
         # The sockets identity
         self.identity = identity
     
     def send_to(self, method, *args, **kwargs):
         """Send data to a socket"""
-        send_to_zmq(self.sock, method, *args, **kwargs)
+        send_to_zmq(self.socket, method, *args, **kwargs)
 
     def receive_from(self, map=None):
         """Receive data from a socket mapping the received data if
         required"""
-        return receive_from(self.sock, map)
+        return receive_from_zmq(self.socket, map)
 
     def close(self):
         """Close socket connection"""
@@ -186,7 +185,7 @@ class TCPSocketZMQ(IClientSocket):
 
     def connect(self):
         """Connect to a given host and port"""
-        self.sock.connect('tcp://{host}:{port}'.format(host=self.address[0], port=self.address[1]))    
+        self.socket.connect('tcp://{host}:{port}'.format(host=self.address[0], port=self.address[1]))    
 
 class TCPSocket(IClientSocket):
     """

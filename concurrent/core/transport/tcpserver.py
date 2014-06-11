@@ -3,7 +3,7 @@
 Implementation of our socket server
 """
 
-from concurrent.core.transport.tcpsocket import send_to, receive_from, send_to_zmq_zipped, send_to_zmq_multi, pickle_object, unpickle_message, VERSION, NoDataException, TCPSocket, TCPSocketZMQ
+from concurrent.core.transport.tcpsocket import send_to, receive_from, send_to_zmq_zipped, send_to_zmq, send_to_zmq_multi, pickle_object, unpickle_message, VERSION, NoDataException, TCPSocket, TCPSocketZMQ
 from concurrent.core.transport.pyjsonrpc.rpcerror import JsonRpcError
 from concurrent.core.async.threads import InterruptibleThread
 from concurrent.core.util.utils import tprint
@@ -251,7 +251,6 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         # we will route them to our workers to get processed
         self.port = port
         self.num_workers = num_workers
-        self.workers = []
         self.context = zmq.Context()
         self.frontend = self.context.socket(zmq.ROUTER)
         self.frontend.bind('tcp://*:{port}'.format(port=self.port))
@@ -266,6 +265,9 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.poll = zmq.Poller()
         self.poll.register(self.frontend, zmq.POLLIN)
         self.poll.register(self.backend,  zmq.POLLIN)
+        
+        # Create workers
+        self.workers = [TCPServerZMQWorker(self.context, self.log) for i in range(self.num_workers)]
 
     def stop(self):
         """
@@ -286,14 +288,12 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
     def run(self):
         self.log.info("TCPServerZMQ started")
         # Create and launch workers
-        for i in range(self.num_workers):
-            worker = TCPServerZMQWorker(self.context, self.log)
+        for worker in self.workers:
             worker.start()
-            self.workers.append(worker)  
                 
         # Start receiving messages
-        while self.kill_switch:
-            sockets = dict(self.poll.poll(1000))
+        while not self.kill_switch:
+            sockets = dict(self.poll.poll())
             if self.frontend in sockets:
                 ident, msg = self.frontend.recv_multipart()
                 tprint('Server received message from %s' % (ident))
@@ -306,6 +306,7 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.frontend.close()
         self.backend.close()
         self.context.term()
+        self.log.info("TCPServerZMQ stopped")
 
 class TCPServerZMQWorker(threading.Thread, TCPHandler):
     """ServerWorker"""
@@ -325,19 +326,20 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
     def run(self):
         self.worker.connect('inproc://backend')
         self.log.info("TCPServerZMQWorker started")
-        while self.kill_switch:
+        while not self.kill_switch:
             # Receive message and unpickle it
             ident, msg = self.worker.recv_multipart()
             msg = unpickle_message(msg)
             tprint('Worker received %s from %s' % (msg, ident))
             
             # Handle message
-            result = self.handle(self, ident, msg)            
+            result = self.handle(self, ident, msg)
             
             # Send back to router
-            self.worker.send_multipart([ident, pickle_object(result)])
+            send_to_zmq_multi(self.worker, ident, *result)
         
         self.worker.close()
+        self.log.info("TCPServerZMQWorker stopped")
     
     def stop(self):
         self.log.info("Shutting down TCPServerZMQWorker")
@@ -373,19 +375,21 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
             self.stop()
             
     def run(self):
-        TCPSocket.connect(self)
+        TCPSocketZMQ.connect(self)
+        self.log.info("TCPClientZMQ started")
         # Before starting create socket poll
         self.poll = zmq.Poller()
         self.poll.register(self.socket, zmq.POLLIN)
-        while self.kill_switch:
+        while not self.kill_switch:
             sockets = dict(self.poll.poll(1000))
             if self.socket in sockets:
                 msg = unpickle_message(self.socket.recv())
                 result = self.handle(self, self.identity, msg)
-                self.socket.send(pickle_object(result))
+                send_to_zmq(self.socket, *result)
         
         # Close socket
         self.close()
+        self.log.info("TCPClientZMQ stopped")
     
     def stop(self):
         """
