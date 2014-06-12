@@ -138,13 +138,13 @@ def send_to_zmq(sock, method, *args, **kwargs):
     """
     Send data to a zmq socket
     """
-    send_to_zmq_zipped(sock, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
+    send_to_zmq_zipped(sock, create_request_dict(method, *args, **kwargs))
 
 def send_to_zmq_multi(sock, identity, method, *args, **kwargs):
     """
     Send data to a zmq socket
     """
-    send_to_zmq_zipped_multi(sock, identity, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
+    send_to_zmq_zipped_multi(sock, identity, create_request_dict(method, *args, **kwargs))
     
 def receive_from_zmq(sock, map=None):
     """

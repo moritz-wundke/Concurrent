@@ -407,17 +407,21 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         
         # The backedn is where we queue the requests that the workers
         # will start working on in round robbin fashion
-        #self.sender = self.context.socket(zmq.DEALER)
-        #self.sender.bind('inproc://{identity}-sender'.format(identity=self.identity))
+        self.backend = self.context.socket(zmq.DEALER)
+        self.backend.bind('inproc://backend-{id}'.format(id="12345"))
         
         # Before starting create socket poll
         self.poll = zmq.Poller()
         self.poll.register(self.socket, zmq.POLLIN)
-        #self.poll.register(self.sender, zmq.POLLIN)
+        self.poll.register(self.backend, zmq.POLLIN)
         
         # Some thread related stuff
         self.daemon = True
         self.kill_switch = False
+    
+    #def send_to(self, method, *args, **kwargs):
+    #    """Send data to a socket"""
+    #    send_to_zmq(self.backend, method, *args, **kwargs)
     
     def connect(self):
         """Connect and start the client thread to listen for responses"""
@@ -426,6 +430,7 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     def close(self):
         """Close socket connection and client thread"""
         try:
+            self.backend.close()
             TCPSocketZMQ.close(self)
         finally:
             # Alwasy stop the client thread!
@@ -439,8 +444,13 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
                 sockets = dict(self.poll.poll(1000))
                 if self.socket in sockets:
                     msg = unpickle_message(self.socket.recv())
+                    #tprint('From server')
                     result = self.handle(self, self.identity, msg)
                     send_to_zmq(self.socket, *result)
+                if self.backend in sockets:
+                    msg = self.backend.recv()
+                    #tprint('To server')
+                    self.socket.send(msg)
             except zmq.Again:
                 # Timeouy just fired, no problem!
                 pass
