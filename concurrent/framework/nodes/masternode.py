@@ -242,7 +242,7 @@ class MasterNode(Component, BaseNode):
             Push a application onto the computation framework
             """
             self.stats.add_avg('push_tasksystem')
-            return self.push_tasksystem(handler, self.pickler.unpickle_s(tasksystem))
+            return self.push_tasksystem(request, self.pickler.unpickle_s(tasksystem))
     
     def _generate_status_dict(self, node):
         return {'type':node.type,'state':node.state}
@@ -476,9 +476,6 @@ class MasterNode(Component, BaseNode):
         if NodeType.slave == node_type:
             with self.registry_lock.writelock:
                 if node_id in self.node_registry:
-                    # if we had a socket close it now!
-                    if self.node_registry[node_id].handler:
-                        self.node_registry[node_id].handler.close()
                     self.node_registry[node_id] = None
                     # Make sure we let the mirror update
                     self.registry_mirror_dirty = True
@@ -489,8 +486,6 @@ class MasterNode(Component, BaseNode):
             with self.client_registry_lock.writelock:
                 if node_id in self.client_registry:
                     # if we had a socket close it now!
-                    if self.client_registry[node_id].handler:
-                        self.client_registry[node_id].handler.close()
                     self.client_registry[node_id] = None
                     # Get rid of any registered task system
                     with self.tasksystem_lock.writelock:
@@ -511,22 +506,21 @@ class MasterNode(Component, BaseNode):
         if NodeType.slave == node_type:
             with self.registry_lock.writelock:
                 if node_id in self.node_registry:
+                    # The handler is shared between many client sockets!
                     self.node_registry[node_id].handler = handler
-                    self.node_registry[node_id].socket = request
-                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(request)
+                    self.node_registry[node_id].socket = handler.worker
+                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
                     self.node_registry[node_id].state = NodeState.active
-                    # Safe some data within the handler itself
-                    handler.node_id = node_id
-                    handler.node_type = NodeType.slave
                     # Let the slave know that the handshake worked
                     return True
                 return False
         elif NodeType.client == node_type:
             with self.client_registry_lock.writelock:
                 if node_id in self.client_registry:
+                    # The handler is shared between many client sockets!
                     self.client_registry[node_id].handler = handler
-                    self.client_registry[node_id].socket = request
-                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(request)
+                    self.client_registry[node_id].socket = handler.worker
+                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
                     self.client_registry[node_id].state = NodeState.active
                     # Safe some data within the handler itself
                     handler.node_id = node_id
@@ -597,17 +591,14 @@ class MasterNode(Component, BaseNode):
         self.log.info("Method %s succeded with %s" % (method, result))
         return result
     
-    def push_tasksystem(self, handler, tasksystem):
+    def push_tasksystem(self, request, tasksystem):
         """
         We received a task system from a client. Get the first list of tasks and save out the
         system itself for later access
         """
-        # We require a valid and registered handler used by a client for the job
-        if handler.node_id == None or handler.node_type == None or handler.node_type != NodeType.client:
-            return False
         
         # Easier access
-        node_id = handler.node_id
+        node_id = request
         
         # Now get the
         with self.tasksystem_lock.writelock:

@@ -7,7 +7,7 @@ from concurrent.core.config.config import IntItem, ExtensionPointItem, ConfigIte
 from concurrent.core.transport.simplejsonrpc import SimpleJSONRPCService, jsonremote
 from concurrent.core.transport.gzipper import Gzipper
 from concurrent.core.transport.tcpserver import TCPClient, TCPClientZMQ
-from concurrent.core.transport.tcpsocket import TCPSocket
+from concurrent.core.transport.tcpsocket import TCPSocket, send_to_zmq_multi
 from concurrent.core.async.api import ITaskManager
 from concurrent.core.async.threads import InterruptibleThread, ReadWriteLock, RWLockCache
 from concurrent.core.application.api import APP_RET_CODE_SUCCESS, IPickler, NodeType, NodeState
@@ -144,7 +144,51 @@ class TCPProxy(object):
     
     def dump_stats(self):
         self.log.debug(self.stats.dump('TCPProxy'))
+
+class TCPProxyZMQ(object):
+    """
+    ZMQ client TCP socket proxy
+    """
+    def __init__(self, socket, identity, log):
+        self.socket=socket
+        self.identity=identity
+        self.log = log
+        self.stats = Stats.getInstance()
     
+    class _Method(object):
+
+        def __init__(self, owner, method, log):
+            self.owner = owner
+            self.method = method
+            self.log = log
+
+        def __call__(self, *args, **kwargs):
+            if self.method != "close" and self.method != "connect":
+                try:
+                    start_time = time.time()
+                    send_to_zmq_multi(self.owner.socket, self.owner.identity, self.method, *args, **kwargs)
+                except Exception as e:
+                    raise e
+                finally:
+                    self.owner.stats.add_avg('TCPProxyZMQ', time.time() - start_time)
+        
+    def __call__(self, method, *args, **kwargs):
+        if method != "close" and method != "connect":
+            try:
+                start_time = time.time()
+                send_to_zmq_multi(self.socket, self.identity, self.method, *args, **kwargs)
+            except Exception as e:
+                raise e
+            finally:
+                self.owner.stats.add_avg('TCPProxyZMQ', time.time() - start_time)
+                    
+    def __getattr__(self, method):
+        # Connect and close are very special
+        return self._Method(self, method = method, log = self.log)
+    
+    def dump_stats(self):
+        self.log.debug(self.stats.dump('TCPProxy'))
+
 class api_thread(InterruptibleThread):
     """
     Thread holding our JSON API server
@@ -428,11 +472,11 @@ class BaseNode(object):
         tcp_client = TCPClientZMQ(self.node_id_str, host, port, self.log)
         return TCPProxy(tcp_client, self.log), tcp_client
     
-    def create_tcp_client_proxy(self, sock):
+    def create_tcp_client_proxy(self, sock, request):
         """
         Create a JSON TCP socket proxy instance to a client
         """
-        return TCPProxy(TCPSocket('', 0, self, socket1=sock), self.log)
+        return TCPProxyZMQ(sock, request, self.log)
         
     # TODO: Make every node steam large amount of data over the normal socket: http://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
     #  Control channel is over the API channel and real-time interactions over the TCP socket (see transport module)

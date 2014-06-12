@@ -125,6 +125,9 @@ class TCPHandler(object):
         except NoResponseRequired as e:
             # Fire up
             raise e
+        except NotImplementedError as e:
+            traceback.print_exc()
+            raise e
         except Exception as e:
             if method:
                 return "{}_failed".format(method), {"c": -32603, "m": "Internal error", "e": e, "t": traceback.format_exc()},
@@ -278,7 +281,7 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         for worker in self.workers:
             worker.stop()
         self.join(5000)
-        self.log.info(" Done")
+        self.log.info("TCPServerZMQ shutdown finished")
     
     def add_method(self, name, method):
         # We will just pass the handle to our workers
@@ -293,15 +296,37 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
                 
         # Start receiving messages
         while not self.kill_switch:
-            sockets = dict(self.poll.poll())
-            if self.frontend in sockets:
-                ident, msg = self.frontend.recv_multipart()
-                tprint('Server received message from %s' % (ident))
-                self.backend.send_multipart([ident, msg])
-            if self.backend in sockets:
-                ident, msg = self.backend.recv_multipart()
-                tprint('Sending message back to %s' % (ident))
-                self.frontend.send_multipart([ident, msg])
+            try:
+                sockets = dict(self.poll.poll(1000))
+                if self.frontend in sockets:
+                    ident, msg = self.frontend.recv_multipart()
+                    #tprint('Server received message from %s' % (ident))
+                    self.backend.send_multipart([ident, msg])
+                if self.backend in sockets:
+                    ident, msg = self.backend.recv_multipart()
+                    #tprint('Sending message back to %s' % (ident))
+                    self.frontend.send_multipart([ident, msg])
+            except zmq.Again:
+                # Timeouy just fired, no problem!
+                pass
+            except NoResponseRequired:
+                # Method does not require a response to the socket, this is actually fine ^^
+                pass
+            except NoDataException:
+                # No data means that there where nothign to read for and so the socket is dead
+                break
+            except socket.error as e:
+                if e.errno == errno.EINTR:
+                    continue
+                break    
+            except KeyboardInterrupt:
+                break
+            except zmq.ContextTerminated:
+                break
+            except:
+                traceback.print_exc()
+                # Not really good to just pass but saver for now!
+                pass
 
         self.frontend.close()
         self.backend.close()
@@ -318,25 +343,49 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
         # Worker stuff
         self.context = context
         self.worker = self.context.socket(zmq.DEALER)
+        self.worker.RCVTIMEO = 1000
         
         # Some thread related stuff
         self.daemon = True
         self.kill_switch = False
         
     def run(self):
+        
         self.worker.connect('inproc://backend')
         self.log.info("TCPServerZMQWorker started")
         while not self.kill_switch:
-            # Receive message and unpickle it
-            ident, msg = self.worker.recv_multipart()
-            msg = unpickle_message(msg)
-            tprint('Worker received %s from %s' % (msg, ident))
-            
-            # Handle message
-            result = self.handle(self, ident, msg)
-            
-            # Send back to router
-            send_to_zmq_multi(self.worker, ident, *result)
+            try:
+                # Receive message and unpickle it
+                ident, msg = self.worker.recv_multipart()
+                msg = unpickle_message(msg)
+                #tprint('Worker received %s from %s' % (msg, ident))
+                
+                # Handle message
+                result = self.handle(self, ident, msg)
+                
+                # Send back to router
+                send_to_zmq_multi(self.worker, ident, *result)
+            except zmq.Again:
+                # Timeouy just fired, no problem!
+                pass
+            except NoResponseRequired:
+                # Method does not require a response to the socket, this is actually fine ^^
+                pass
+            except NoDataException:
+                # No data means that there where nothign to read for and so the socket is dead
+                break
+            except socket.error as e:
+                if e.errno == errno.EINTR:
+                    continue
+                break    
+            except KeyboardInterrupt:
+                break
+            except zmq.ContextTerminated:
+                break
+            except:
+                traceback.print_exc()
+                # Not really good to just pass but saver for now!
+                pass
         
         self.worker.close()
         self.log.info("TCPServerZMQWorker stopped")
@@ -344,9 +393,7 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
     def stop(self):
         self.log.info("Shutting down TCPServerZMQWorker")
         self.kill_switch = True
-        self.worker.close()
         self.join(1000)
-        self.log.info(" Closed")
         
 class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     """
@@ -357,6 +404,16 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         TCPHandler.__init__(self)
         threading.Thread.__init__ (self)
         self.log = log
+        
+        # The backedn is where we queue the requests that the workers
+        # will start working on in round robbin fashion
+        #self.sender = self.context.socket(zmq.DEALER)
+        #self.sender.bind('inproc://{identity}-sender'.format(identity=self.identity))
+        
+        # Before starting create socket poll
+        self.poll = zmq.Poller()
+        self.poll.register(self.socket, zmq.POLLIN)
+        #self.poll.register(self.sender, zmq.POLLIN)
         
         # Some thread related stuff
         self.daemon = True
@@ -377,15 +434,34 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     def run(self):
         TCPSocketZMQ.connect(self)
         self.log.info("TCPClientZMQ started")
-        # Before starting create socket poll
-        self.poll = zmq.Poller()
-        self.poll.register(self.socket, zmq.POLLIN)
         while not self.kill_switch:
-            sockets = dict(self.poll.poll(1000))
-            if self.socket in sockets:
-                msg = unpickle_message(self.socket.recv())
-                result = self.handle(self, self.identity, msg)
-                send_to_zmq(self.socket, *result)
+            try:
+                sockets = dict(self.poll.poll(1000))
+                if self.socket in sockets:
+                    msg = unpickle_message(self.socket.recv())
+                    result = self.handle(self, self.identity, msg)
+                    send_to_zmq(self.socket, *result)
+            except zmq.Again:
+                # Timeouy just fired, no problem!
+                pass
+            except NoResponseRequired:
+                # Method does not require a response to the socket, this is actually fine ^^
+                pass
+            except NoDataException:
+                # No data means that there where nothign to read for and so the socket is dead
+                break
+            except socket.error as e:
+                if e.errno == errno.EINTR:
+                    continue
+                break    
+            except KeyboardInterrupt:
+                break
+            except zmq.ContextTerminated:
+                break
+            except:
+                traceback.print_exc()
+                # Not really good to just pass but saver for now!
+                pass
         
         # Close socket
         self.close()
@@ -398,8 +474,6 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         self.log.info("Shutting down TCPClientZMQ")
         self.kill_switch = True
         self.join(1000)
-        self.log.info(" Closed")
-        
 
 def tcpremote(tcp_opbject, name=None):
     """

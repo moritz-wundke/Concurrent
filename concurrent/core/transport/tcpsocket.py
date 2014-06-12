@@ -140,17 +140,17 @@ def send_to_zmq(sock, method, *args, **kwargs):
     """
     send_to_zmq_zipped(sock, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
 
-def send_to_zmq_multi(sock, method, *args, **kwargs):
+def send_to_zmq_multi(sock, identity, method, *args, **kwargs):
     """
     Send data to a zmq socket
     """
-    send_to_zmq_zipped_multi(sock, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
+    send_to_zmq_zipped_multi(sock, identity, create_request_dict(method, *args, **kwargs), flags=0, protocol=2)
     
 def receive_from_zmq(sock, map=None):
     """
     Receive data from a zmq socket
     """
-    return receive_from_zmq_zipped(sock, flags=0)
+    return receive_from_zmq_zipped(sock)
     
 class TCPSocketZMQ(IClientSocket):
     """
@@ -185,6 +185,7 @@ class TCPSocketZMQ(IClientSocket):
 
     def connect(self):
         """Connect to a given host and port"""
+        self.socket.identity = self.identity.encode('ascii')
         self.socket.connect('tcp://{host}:{port}'.format(host=self.address[0], port=self.address[1]))    
 
 class TCPSocket(IClientSocket):
