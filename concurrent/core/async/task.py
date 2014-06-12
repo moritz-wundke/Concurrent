@@ -177,7 +177,7 @@ class GenericTaskManager(Component):
         Stop our worker processes
         """
         for i in xrange(self._num_workers):
-            send_to_zmq_zipped(self.ventilator_send.send, None)
+            send_to_zmq_zipped(self.ventilator_send, None)
         # Poison for result listener
         self.results.put(None)
 

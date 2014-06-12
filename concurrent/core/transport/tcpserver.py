@@ -395,7 +395,7 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
         self.kill_switch = True
         self.join(1000)
         
-class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
+class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     """
     TCP client using the ZeroMQ network framework
     """
@@ -426,14 +426,14 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     def close(self):
         """Close socket connection and client thread"""
         try:
-            TCPSocket.close(self)
+            TCPSocketZMQ.close(self)
         finally:
             # Alwasy stop the client thread!
             self.stop()
             
     def run(self):
         TCPSocketZMQ.connect(self)
-        self.log.info("TCPClientZMQ started")
+        self.log.info("TCPServerProxyZMQ started")
         while not self.kill_switch:
             try:
                 sockets = dict(self.poll.poll(1000))
@@ -465,13 +465,13 @@ class TCPClientZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         
         # Close socket
         self.close()
-        self.log.info("TCPClientZMQ stopped")
+        self.log.info("TCPServerProxyZMQ stopped")
     
     def stop(self):
         """
         Stop socket and thread
         """
-        self.log.info("Shutting down TCPClientZMQ")
+        self.log.info("Shutting down TCPServerProxyZMQ")
         self.kill_switch = True
         self.join(1000)
 

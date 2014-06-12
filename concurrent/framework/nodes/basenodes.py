@@ -6,7 +6,7 @@ Module containing our base node enteties
 from concurrent.core.config.config import IntItem, ExtensionPointItem, ConfigItem, FloatItem, BoolItem
 from concurrent.core.transport.simplejsonrpc import SimpleJSONRPCService, jsonremote
 from concurrent.core.transport.gzipper import Gzipper
-from concurrent.core.transport.tcpserver import TCPClient, TCPClientZMQ
+from concurrent.core.transport.tcpserver import TCPClient, TCPServerProxyZMQ#, TCPClientProxyZMQ
 from concurrent.core.transport.tcpsocket import TCPSocket, send_to_zmq_multi
 from concurrent.core.async.api import ITaskManager
 from concurrent.core.async.threads import InterruptibleThread, ReadWriteLock, RWLockCache
@@ -469,7 +469,7 @@ class BaseNode(object):
         """
         #tcp_client = TCPClient(self.log, host, port, self)
         #return TCPProxy(tcp_client, self.log), tcp_client
-        tcp_client = TCPClientZMQ(self.node_id_str, host, port, self.log)
+        tcp_client = TCPServerProxyZMQ(self.node_id_str, host, port, self.log)
         return TCPProxy(tcp_client, self.log), tcp_client
     
     def create_tcp_client_proxy(self, sock, request):
@@ -477,6 +477,8 @@ class BaseNode(object):
         Create a JSON TCP socket proxy instance to a client
         """
         return TCPProxyZMQ(sock, request, self.log)
+        #tcp_client = TCPClientProxyZMQ(self.node_id_str, host, port, self.log)
+        #return TCPProxy(tcp_client, self.log), tcp_client
         
     # TODO: Make every node steam large amount of data over the normal socket: http://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
     #  Control channel is over the API channel and real-time interactions over the TCP socket (see transport module)
