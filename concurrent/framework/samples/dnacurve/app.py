@@ -171,7 +171,7 @@ class DNACurveTaskSystem(ITaskSystem):
             workload.append(( self.xyz[:4, :i+1, :] , matrices[seq]))
             
             # Collect a set of 166 workloads
-            if len(workload) == 1:
+            if len(workload) == 166:
                 job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, start = i, workload = workload))
                 workload = []
         
@@ -324,12 +324,13 @@ class DNACurveTask(Task):
         No try to find the hash
         """
         #print("Task [{}] called".format(self.name))
-        return True
-        #dot = numpy.dot
-        #results = []
-        #for work in self.workload:
-        #    results.append(dot(work[0], work[1]))
-        #return (self.start, results)
+        print("working start")
+        dot = numpy.dot
+        results = []
+        for work in self.workload:
+            results.append(dot(work[0], work[1]))
+        print("working done")
+        return (self.start, results)
     
     def finished(self, result, error):
         """
