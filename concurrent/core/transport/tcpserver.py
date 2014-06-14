@@ -258,7 +258,7 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.frontend = self.context.socket(zmq.ROUTER)
         self.frontend.bind('tcp://*:{port}'.format(port=self.port))
         
-        # The backedn is where we queue the requests that the workers
+        # The backend is where we queue the requests that the workers
         # will start working on in round robbin fashion
         self.backend = self.context.socket(zmq.DEALER)
         self.backend.bind('inproc://backend')
@@ -408,7 +408,7 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         # The backedn is where we queue the requests that the workers
         # will start working on in round robbin fashion
         self.backend = self.context.socket(zmq.DEALER)
-        self.backend.bind('inproc://backend-{id}'.format(id="12345"))
+        self.backend.bind('inproc://backend')
         
         # Before starting create socket poll
         self.poll = zmq.Poller()
@@ -419,9 +419,11 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         self.daemon = True
         self.kill_switch = False
     
-    #def send_to(self, method, *args, **kwargs):
-    #    """Send data to a socket"""
-    #    send_to_zmq(self.backend, method, *args, **kwargs)
+    def send_to(self, method, *args, **kwargs):
+        """Send data to a socket"""
+        send_to_zmq(self.backend, method, *args, **kwargs)
+        #self.backend.send_multipart([self.identity, method])
+        #print("sending to backend")
     
     def connect(self):
         """Connect and start the client thread to listen for responses"""
@@ -438,6 +440,8 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
             
     def run(self):
         TCPSocketZMQ.connect(self)
+        self.backend.identity = self.identity.encode('ascii')
+        self.backend.connect('inproc://backend')
         self.log.info("TCPServerProxyZMQ started")
         while not self.kill_switch:
             try:
@@ -449,7 +453,7 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
                     send_to_zmq(self.socket, *result)
                 if self.backend in sockets:
                     msg = self.backend.recv()
-                    #tprint('To server')
+                    #tprint('To Server')
                     self.socket.send(msg)
             except zmq.Again:
                 # Timeouy just fired, no problem!
