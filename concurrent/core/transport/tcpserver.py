@@ -129,6 +129,7 @@ class TCPHandler(object):
             traceback.print_exc()
             raise e
         except Exception as e:
+            traceback.print_exc()
             if method:
                 return "{}_failed".format(method), {"c": -32603, "m": "Internal error", "e": e, "t": traceback.format_exc()},
             raise NoResponseRequired()
@@ -263,11 +264,15 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.backend = self.context.socket(zmq.DEALER)
         self.backend.bind('inproc://backend')
         
+        self.backend_client = self.context.socket(zmq.DEALER)
+        self.backend_client.bind('inproc://backend-client')
+        
         # The poller is used to poll for incomming messages for both
         # the frontend (internet) and the backend (scheduling)
         self.poll = zmq.Poller()
         self.poll.register(self.frontend, zmq.POLLIN)
         self.poll.register(self.backend,  zmq.POLLIN)
+        self.poll.register(self.backend_client,  zmq.POLLIN)
         
         # Create workers
         self.workers = [TCPServerZMQWorker(self.context, self.log) for i in range(self.num_workers)]
@@ -304,6 +309,10 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
                     self.backend.send_multipart([ident, msg])
                 if self.backend in sockets:
                     ident, msg = self.backend.recv_multipart()
+                    #tprint('Sending message back to %s' % (ident))
+                    self.frontend.send_multipart([ident, msg])
+                if self.backend_client in sockets:
+                    ident, msg = self.backend_client.recv_multipart()
                     #tprint('Sending message back to %s' % (ident))
                     self.frontend.send_multipart([ident, msg])
             except zmq.Again:
@@ -423,7 +432,7 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         """Send data to a socket"""
         send_to_zmq(self.backend, method, *args, **kwargs)
         #self.backend.send_multipart([self.identity, method])
-        #print("sending to backend")
+        #print("sending to backend end")
     
     def connect(self):
         """Connect and start the client thread to listen for responses"""
@@ -488,6 +497,25 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         self.log.info("Shutting down TCPServerProxyZMQ")
         self.kill_switch = True
         self.join(1000)
+
+class TCPClientProxyZMQ():
+    """
+    TCP client using the ZeroMQ network framework
+    """
+    def __init__(self, context, identity, log):
+        self.log = log
+        self.context = context
+        self.identity = identity
+        
+        # The backend which our server will process (or some other workers might)
+        self.backend = self.context.socket(zmq.DEALER)
+        self.backend.identity = self.identity.encode('ascii')
+        self.backend.connect('inproc://backend-client')
+        
+    def send_to(self, method, *args, **kwargs):
+        """Send data to a socket"""
+        send_to_zmq_multi(self.backend, self.identity, method, *args, **kwargs)
+        #print("sending to backend ends")
 
 def tcpremote(tcp_opbject, name=None):
     """

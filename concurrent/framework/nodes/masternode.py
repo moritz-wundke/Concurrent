@@ -509,7 +509,8 @@ class MasterNode(Component, BaseNode):
                     # The handler is shared between many client sockets!
                     self.node_registry[node_id].handler = handler
                     self.node_registry[node_id].socket = handler.worker
-                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    #self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy_zmq(self.zmq_server.context, request)
                     self.node_registry[node_id].state = NodeState.active
                     # Let the slave know that the handshake worked
                     return True
@@ -520,7 +521,8 @@ class MasterNode(Component, BaseNode):
                     # The handler is shared between many client sockets!
                     self.client_registry[node_id].handler = handler
                     self.client_registry[node_id].socket = handler.worker
-                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    #self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy_zmq(self.zmq_server.context, request)
                     self.client_registry[node_id].state = NodeState.active
                     # Safe some data within the handler itself
                     handler.node_id = node_id
@@ -624,7 +626,7 @@ class MasterNode(Component, BaseNode):
         the result or an error and additional information
         """        
         # Now pass the same result to the ITaskSystem that will handle the task
-        with self.tasksystem_lock.readlock:
+        with self.tasksystem_lock.writelock:
             if task.system_id in self.tasksystem_registry:
                 system_entry = self.tasksystem_registry[task.system_id]
                 system_entry.system.task_finished(self, task, result, error)
@@ -634,16 +636,15 @@ class MasterNode(Component, BaseNode):
                 
                 # Check for end
                 if system_entry.system.is_complete(self):
-                    with self.tasksystem_lock.writelock:
-                        try:
-                            # Gather results
-                            final_results = system_entry.system.gather_result(self)
-                            
-                            # Send to client proxy the results
-                            client_id = system_entry.client_id
-                            with self.client_registry_lock.readlock:
-                                if client_id in self.client_registry:
-                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, self.pickler.pickle_s(system_entry.system))
-                        finally:
-                            del self.tasksystem_registry[task.system_id]
+                    try:
+                        # Gather results
+                        final_results = system_entry.system.gather_result(self)
+                        
+                        # Send to client proxy the results
+                        client_id = system_entry.client_id
+                        with self.client_registry_lock.readlock:
+                            if client_id in self.client_registry:
+                                self.client_registry[client_id].tcp_proxy.work_finished(final_results, self.pickler.pickle_s(system_entry.system))
+                    finally:
+                        del self.tasksystem_registry[task.system_id]
                                 
