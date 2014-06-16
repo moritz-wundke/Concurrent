@@ -64,7 +64,7 @@ class MasterNode(Component, BaseNode):
     registry_cleanup_timer = FloatItem('masternode', 'registry_cleanup_timer', 60.0,
         """Timer used to cleanup the node registry""")
     
-    task_scheduler= ExtensionPointItem('masternode', 'task_manager', ITaskScheduler, 'GenericTaskScheduler',
+    task_scheduler= ExtensionPointItem('masternode', 'task_scheduler', ITaskScheduler, 'GenericTaskScheduler',
         """Task scheduler used by the master node""")
     
     master_port = IntItem('node', 'master_port', 8081,
@@ -215,11 +215,7 @@ class MasterNode(Component, BaseNode):
             #@tcpremote(self.server)
             def task_finished(handler, request, task, result, error):
                 self.stats.add_avg('task_finished')
-                start = time.time()
-                new_task = self.pickler.unpickle_s(task)
-                ellapsed = time.time() - start
-                self.stats.add_avg('task_finished_unpickle_time',ellapsed)
-                self.task_finished(new_task, result, error)
+                self.task_finished(task, result, error)
                 # This is an end method for the interaction
                 raise NoResponseRequired()
             
@@ -243,6 +239,12 @@ class MasterNode(Component, BaseNode):
             """
             self.stats.add_avg('push_tasksystem')
             return self.push_tasksystem(request, self.pickler.unpickle_s(tasksystem))
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def test_method(handler, request):
+            print("test_method from {}".format(request))
+            raise NoResponseRequired()
     
     def _generate_status_dict(self, node):
         return {'type':node.type,'state':node.state}

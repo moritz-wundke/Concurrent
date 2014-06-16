@@ -258,14 +258,17 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.context = zmq.Context()
         self.frontend = self.context.socket(zmq.ROUTER)
         self.frontend.bind('tcp://*:{port}'.format(port=self.port))
+        self.frontend.setsockopt(zmq.LINGER, 0)
         
         # The backend is where we queue the requests that the workers
         # will start working on in round robbin fashion
         self.backend = self.context.socket(zmq.DEALER)
         self.backend.bind('inproc://backend')
+        self.backend.setsockopt(zmq.LINGER, 0)
         
         self.backend_client = self.context.socket(zmq.DEALER)
         self.backend_client.bind('inproc://backend-client')
+        self.backend_client.setsockopt(zmq.LINGER, 0)
         
         # The poller is used to poll for incomming messages for both
         # the frontend (internet) and the backend (scheduling)
@@ -282,9 +285,11 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         Stop server and workers
         """
         self.log.info("Shutting down TCPServerZMQ")
-        self.kill_switch = True
+        
         for worker in self.workers:
             worker.stop()
+        
+        self.kill_switch = True
         self.join(5000)
         self.log.info("TCPServerZMQ shutdown finished")
     
@@ -332,13 +337,16 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
+            except zmq.ZMQError:
+                break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!
                 pass
-
+            
         self.frontend.close()
         self.backend.close()
+        self.backend_client.close()
         self.context.term()
         self.log.info("TCPServerZMQ stopped")
 
@@ -391,6 +399,8 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
+            except zmq.ZMQError:
+                break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!
@@ -441,8 +451,7 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
     def close(self):
         """Close socket connection and client thread"""
         try:
-            self.backend.close()
-            TCPSocketZMQ.close(self)
+            self.context.term()
         finally:
             # Alwasy stop the client thread!
             self.stop()
@@ -481,13 +490,16 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
+            except zmq.ZMQError:
+                break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!
                 pass
         
         # Close socket
-        self.close()
+        self.socket.close()
+        self.backend.close()
         self.log.info("TCPServerProxyZMQ stopped")
     
     def stop(self):

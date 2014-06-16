@@ -11,7 +11,7 @@ from concurrent.core.application.api import IApp
 from concurrent.core.components.component import implements
 from concurrent.core.async.task import Task
 from concurrent.core.async.api import ITaskSystem
-from concurrent.core.util.utils import is_digit
+from concurrent.core.util.utils import is_digit, tprint
 from concurrent.core.util.stats import time_push, time_pop
 
 import sys
@@ -27,6 +27,7 @@ import time
 import md5
 import uuid
 from uuid import UUID
+import traceback
 
 MAXLEN = 510  # maximum length of sequence
 
@@ -54,7 +55,8 @@ class DNACurveNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024)
+        #self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024)
+        self.dna_system = DNACurveTaskSystem("ATGCAAATTG", "trifonov", name="Example", maxlen=1024*1024)
         return self.dna_system
     
     def work_finished(self, result, task_system):
@@ -62,15 +64,23 @@ class DNACurveNode(ApplicationNode):
         Called when the work has been done, the results is what our ITaskSystem
         sent back to us. Check resukt for more info
         """
-        if not result[1]:
-            task_system.coordinates_post()
-            task_system.reorient()
-            task_system.center()
-            task_system.curvature()
-        else:
-            self.log.error("Computation failed: %s" % str(result[1]))
-        
-        print("Total time: {}".format(time.time() - self.start_time))
+        # Reassamble result to be processed further
+        try:
+            #for i, seq in enumerate(dinuc_window(self.sequence, self.model.order)):
+            #    xyz[:4, :i+1, :] = dot(xyz[:4, :i+1, :], matrices[seq])
+            
+            for task_result in result[0]:
+                print(task_result)
+                #task_system.coordinates_post()
+                #task_system.reorient()
+                #task_system.center()
+                #task_system.curvature()
+            
+            #print(self.xyz)
+            print("Total time: {}".format(time.time() - self.start_time))
+        except:
+            traceback.print_exc()
+        self.shutdown_main_loop()
     
     def push_tasksystem_response(self, result):
         """
@@ -171,7 +181,7 @@ class DNACurveTaskSystem(ITaskSystem):
             workload.append(( self.xyz[:4, :i+1, :] , matrices[seq]))
             
             # Collect a set of 166 workloads
-            if len(workload) == 166:
+            if len(workload) == 1:
                 job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, start = i, workload = workload))
                 workload = []
         
@@ -188,7 +198,7 @@ class DNACurveTaskSystem(ITaskSystem):
         """
         self.finished_jobs += 1
         if result:
-            self.result = result
+            self.result += result
     
     def gather_result(self, master):
         """
@@ -203,6 +213,7 @@ class DNACurveTaskSystem(ITaskSystem):
         Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
         gets performed every time a tasks finishes.
         """
+        print("%d -> %d" % (self.finished_jobs,self.jobs))
         # Wait for all tasks to finish
         return self.finished_jobs == self.jobs
     
@@ -323,13 +334,12 @@ class DNACurveTask(Task):
         """
         No try to find the hash
         """
-        #print("Task [{}] called".format(self.name))
-        print("working start")
+        tprint("Task [{}-{}] starting".format(os.getpid(), self.name))
         dot = numpy.dot
         results = []
         for work in self.workload:
             results.append(dot(work[0], work[1]))
-        print("working done")
+        tprint("Task [{}-{}] finished".format(os.getpid(), self.name))
         return (self.start, results)
     
     def finished(self, result, error):

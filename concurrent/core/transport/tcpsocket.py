@@ -58,6 +58,7 @@ def create_request_dict(method, *args, **kwargs):
         "v": VERSION,
         "p": params
     }
+    print(data['m'])
     return data
 
 
@@ -180,6 +181,8 @@ class TCPSocketZMQ(IClientSocket):
 
     def close(self):
         """Close socket connection"""
+        # NOTE: Sockets can only be closed on the thread where they are accessed! Bettwen close context 
+        # so that socket will get interupted
         self.socket.close()
         self.context.term()
 

@@ -43,9 +43,7 @@ def generateExtensions(extName, extension='.pyx'):
     # get the list of extensions
     extNames = scandir(extName, [], extension)
     # and build up the set of Extension objects
-    extensions = [makeExtension(name, extension) for name in extNames]
-    print(extensions)
-    return extensions
+    return [makeExtension(name, extension) for name in extNames]
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -124,7 +122,7 @@ def setup_package():
           name = 'Concurrent'
         , version = '0.0.1'
         , description = 'Concurrent Application Framework'
-        , long_description=open('README.txt').read()
+        , long_description=open('README.md').read()
         , author = 'Moritz Wundke'
         , author_email = 'b.thax.dcg@gmail.com'
         , maintainer = 'Moritz Wundke'

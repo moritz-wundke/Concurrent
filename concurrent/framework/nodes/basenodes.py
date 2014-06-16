@@ -17,6 +17,7 @@ import concurrent.core.transport.pyjsonrpc as pyjsonrpc
 
 from bunch import Bunch
 
+import uuid
 import sys
 import web
 import time
@@ -523,6 +524,16 @@ class Node(BaseNode):
     heartbeats
     """
     
+    def app_init(self):
+        """
+        Initialize application just before running it
+        """
+        super(Node, self).app_init()
+        
+        # We create our own node_id, this will be unique everywhere!
+        self.node_id = uuid.uuid1()
+        self.node_id_str = str(self.node_id)
+    
     def app_main(self):
         """
         Launch a concurrent application
@@ -557,6 +568,12 @@ class Node(BaseNode):
         Get the URL where our master node is hosted
         """
         raise NotImplementedError("Node has not implemented get_master_url!")
+
+    def get_master_address(self):
+        """
+        Get the adress and port in (host,port) fashion
+        """
+        raise NotImplementedError("Node has not implemented get_master_address!")
     
     def setup_master(self):
         """
@@ -606,9 +623,9 @@ class ComputeNode(Node):
     def setup_compute_node(self):
         """
         Launch the compute service from this node
-        """
+        """        
         self.log.info("Initializing ComputeNode")
-        self.task_manager.init();
+        self.task_manager.init(self.node_id_str, self.get_master_address());
         self.task_manager.start();
         
         # Start results collector thread

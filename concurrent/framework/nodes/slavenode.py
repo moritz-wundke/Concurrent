@@ -38,10 +38,6 @@ class SlaveNode(Component, ComputeNode):
         """
         super(SlaveNode, self).app_init()
         
-        # We create our own node_id, this will be unique everywhere!
-        self.node_id = uuid.uuid1()
-        self.node_id_str = str(self.node_id)
-        
         # Null this one first
         self.master_node_tcp = None
 
@@ -101,6 +97,12 @@ class SlaveNode(Component, ComputeNode):
         """
         return "%s:%d" % (self.master_url)
     
+    def get_master_address(self):
+        """
+        Get the adress and port in (host,port) fashion
+        """
+        return ('localhost',8081)
+    
     def has_master(self):
         """
         Check if the node has a master or not. Master node has no master itself
@@ -115,11 +117,7 @@ class SlaveNode(Component, ComputeNode):
             @tcpremote(self.master_node_tcp_client)
             def push_task(handler, request, task):
                 self.stats.add_avg('push_task')
-                start = time.time()
-                newTask = self.pickler.unpickle_s(task)
-                ellapsed = time.time() - start
-                self.stats.add_avg('push_task_unpickle_time',ellapsed)
-                return self.push_task(newTask)
+                return self.push_task(task)
             
             @tcpremote(self.master_node_tcp_client)
             def register_slave_failed(handler, request, result):
@@ -239,7 +237,7 @@ class SlaveNode(Component, ComputeNode):
         the result or an error and additional information
         """
         try:
-            self.master_node_tcp.task_finished(self.pickler.pickle_s(task), result, error)
+            self.master_node_tcp.task_finished(task, result, error)
             return True
         except:
             traceback.print_exc()

@@ -45,10 +45,6 @@ class ApplicationNode(Component, Node):
         """
         super(ApplicationNode, self).app_init()
         
-        # We create our own node_id, this will be unique everywhere!
-        self.node_id = uuid.uuid1()
-        self.node_id_str = str(self.node_id)
-        
         # Null this one first
         self.master_node_tcp = None
         
@@ -102,6 +98,12 @@ class ApplicationNode(Component, Node):
         Get the URL where our master node is hosted
         """
         return "%s:%d" % (self.master_url)
+    
+    def get_master_address(self):
+        """
+        Get the adress and port in (host,port) fashion
+        """
+        return ('localhost',8081)
     
     def has_master(self):
         """
