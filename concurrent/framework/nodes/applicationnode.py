@@ -118,7 +118,12 @@ class ApplicationNode(Component, Node):
         if self.master_node_tcp:
             @tcpremote(self.master_node_tcp_client)
             def work_finished(handler, request, result, task_system):
-                self.work_finished(result, self.pickler.unpickle_s(task_system))
+                self.work_finished(result, task_system)
+                raise NoResponseRequired()
+            
+            @tcpremote(self.master_node_tcp_client)
+            def task_finished(handler, request, task, result, error):
+                self.task_finished(task, result, error)
                 raise NoResponseRequired()
             
             @tcpremote(self.master_node_tcp_client)
@@ -143,6 +148,12 @@ class ApplicationNode(Component, Node):
         sent back to us. Check resukt for more info
         """
         raise NotImplementedError("Node has not implemented work_finished!")
+    
+    def task_finished(self, task, result, error):
+        """
+        Called when a task has been done
+        """
+        raise NotImplementedError("Node has not implemented task_finished!")
     
     def push_tasksystem_response(self, result):
         """
@@ -278,6 +289,6 @@ class ApplicationNode(Component, Node):
             raise NotImplementedError('TaskSystem "%s" not an instance of ITaskSystem' % str(self.task_system))
         
         # Pickle and send!        
-        self.master_node_tcp.push_tasksystem(self.pickler.pickle_s(self.task_system))
+        self.master_node_tcp.push_tasksystem(self.task_system)
     
     

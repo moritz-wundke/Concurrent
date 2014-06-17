@@ -56,6 +56,9 @@ class Task(object):
         
         # The slave ID is the ID of the slave that processed the task
         self.slave_id = None
+        
+        # The client ID is set when a push a task onto the framework
+        self.client_id = None
             
     @property
     def name(self):

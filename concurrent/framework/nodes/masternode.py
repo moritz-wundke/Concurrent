@@ -238,7 +238,28 @@ class MasterNode(Component, BaseNode):
             Push a application onto the computation framework
             """
             self.stats.add_avg('push_tasksystem')
-            return self.push_tasksystem(request, self.pickler.unpickle_s(tasksystem))
+            return self.push_tasksystem(request, tasksystem)
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def push_task(handler, request, task):
+            """
+            Push a task onto the computation framework
+            """
+            self.stats.add_avg('push_task')
+            return self.push_task(request, task)
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def push_tasks(handler, request, tasks):
+            """
+            Push a set of tasks onto the computation framework
+            """
+            self.stats.add_avg('push_tasks')
+            for task in tasks:
+                if not self.push_task(request, task):
+                    return False
+            return True
         
         @tcpremote(self.zmq_server)
         #@tcpremote(self.server)
@@ -622,31 +643,46 @@ class MasterNode(Component, BaseNode):
             self.task_scheduler.start_system(system_entry.system)
         return True
     
+    def push_task(self, request, task):
+        """
+        We received a task from a client, add it to the system to be processed
+        """
+        task.client_id = request
+        return True
+    
     def task_finished(self, task, result, error):
         """
         Called when a task has finished its computation, the result object contains the task, 
         the result or an error and additional information
-        """        
-        # Now pass the same result to the ITaskSystem that will handle the task
-        with self.tasksystem_lock.writelock:
-            if task.system_id in self.tasksystem_registry:
-                system_entry = self.tasksystem_registry[task.system_id]
-                system_entry.system.task_finished(self, task, result, error)
-                
-                # Inform scheduler of the task
-                self.task_scheduler.task_finished(task, result, error)
-                
-                # Check for end
-                if system_entry.system.is_complete(self):
-                    try:
-                        # Gather results
-                        final_results = system_entry.system.gather_result(self)
-                        
-                        # Send to client proxy the results
-                        client_id = system_entry.client_id
-                        with self.client_registry_lock.readlock:
-                            if client_id in self.client_registry:
-                                self.client_registry[client_id].tcp_proxy.work_finished(final_results, self.pickler.pickle_s(system_entry.system))
-                    finally:
-                        del self.tasksystem_registry[task.system_id]
+        """
+        # if the task does not specify a ITaskSystem id its a single executed task which is not controller by
+        # a dedicated autonomouse system on the master
+        if task.system_id is None:
+            client_id = task.client_id
+            with self.client_registry_lock.readlock:
+                if client_id in self.client_registry:
+                    self.client_registry[client_id].tcp_proxy.task_finished(task, result, error)
+        else:
+            # If we do have a system id let it process it instead
+            with self.tasksystem_lock.writelock:
+                if task.system_id in self.tasksystem_registry:
+                    system_entry = self.tasksystem_registry[task.system_id]
+                    system_entry.system.task_finished(self, task, result, error)
+                    
+                    # Inform scheduler of the task
+                    self.task_scheduler.task_finished(task, result, error)
+                    
+                    # Check for end
+                    if system_entry.system.is_complete(self):
+                        try:
+                            # Gather results
+                            final_results = system_entry.system.gather_result(self)
+                            
+                            # Send to client proxy the results
+                            client_id = system_entry.client_id
+                            with self.client_registry_lock.readlock:
+                                if client_id in self.client_registry:
+                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, system_entry.system)
+                        finally:
+                            del self.tasksystem_registry[task.system_id]
                                 
