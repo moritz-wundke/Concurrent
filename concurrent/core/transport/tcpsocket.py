@@ -58,7 +58,6 @@ def create_request_dict(method, *args, **kwargs):
         "v": VERSION,
         "p": params
     }
-    print(data['m'])
     return data
 
 

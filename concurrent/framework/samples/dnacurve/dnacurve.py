@@ -279,7 +279,7 @@ class CurvedDNA(object):
         dot = numpy.dot
         for i, seq in enumerate(dinuc_window(self.sequence, self.model.order)):
             xyz[:4, :i+1, :] = dot(xyz[:4, :i+1, :], matrices[seq])
-
+        
         # Average direction vector of one helix turn,
         # calculated by smoothing the basepair normals
         if len(self.sequence) > 10:

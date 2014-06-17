@@ -84,7 +84,7 @@ REQUIEREMENTS = [
         # Do we really need this one? This is more a client side module...
         # sudo apt-get build-dep python-matplotlib
         # Windows requires GnuWin32 libs first
-        #, 'matplotlib>=1.3.1'
+        , 'matplotlib>=1.3.1' # Used for the samples
     ]
  
 
@@ -103,6 +103,7 @@ concurrent.framework.nodes.masternode = concurrent.framework.nodes.masternode
 concurrent.framework.nodes.applicationnode = concurrent.framework.nodes.applicationnode
 concurrent.framework.samples.dnacurve.app = concurrent.framework.samples.dnacurve.app
 concurrent.framework.samples.reversemd5.app = concurrent.framework.samples.reversemd5.app
+concurrent.framework.samples.mandlebrot.app = concurrent.framework.samples.mandlebrot.app
 """
 def setup_package():
     

@@ -3,6 +3,8 @@
 Sample application demostrating the implementation of a DNA Curve Analysis.
 The implemnetation has been based on work from Christoph Gohlke (http://www.lfd.uci.edu/~gohlke/)
 
+NOTE: The implementation is not finsihed and not working but demostrates the capabilities!
+
 File: dnacurve.app.py
 """
 
@@ -55,8 +57,7 @@ class DNACurveNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        #self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024)
-        self.dna_system = DNACurveTaskSystem("ATGCAAATTG", "trifonov", name="Example", maxlen=1024*1024)
+        self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024)
         return self.dna_system
     
     def work_finished(self, result, task_system):
@@ -66,17 +67,6 @@ class DNACurveNode(ApplicationNode):
         """
         # Reassamble result to be processed further
         try:
-            #for i, seq in enumerate(dinuc_window(self.sequence, self.model.order)):
-            #    xyz[:4, :i+1, :] = dot(xyz[:4, :i+1, :], matrices[seq])
-            
-            for task_result in result[0]:
-                print(task_result)
-                #task_system.coordinates_post()
-                #task_system.reorient()
-                #task_system.center()
-                #task_system.curvature()
-            
-            #print(self.xyz)
             print("Total time: {}".format(time.time() - self.start_time))
         except:
             traceback.print_exc()
@@ -142,17 +132,6 @@ class DNACurveTaskSystem(ITaskSystem):
         self.curvature = numpy.zeros((3, len(self)), dtype=numpy.float64)
         self.scales = numpy.ones((3, 1), dtype=numpy.float64)
         
-        p = self.p_coord
-        p = numpy.array((p[0] * math.cos(math.radians(p[1])),
-                         p[0] * math.sin(math.radians(p[1])),
-                         p[2]))
-
-        self.xyz = self.coordinates
-        self.xyz[0:3, :, 3] = 1.0  # homogeneous coordinates
-        self.xyz[1, :, 0:3] = p  # 5' phosphate
-        self.xyz[2, :, 0:3] = -p[0], p[1], -p[2]  # phosphate of antiparallel strand
-        self.xyz[3, :, 2] = 1.0  # basepair normal vectors
-        
         # Create a number of jobs that will be processed
         self.jobs = 0
         self.finished_jobs = 0
@@ -162,7 +141,7 @@ class DNACurveTaskSystem(ITaskSystem):
         """
         Initialize the system
         """
-        self.start_time = time.time()
+        pass
     
     def generate_tasks(self, master):
         """
@@ -173,12 +152,24 @@ class DNACurveTaskSystem(ITaskSystem):
         """
         job_list = []
         
-        matrices = self.model.matrices        
+        p = self.p_coord
+        p = numpy.array((p[0] * math.cos(math.radians(p[1])),
+                         p[0] * math.sin(math.radians(p[1])),
+                         p[2]))
+        
+        xyz = self.coordinates
+        xyz[0:3, :, 3] = 1.0  # homogeneous coordinates
+        xyz[1, :, 0:3] = p  # 5' phosphate
+        xyz[2, :, 0:3] = -p[0], p[1], -p[2]  # phosphate of antiparallel strand
+        xyz[3, :, 2] = 1.0  # basepair normal vectors
+        
+        matrices = self.model.matrices      
         workload = []
         i = 0
         for i, seq in enumerate(dinuc_window(self.sequence, self.model.order)):
+            #print(xyz[:4, :i+1, :])
             # Split workload
-            workload.append(( self.xyz[:4, :i+1, :] , matrices[seq]))
+            workload.append(( xyz[:4, :i+1, :] , matrices[seq]))
             
             # Collect a set of 166 workloads
             if len(workload) == 1:
@@ -190,6 +181,7 @@ class DNACurveTaskSystem(ITaskSystem):
             job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, start = i, workload = workload))
 
         self.jobs = len(job_list)
+        self.start_time = time.time()
         return job_list
         
     def task_finished(self, master, task, result, error):
@@ -213,7 +205,7 @@ class DNACurveTaskSystem(ITaskSystem):
         Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
         gets performed every time a tasks finishes.
         """
-        print("%d -> %d" % (self.finished_jobs,self.jobs))
+        #print("%d -> %d" % (self.finished_jobs,self.jobs))
         # Wait for all tasks to finish
         return self.finished_jobs == self.jobs
     
@@ -232,6 +224,8 @@ class DNACurveTaskSystem(ITaskSystem):
     def coordinates_post(self):
         """Calculate coordinates and normal vectors from sequence and model."""
         
+        print(self.xyz)
+        
         # Average direction vector of one helix turn,
         # calculated by smoothing the basepair normals
         if len(self.sequence) > 10:
@@ -241,6 +235,8 @@ class DNACurveTaskSystem(ITaskSystem):
                 self.xyz[4, :, i] = numpy.convolve(kernel, self.xyz[3, :, i], 'same')
             for i in range(5, len(self)-5):
                 self.xyz[4, i, :] /= norm(self.xyz[4, i, :])
+        
+        self.coordinates = self.xyz
 
     def reorient(self):
         """Reorient coordinates."""
@@ -334,12 +330,12 @@ class DNACurveTask(Task):
         """
         No try to find the hash
         """
-        tprint("Task [{}-{}] starting".format(os.getpid(), self.name))
+        #tprint("Task [{}-{}] starting".format(os.getpid(), self.name))
         dot = numpy.dot
         results = []
         for work in self.workload:
             results.append(dot(work[0], work[1]))
-        tprint("Task [{}-{}] finished".format(os.getpid(), self.name))
+        #tprint("Task [{}-{}] finished".format(os.getpid(), self.name))
         return (self.start, results)
     
     def finished(self, result, error):
