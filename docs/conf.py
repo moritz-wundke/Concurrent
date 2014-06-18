@@ -13,7 +13,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sphinx_bootstrap_theme
 import sys
 import os
 

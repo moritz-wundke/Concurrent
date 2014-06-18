@@ -48,11 +48,12 @@ def create_fractal(min_x, max_x, min_y, max_y, image, iters):
 
     time_end("mandle")
 
-image = np.zeros((1024, 1536), dtype = np.uint8)
-start = timer()
-create_fractal(-2.0, 1.0, -1.0, 1.0, image, 20) 
-dt = timer() - start
-
-print "Mandelbrot created in %f s" % dt
-imshow(image)
-show()
+if __name__ == '__main__':
+    image = np.zeros((1024, 1536), dtype = np.uint8)
+    start = timer()
+    create_fractal(-2.0, 1.0, -1.0, 1.0, image, 20) 
+    dt = timer() - start
+    
+    print "Mandelbrot created in %f s" % dt
+    imshow(image)
+    show()
