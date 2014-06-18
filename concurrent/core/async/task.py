@@ -42,7 +42,7 @@ class Task(object):
     """
     A simple tasks that just executes a function in a fire and forget way
     """
-    def __init__(self, name, system_id, **kwargs):
+    def __init__(self, name, system_id, client_id, **kwargs):
         """
         Initialize the task itself
         """
@@ -58,7 +58,7 @@ class Task(object):
         self.slave_id = None
         
         # The client ID is set when a push a task onto the framework
-        self.client_id = None
+        self.client_id = client_id
             
     @property
     def name(self):

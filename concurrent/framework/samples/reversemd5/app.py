@@ -56,6 +56,7 @@ class MD5HashReverseNode(ApplicationNode):
                 self.log.info("Failed to reverse the hash :(")
         else:
             self.log.error("Computation failed: %s" % str(result[1]))
+        self.shutdown_main_loop()
     
     def push_tasksystem_response(self, result):
         """
@@ -104,7 +105,7 @@ class MD5HashReverseTaskSystem(ITaskSystem):
         for i in xrange(self.jobs):
             job_start = self.start + i*self.step
             job_end = min(self.start + (i + 1)*self.step, self.end)
-            job_list.append(MD5ReverseTask("md5_reverse_task_{}".format(i), self.system_id, target_hash=self.target_hash, start=job_start, end = job_end))
+            job_list.append(MD5ReverseTask("md5_reverse_task_{}".format(i), self.system_id, None, target_hash=self.target_hash, start=job_start, end = job_end))
         self.start_time = time.time()
         return job_list
         

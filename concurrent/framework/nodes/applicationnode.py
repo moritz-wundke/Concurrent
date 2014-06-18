@@ -135,6 +135,22 @@ class ApplicationNode(Component, Node):
                 self.push_tasksystem_response(result)
             
             @tcpremote(self.master_node_tcp_client)
+            def push_task_failed(handler, request, result):
+                self.push_task_failed(result)
+            
+            @tcpremote(self.master_node_tcp_client)
+            def push_task_response(handler, request, result):
+                self.push_task_response(result)
+            
+            @tcpremote(self.master_node_tcp_client)
+            def push_tasks_failed(handler, request, result):
+                self.push_tasks_failed(result)
+            
+            @tcpremote(self.master_node_tcp_client)
+            def push_tasks_response(handler, request, result):
+                self.push_tasks_response(result)
+            
+            @tcpremote(self.master_node_tcp_client)
             def register_client_failed(handler, request, result):
                 self.register_client_failed(result)
             
@@ -172,6 +188,30 @@ class ApplicationNode(Component, Node):
         Called when we failed to register ouselfs to a master node. Raises an exception.
         """
         raise FailedToRegisterWithMaster("Client failed to register with the assigned master!")
+    
+    def push_task_response(self, result):
+        """
+        We just add a Task to the computation framework
+        """
+        raise NotImplementedError("Node has not implemented push_task_response!")
+    
+    def push_task_failed(self, result):
+        """
+        We failed to add a Task to the computation framework
+        """
+        raise NotImplementedError("Node has not implemented push_task_failed!")
+    
+    def push_tasks_response(self, result):
+        """
+        We just add a set of Tasks to the computation framework
+        """
+        raise NotImplementedError("Node has not implemented push_tasks_response!")
+    
+    def push_tasks_failed(self, result):
+        """
+        We failed to add a set of Tasks to the computation framework
+        """
+        raise NotImplementedError("Node has not implemented push_tasks_failed!")
     
     def register_client_response(self, result):
         """
@@ -275,6 +315,13 @@ class ApplicationNode(Component, Node):
         """
         raise NotImplementedError("Node has not implemented get_task_system!")
     
+    def start_processing(self):
+        """
+        Called when the app is not using a ITaskSystem and will instead just add tasks and
+        will take care of the task flow itself
+        """
+        raise NotImplementedError("Node has not implemented start_processing!")
+    
     def _start_processing(self):
         """
         Called once the application is registered with the framework and we 
@@ -283,12 +330,25 @@ class ApplicationNode(Component, Node):
         # Request task system instance
         
         self.task_system = self.get_task_system()
-        
-        # Make sure its an instance of ITaskSystem
-        if not isinstance(self.task_system, ITaskSystem):
-            raise NotImplementedError('TaskSystem "%s" not an instance of ITaskSystem' % str(self.task_system))
-        
-        # Pickle and send!        
-        self.master_node_tcp.push_tasksystem(self.task_system)
+        if self.task_system:        
+            # Make sure its an instance of ITaskSystem
+            if not isinstance(self.task_system, ITaskSystem):
+                raise NotImplementedError('TaskSystem "%s" not an instance of ITaskSystem' % str(self.task_system))
+            
+            # Pickle and send!        
+            self.master_node_tcp.push_tasksystem(self.task_system)
+        else:
+            self.start_processing()
     
+    def push_task(self, task):
+        """
+        Send a task to the computation framework
+        """
+        self.master_node_tcp.push_task(task)
+    
+    def push_tasks(self, tasks):
+        """
+        Send a set of tasks to the computation framework
+        """
+        self.master_node_tcp.push_tasks(tasks)
     

@@ -173,12 +173,12 @@ class DNACurveTaskSystem(ITaskSystem):
             
             # Collect a set of 166 workloads
             if len(workload) == 1:
-                job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, start = i, workload = workload))
+                job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, None, start = i, workload = workload))
                 workload = []
         
         # Add last task with rest of workload
         if len(workload) > 0: 
-            job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, start = i, workload = workload))
+            job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, None, start = i, workload = workload))
 
         self.jobs = len(job_list)
         self.start_time = time.time()

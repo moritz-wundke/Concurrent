@@ -104,8 +104,10 @@ class TCPHandler(object):
                     if method.endswith('_failed') or method.endswith('_response'):
                         raise NoResponseRequired()
                 except JsonRpcError as e:
+                    traceback.print_exc()
                     return "{}_failed".format(method), {"c": e.code, "m": e.message},
                 except TypeError:
+                    traceback.print_exc()
                     return "{}_failed".format(method), {"c": -32602, "m": "Invalid params"},
                 return "{}_response".format(method), result
             else:
@@ -114,11 +116,12 @@ class TCPHandler(object):
                     raise NoResponseRequired()
                 return "{}_failed".format(method), {"c": -32601, "m": "Method not found"},
         except KeyError:
+            traceback.print_exc()
             if method:
                 return "{}_failed".format(method), {"c": -32700, "m": "Parse error"},
             raise NoResponseRequired()
         except TypeError:
-            #traceback.print_exc()
+            traceback.print_exc()
             if method:
                 return "{}_failed".format(method), {"c": -32600, "m": "Invalid Request"},
             raise NoResponseRequired()
@@ -437,10 +440,14 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
         # Some thread related stuff
         self.daemon = True
         self.kill_switch = False
+        
+        # Our lock used to protect the backend socket
+        self.lock = threading.Lock()
     
     def send_to(self, method, *args, **kwargs):
         """Send data to a socket"""
-        send_to_zmq(self.backend, method, *args, **kwargs)
+        with self.lock:
+            send_to_zmq(self.backend, method, *args, **kwargs)
         #self.backend.send_multipart([self.identity, method])
         #print("sending to backend end")
     
@@ -524,9 +531,13 @@ class TCPClientProxyZMQ():
         self.backend.identity = self.identity.encode('ascii')
         self.backend.connect('inproc://backend-client')
         
+        # Our lock used to protect the backend socket
+        self.lock = threading.Lock()
+        
     def send_to(self, method, *args, **kwargs):
         """Send data to a socket"""
-        send_to_zmq_multi(self.backend, self.identity, method, *args, **kwargs)
+        with self.lock:
+            send_to_zmq_multi(self.backend, self.identity, method, *args, **kwargs)
         #print("sending to backend ends")
 
 def tcpremote(tcp_opbject, name=None):

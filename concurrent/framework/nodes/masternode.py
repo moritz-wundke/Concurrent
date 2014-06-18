@@ -256,9 +256,10 @@ class MasterNode(Component, BaseNode):
             Push a set of tasks onto the computation framework
             """
             self.stats.add_avg('push_tasks')
-            for task in tasks:
-                if not self.push_task(request, task):
-                    return False
+            if isinstance(tasks, list):
+                for task in tasks:
+                    if not self.push_task(request, task):
+                        return False
             return True
         
         @tcpremote(self.zmq_server)
@@ -647,8 +648,10 @@ class MasterNode(Component, BaseNode):
         """
         We received a task from a client, add it to the system to be processed
         """
-        task.client_id = request
-        return True
+        if isinstance(task, Task):
+            self.task_scheduler.push_task(task)
+            return True
+        return False
     
     def task_finished(self, task, result, error):
         """
