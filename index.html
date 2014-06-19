@@ -65,6 +65,8 @@
 
 <p>To show how to use Concurrent for your own tasks we will create a simple <em>hello world</em> application that just computes the string on the system and returns it to our application.</p>
 
+<p>For this example we will create two classes, one which actually gets executed on the distributed system <code>class SimpleTask(Task):</code> and our application which interacts with the system and controls the task flow <code>class SimpleConcurrentApp(ApplicationNode)</code>. Our task class just gets executed on an abitrary processes within the system while our application is what is getting executed on the client side creating the task, sending it to the framework and waiting for its completion.</p>
+
 <div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">concurrent.framework.nodes.applicationnode</span> <span class="kn">import</span> <span class="n">ApplicationNode</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">implements</span>
@@ -73,48 +75,56 @@
 <span class="k">class</span> <span class="nc">SimpleTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">client_id</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Just create a task specifying only a client_id, this will tell Concurrent</span>
-<span class="sd">        to only process the task and send the results back</span>
+<span class="sd">        Just create a task specifying only a client_id, this</span>
+<span class="sd">        will tell Concurrent to only process the task and</span>
+<span class="sd">        send the results back</span>
 <span class="sd">        """</span>
         <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">client_id</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Method gets called on an arbitrary slave to perform the computation</span>
+<span class="sd">        Method gets called on an arbitrary slave to perform</span>
+<span class="sd">        the computation</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="s">"Hello World"</span>
 
     <span class="k">def</span> <span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Once the task is finished. Called on the MasterNode within the main thread once</span>
-<span class="sd">        the node has recovered the result data.</span>
+<span class="sd">        Once the task is finished. Called on the MasterNode</span>
+<span class="sd">        within the main thread once the node has recovered</span>
+<span class="sd">        the result data.</span>
 <span class="sd">        """</span>
         <span class="k">print</span><span class="p">(</span><span class="s">"Hey I'm done!"</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">SimpleConcurrentApp</span><span class="p">(</span><span class="n">ApplicationNode</span><span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Just a simple application showing how to send tasks to be processed using Concurrent</span>
+<span class="sd">    Just a simple application showing how to send tasks to</span>
+<span class="sd">    be processed using Concurrent</span>
 <span class="sd">    """</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_task_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Called from the base class when we are connected to a MasterNode and we are </span>
-<span class="sd">        able to send computation tasks over</span>
+<span class="sd">        Called from the base class when we are connected </span>
+<span class="sd">        to a MasterNode and we are able to send computation </span>
+<span class="sd">        tasks over</span>
 <span class="sd">        """</span>
-        <span class="c"># We return none for the simple example, to check more advanced samples please check the</span>
-        <span class="c"># samples source code</span>
+        <span class="c"># We return none for the simple example, to check </span>
+        <span class="c"># more advanced samples please check the samples </span>
+        <span class="c"># source code</span>
         <span class="k">return</span> <span class="bp">None</span>
 
     <span class="k">def</span> <span class="nf">start_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Called when the app is not using a ITaskSystem and will instead just add tasks and</span>
-<span class="sd">        will take care of the task flow itself</span>
+<span class="sd">        Called when the app is not using a ITaskSystem and</span>
+<span class="sd">        will instead just add tasks and will take care of</span>
+<span class="sd">        the task flow itself</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Starting computation"</span><span class="p">)</span>
 
         <span class="c"># Create a task and send it to the system</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span> <span class="n">SimpleTask</span><span class="p">(</span><span class="s">"my_task"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span>
+            <span class="n">SimpleTask</span><span class="p">(</span><span class="s">"my_task"</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">)</span> <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
         <span class="sd">"""</span>
@@ -129,25 +139,32 @@
         <span class="sd">"""</span>
 <span class="sd">        We just add a Task to the computation framework</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Task send to computation framework"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Task send to computation "</span> \
+            <span class="s">"framework"</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">push_task_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        We failed to add a Task to the computation framework</span>
+<span class="sd">        We failed to add a Task to the computation</span>
+<span class="sd">        framework</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Failed to send task send to computation framework"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Failed to send task send to "</span> \
+            <span class="s">"computation framework"</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">push_tasks_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        We just add a set of Tasks to the computation framework</span>
+<span class="sd">        We just add a set of Tasks to the computation</span>
+<span class="sd">        framework</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Tasks send to computation framework"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Tasks send to computation "</span> \ 
+            <span class="s">"framework"</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">push_tasks_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        We failed to add a set of Tasks to the computation framework</span>
+<span class="sd">        We failed to add a set of Tasks to the computation</span>
+<span class="sd">        framework</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Failed to send tasks send to computation framework"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Failed to send tasks send to "</span> \
+            <span class="s">"computation framework"</span><span class="p">)</span>
 </pre></div>
 
 <h1>
