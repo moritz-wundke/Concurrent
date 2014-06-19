@@ -1,0 +1,974 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.samples.dnacurve.app &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.framework.samples.dnacurve.app</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sample application demostrating the implementation of a DNA Curve Analysis.</span>
+<span class="sd">The implemnetation has been based on work from Christoph Gohlke (http://www.lfd.uci.edu/~gohlke/)</span>
+
+<span class="sd">NOTE: The implementation is not finsihed and not working but demostrates the capabilities!</span>
+
+<span class="sd">File: dnacurve.app.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.framework.nodes.applicationnode</span> <span class="kn">import</span> <span class="n">ApplicationNode</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">implements</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.task</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskSystem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.utils</span> <span class="kn">import</span> <span class="n">is_digit</span><span class="p">,</span> <span class="n">tprint</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.stats</span> <span class="kn">import</span> <span class="n">time_push</span><span class="p">,</span> <span class="n">time_pop</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">md5</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="n">MAXLEN</span> <span class="o">=</span> <span class="mi">510</span>  <span class="c"># maximum length of sequence</span>
+
+<div class="viewcode-block" id="DNACurveNode"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode">[docs]</a><span class="k">class</span> <span class="nc">DNACurveNode</span><span class="p">(</span><span class="n">ApplicationNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DNA Curve Analysis application</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="DNACurveNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called just before the main entry. Used as the initialization point instead of the ctor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DNACurveNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="DNACurveNode.app_main"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main">[docs]</a>    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applications main entry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DNACurveNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="DNACurveNode.get_task_system"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from the base class when we are connected to a MasterNode and we are </span>
+<span class="sd">        able to send computation tasks over</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dna_system</span> <span class="o">=</span> <span class="n">DNACurveTaskSystem</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Example&quot;</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dna_system</span>
+    </div>
+<div class="viewcode-block" id="DNACurveNode.work_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished">[docs]</a>    <span class="k">def</span> <span class="nf">work_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when the work has been done, the results is what our ITaskSystem</span>
+<span class="sd">        sent back to us. Check resukt for more info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Reassamble result to be processed further</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Total time: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown_main_loop</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="DNACurveNode.push_tasksystem_response"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasksystem_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We just added a ITaskSystem on the framwork. Check result for more info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Tasks system send to computation framework&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="DNACurveNode.push_tasksystem_failed"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasksystem_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We failed to push a ITaskSystem on the computation framework!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Tasks system failed to be send to framework!&quot;</span><span class="p">)</span>
+        <span class="c"># Check if the resuklt dict contains a traceback</span>
+        <span class="k">if</span> <span class="s">&quot;t&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&quot;t&quot;</span><span class="p">])</span>
+</div></div>
+<div class="viewcode-block" id="DNACurveTaskSystem"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem">[docs]</a><span class="k">class</span> <span class="nc">DNACurveTaskSystem</span><span class="p">(</span><span class="n">ITaskSystem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The task system that is executed on the MasterNode and controls what jobs are required to be performed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">p_coord</span> <span class="o">=</span> <span class="p">(</span>  <span class="c"># cylindrical coordinates of 5&#39; phosphate</span>
+        <span class="mf">8.91</span><span class="p">,</span>    <span class="c"># distance from axis</span>
+        <span class="o">-</span><span class="mf">5.2</span><span class="p">,</span>    <span class="c"># angle to roll axis</span>
+        <span class="mf">2.08</span><span class="p">)</span>    <span class="c"># distance from bp plane</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Untitled&quot;</span><span class="p">,</span>
+                 <span class="n">curvature_window</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bend_window</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">curve_window</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                 <span class="n">maxlen</span><span class="o">=</span><span class="n">MAXLEN</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Default constructor used to initialize the base values. The ctor is</span>
+<span class="sd">        executed on the ApplicationNode and not called on the MasterNode so we can </span>
+<span class="sd">        use it to initialize values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DNACurveTaskSystem</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="n">sequence</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">maxlen</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">order</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;sequence must be &gt;</span><span class="si">%i</span><span class="s"> nucleotides long&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxlen</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;sequence is longer than </span><span class="si">%i</span><span class="s"> nucleotides&quot;</span> <span class="o">%</span> <span class="n">maxlen</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">curvature_window</span> <span class="o">&lt;</span> <span class="mi">21</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">bend_window</span> <span class="o">&lt;</span> <span class="mi">4</span>
+        <span class="k">assert</span> <span class="mi">9</span> <span class="o">&lt;</span> <span class="n">curve_window</span> <span class="o">&lt;</span> <span class="mi">21</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">windows</span> <span class="o">=</span> <span class="p">[</span><span class="n">curvature_window</span><span class="p">,</span> <span class="n">bend_window</span><span class="p">,</span> <span class="n">curve_window</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_limits</span> <span class="o">=</span> <span class="p">[</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        
+        <span class="c"># Create a number of jobs that will be processed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    
+<div class="viewcode-block" id="DNACurveTaskSystem.init_system"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system">[docs]</a>    <span class="k">def</span> <span class="nf">init_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="DNACurveTaskSystem.generate_tasks"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">generate_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        From the analysis of the sequential version of the algorithm we conclude that each analysis of</span>
+<span class="sd">        each sequence takes on average 0.006 seconds. We will split the workload so that we expect to</span>
+<span class="sd">        send as much sequences to each worker so that the worker is busy for 1 second. This makes a</span>
+<span class="sd">        total of 166 sequences for each task, the last tasks will vary in seuqences though.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">job_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_coord</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                         <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                         <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        
+        <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span>
+        <span class="n">xyz</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c"># homogeneous coordinates</span>
+        <span class="n">xyz</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>  <span class="c"># 5&#39; phosphate</span>
+        <span class="n">xyz</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># phosphate of antiparallel strand</span>
+        <span class="n">xyz</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c"># basepair normal vectors</span>
+        
+        <span class="n">matrices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">matrices</span>      
+        <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dinuc_window</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">order</span><span class="p">)):</span>
+            <span class="c">#print(xyz[:4, :i+1, :])</span>
+            <span class="c"># Split workload</span>
+            <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span> <span class="n">xyz</span><span class="p">[:</span><span class="mi">4</span><span class="p">,</span> <span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="p">,</span> <span class="n">matrices</span><span class="p">[</span><span class="n">seq</span><span class="p">]))</span>
+            
+            <span class="c"># Collect a set of 166 workloads</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DNACurveTask</span><span class="p">(</span><span class="s">&quot;dna_curve_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c"># Add last task with rest of workload</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> 
+            <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DNACurveTask</span><span class="p">(</span><span class="s">&quot;dna_curve_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">job_list</span>
+        </div>
+<div class="viewcode-block" id="DNACurveTaskSystem.task_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">+=</span> <span class="n">result</span>
+    </div>
+<div class="viewcode-block" id="DNACurveTaskSystem.gather_result"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result">[docs]</a>    <span class="k">def</span> <span class="nf">gather_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the system stated that it has finsihed the MasterNode will request the required results that</span>
+<span class="sd">        are to be send to the originator. Returns a tuple like (result, Error)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Calculated in {} seconds!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="DNACurveTaskSystem.is_complete"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete">[docs]</a>    <span class="k">def</span> <span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This</span>
+<span class="sd">        gets performed every time a tasks finishes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#print(&quot;%d -&gt; %d&quot; % (self.finished_jobs,self.jobs))</span>
+        <span class="c"># Wait for all tasks to finish</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return number of nucleotides in sequence.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return string representation of sequence and model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">))</span>
+    
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="DNACurveTaskSystem.name"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name">[docs]</a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="o">.</span><span class="n">name</span>
+    </div>
+<div class="viewcode-block" id="DNACurveTaskSystem.coordinates_post"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post">[docs]</a>    <span class="k">def</span> <span class="nf">coordinates_post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate coordinates and normal vectors from sequence and model.&quot;&quot;&quot;</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">)</span>
+        
+        <span class="c"># Average direction vector of one helix turn,</span>
+        <span class="c"># calculated by smoothing the basepair normals</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">])</span>
+            <span class="n">kernel</span> <span class="o">/=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="s">&#39;same&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="mi">5</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/=</span> <span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span>
+</div>
+<div class="viewcode-block" id="DNACurveTaskSystem.reorient"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient">[docs]</a>    <span class="k">def</span> <span class="nf">reorient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reorient coordinates.&quot;&quot;&quot;</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="c"># helix axis</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span> <span class="o">-</span> <span class="n">xyz</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># assert start point is at origin</span>
+        <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="c"># normalized end to end vector</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="o">+</span><span class="n">xyz</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">e_len</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">/=</span> <span class="n">e_len</span>
+        <span class="c"># point i of maximum distance to end to end line</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="c"># distance of endpoint to xyz[i]</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="c"># distance of endpoint to point on end to end line nearest to xyz[i]</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w</span><span class="o">*</span><span class="n">w</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+        <span class="c"># find transformation matrix</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">xyz</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">e_len</span><span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">e_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">superimpose_matrix</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DNACurveTaskSystem.center"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center">[docs]</a>    <span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Center atomic coordinates at origin.&quot;&quot;&quot;</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="c"># helix axis and P atoms</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">upp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_limits</span> <span class="o">=</span> <span class="p">(</span><span class="n">upp</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">-=</span> <span class="p">(</span><span class="n">low</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_limits</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DNACurveTaskSystem.curvature"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature">[docs]</a>    <span class="k">def</span> <span class="nf">curvature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate normalized curvature and bend angles.&quot;&quot;&quot;</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span>
+        <span class="n">cross</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cross</span>
+        <span class="n">arccos</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arccos</span>
+
+        <span class="c"># curvature from radius</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">window</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="c"># helix axis</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="n">window</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">xyz</span><span class="p">[[</span><span class="n">i</span><span class="o">-</span><span class="n">window</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">window</span><span class="p">]]</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+                <span class="n">bc</span> <span class="o">=</span> <span class="n">c</span> <span class="o">-</span> <span class="n">b</span>
+                <span class="n">ac</span> <span class="o">=</span> <span class="n">c</span> <span class="o">-</span> <span class="n">a</span>
+                <span class="n">lab</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">ab</span><span class="p">)</span>
+                <span class="n">lbc</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">bc</span><span class="p">)</span>
+                <span class="n">lac</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">ac</span><span class="p">)</span>
+                <span class="n">area</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">cross</span><span class="p">(</span><span class="n">ab</span><span class="p">,</span> <span class="n">ac</span><span class="p">))</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">area</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">lab</span><span class="o">*</span><span class="n">lbc</span><span class="o">*</span><span class="n">lac</span><span class="p">)</span>
+
+        <span class="c"># local bend angles from basepair normals</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">window</span><span class="p">:</span>
+            <span class="n">normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="n">window</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">window</span><span class="p">],</span> <span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">window</span><span class="p">]):</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arccos</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">window</span><span class="p">],</span>
+                                           <span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">window</span><span class="p">]))</span>
+
+        <span class="c"># curvature angles from smoothed basepair normals</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">window</span><span class="p">:</span>
+            <span class="n">normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="n">window</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">window</span><span class="p">],</span> <span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">window</span><span class="p">]):</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arccos</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">window</span><span class="p">],</span>
+                                           <span class="n">normals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">window</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curvature</span><span class="p">)</span>
+
+        <span class="c"># normalize relative to curvature in nucleosome</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0234</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0234</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span>
+</div></div>
+<div class="viewcode-block" id="DNACurveTask"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTask">[docs]</a><span class="k">class</span> <span class="nc">DNACurveTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;start&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;workload&#39;</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        No try to find the hash</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#tprint(&quot;Task [{}-{}] starting&quot;.format(os.getpid(), self.name))</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">work</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">workload</span><span class="p">:</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">work</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">work</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="c">#tprint(&quot;Task [{}-{}] finished&quot;.format(os.getpid(), self.name))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="DNACurveTask.finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTask.finished">[docs]</a>    <span class="k">def</span> <span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the task is finished. Called on the MasterNode within the main thread once</span>
+<span class="sd">        the node has recovered the result data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#print(&quot;Task [{}] finished with: {}&quot;.format(self.name, result))</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="DNACurveTask.clean_up"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed and its results are about to be sent back. This is used</span>
+<span class="sd">        to optimize our network and to cleanup the tasks input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="bp">None</span>
+</div></div>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;N-mer DNA-bending model.</span>
+
+<span class="sd">    Transformation parameters and matrices for all oligonucleotides of</span>
+<span class="sd">    certain length.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human readable label.</span>
+<span class="sd">    order : int</span>
+<span class="sd">        Order of model, i.e. length of oligonucleotides.</span>
+<span class="sd">        Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</span>
+<span class="sd">    rise : float</span>
+<span class="sd">        Displacement along the Z axis.</span>
+<span class="sd">    twist : dict</span>
+<span class="sd">        Rotation angle in deg about the Z axis for all oligonucleotides.</span>
+<span class="sd">    roll : dict</span>
+<span class="sd">        Rotation angle in deg about the Y axis for all oligonucleotides.</span>
+<span class="sd">    tilt : dict</span>
+<span class="sd">        Rotation angle in deg about the Z axis for all oligonucleotides.</span>
+<span class="sd">    matrices : dict</span>
+<span class="sd">        Homogeneous transformation matrices for all oligonucleotides.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; m = Model(&quot;AAWedge&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; m = Model(&quot;Nucleosome&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; m = Model(**Model.STRAIGHT)</span>
+<span class="sd">    &gt;&gt;&gt; m = Model(Model.CALLADINE, name=&quot;My Model&quot;, rise=4.0)</span>
+<span class="sd">    &gt;&gt;&gt; m.name == &quot;My Model&quot; and m.rise == 4.0</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; m = Model(name=&quot;Test&quot;, rise=3.38,</span>
+<span class="sd">    ...           oligo=&quot;AA AC AG AT CA GG CG GA GC TA&quot;.split(),</span>
+<span class="sd">    ...           twist=(34.29, )*10, roll=(0., )*10, tilt=(0., )*10)</span>
+<span class="sd">    &gt;&gt;&gt; m.save(&quot;_test.dat&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; m.twist == Model(&quot;_test.dat&quot;).twist</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">STRAIGHT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Straight&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA AC AG AT CA GG CG GA GC TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">360.0</span><span class="o">/</span><span class="mf">10.5</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">AAWEDGE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;AA Wedge&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA     AC    AG    AT    CA    GG     CG    GA    GC    TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">35.62</span><span class="p">,</span> <span class="mf">34.4</span><span class="p">,</span> <span class="mf">27.7</span><span class="p">,</span> <span class="mf">31.5</span><span class="p">,</span> <span class="mf">34.5</span><span class="p">,</span> <span class="mf">33.67</span><span class="p">,</span> <span class="mf">29.8</span><span class="p">,</span> <span class="mf">36.9</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">),</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">8.40</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">2.40</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">CALLADINE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c"># Nucleic Acids Res, 1994, 22(24), p 5498, Table 1, Model b.</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Calladine &amp; Drew&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA    AC    AG    AT    CA    GG    CG    GA    GC    TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">6.6</span><span class="p">),</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">TRIFONOV</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c"># Nucleic Acids Res, 1994, 22(24), p 5498, Table 1, Model c.</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Bolshoi &amp; Trifonov&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA     AC    AG    AT    CA    GG     CG    GA    GC    TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">35.62</span><span class="p">,</span> <span class="mf">34.4</span><span class="p">,</span> <span class="mf">27.7</span><span class="p">,</span> <span class="mf">31.5</span><span class="p">,</span> <span class="mf">34.5</span><span class="p">,</span> <span class="mf">33.67</span><span class="p">,</span> <span class="mf">29.8</span><span class="p">,</span> <span class="mf">36.9</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">),</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">6.50</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">,</span>  <span class="mf">8.4</span><span class="p">,</span>  <span class="mf">2.6</span><span class="p">,</span>  <span class="mf">1.6</span><span class="p">,</span>   <span class="mf">1.2</span><span class="p">,</span>  <span class="mf">6.7</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.7</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">,</span>  <span class="mf">0.9</span><span class="p">),</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">3.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">3.1</span><span class="p">,</span>  <span class="o">-</span><span class="mf">1.8</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.6</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">DESANTIS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c"># Nucleic Acids Res, 1994, 22(24), p 5498, Table 1, Model d.</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Cacchione &amp; De Santis&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA    AC    AG    AT    CA    GG    CG    GA    GC    TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">35.9</span><span class="p">,</span> <span class="mf">34.6</span><span class="p">,</span> <span class="mf">35.6</span><span class="p">,</span> <span class="mf">35.0</span><span class="p">,</span> <span class="mf">34.5</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">,</span> <span class="mf">33.7</span><span class="p">,</span> <span class="mf">35.8</span><span class="p">,</span> <span class="mf">33.3</span><span class="p">,</span> <span class="mf">34.6</span><span class="p">),</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">5.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.4</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.3</span><span class="p">,</span>  <span class="mf">6.7</span><span class="p">,</span>  <span class="mf">1.3</span><span class="p">,</span>  <span class="mf">4.6</span><span class="p">,</span>  <span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.7</span><span class="p">,</span>  <span class="mf">8.0</span><span class="p">),</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.7</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.6</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.7</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">REVERSED</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c"># Nucleic Acids Res, 1994, 22(24), p 5498, Table 1, Model e.</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Reversed Calladine &amp; Drew&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;AA    AC    AG    AT    CA    GG    CG    GA    GC    TA&quot;</span><span class="p">,</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span>
+        <span class="n">roll</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.3</span><span class="p">),</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="n">NUCLEOSOME</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c"># Nucleic Acids Res, 1994, 22(24), p 5498, Table 1, Model a.</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Nucleosome Positioning&quot;</span><span class="p">,</span>
+        <span class="n">oligo</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">                AAA  ATA   AGA   ACA  TAA  TTA  TGA  TCA</span>
+<span class="s">                GAA  GTA   GGA   GCA  CAA  CTA  CGA  CCA</span>
+<span class="s">                AAT  ATT   AGT   ACT  TAT  TTT  TGT  TCT</span>
+<span class="s">                GAT  GTT   GGT   GCT  CAT  CTT  CGT  CCT</span>
+<span class="s">                AAG  ATG   AGG   ACG  TAG  TTG  TGG  TCG</span>
+<span class="s">                GAG  GTG   GGG   GCG  CAG  CTG  CGG  CCG</span>
+<span class="s">                AAC  ATC   AGC   ACC  TAC  TTC  TGC  TCC</span>
+<span class="s">                GAC  GTC   GGC   GCC  CAC  CTC  CGC  CCC&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="n">roll</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span>  <span class="mf">3.3</span><span class="p">,</span>  <span class="mf">5.2</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span>
+                <span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.7</span><span class="p">,</span>  <span class="mf">3.8</span><span class="p">,</span>  <span class="mf">5.4</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="mf">8.3</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span>
+                <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span>  <span class="mf">5.8</span><span class="p">,</span>  <span class="mf">5.8</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">5.2</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">,</span>
+                <span class="mf">5.3</span><span class="p">,</span> <span class="mf">3.7</span><span class="p">,</span>  <span class="mf">5.4</span><span class="p">,</span>  <span class="mf">7.5</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">,</span> <span class="mf">5.2</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span>
+                <span class="mf">5.2</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">,</span>  <span class="mf">5.4</span><span class="p">,</span>  <span class="mf">5.4</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">8.3</span><span class="p">,</span>
+                <span class="mf">5.4</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span>  <span class="mf">6.0</span><span class="p">,</span>  <span class="mf">7.5</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span>
+                <span class="mf">3.7</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span>  <span class="mf">7.5</span><span class="p">,</span>  <span class="mf">5.4</span><span class="p">,</span> <span class="mf">3.7</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">3.8</span><span class="p">,</span>
+                <span class="mf">5.4</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">),</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">34.3</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="n">tilt</span> <span class="o">=</span>  <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="mf">3.38</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize instance from predefined model, file, or arguments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : various types</span>
+<span class="sd">            Name of predefined model : str</span>
+<span class="sd">                &#39;straight&#39;, &#39;aawedge&#39;, &#39;trifonov&#39;, &#39;desantis&#39;, &#39;calladine&#39;,</span>
+<span class="sd">                &#39;reversed&#39;</span>
+<span class="sd">            Class or Dict:</span>
+<span class="sd">                Instance containing model parameters</span>
+<span class="sd">            Path name: str</span>
+<span class="sd">                File containing model parameters</span>
+<span class="sd">            None:</span>
+<span class="sd">                Default model &#39;straight&#39;</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Human readable label.</span>
+<span class="sd">        oligo : str or tuple</span>
+<span class="sd">            Oligonucleotide sequences separated by whitespace or as tuple.</span>
+<span class="sd">        twist : sequence of floats</span>
+<span class="sd">            Twist values for given oligonucleotides in degrees.</span>
+<span class="sd">        roll : sequence of floats</span>
+<span class="sd">            Roll values for given oligonucleotides in degrees.</span>
+<span class="sd">        tilt : sequence of floats</span>
+<span class="sd">            Tilt values for given oligonucleotides in degrees.</span>
+<span class="sd">        rise : float</span>
+<span class="sd">            Rise value.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">importfunction</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fromname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fromdict</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_fromclass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fromfile</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c"># import functions return dictionary or raise exception</span>
+                    <span class="n">model</span> <span class="o">=</span> <span class="n">importfunction</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;can not initialize model from </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">STRAIGHT</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">oligos</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;oligo&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">oligos</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;oligo&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oligos</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">][:</span><span class="mi">32</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rise</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s">&#39;rise&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twist</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oligos</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;twist&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">roll</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oligos</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;roll&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tilt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oligos</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;tilt&#39;</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrices</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">oligo</span> <span class="ow">in</span> <span class="n">oligonucleotides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">oligo</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">complementary</span><span class="p">(</span><span class="n">oligo</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">[</span><span class="n">oligo</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">roll</span><span class="p">[</span><span class="n">oligo</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">roll</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tilt</span><span class="p">[</span><span class="n">oligo</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tilt</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>  <span class="c"># tilt reverses sign</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">[</span><span class="n">oligo</span><span class="p">]</span> <span class="o">=</span> <span class="n">dinucleotide_matrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rise</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">[</span><span class="n">oligo</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">roll</span><span class="p">[</span><span class="n">oligo</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tilt</span><span class="p">[</span><span class="n">oligo</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">dinucleotide_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rise</span><span class="p">,</span> <span class="mf">34.3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return string representation of model.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">oligos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">oligonucleotides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">oligos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique_oligos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">format_</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">formatstr</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%5.2f</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;  &#39;</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">formatstr</span> <span class="o">%</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">Rise    </span><span class="si">%.2f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">rise</span><span class="p">),</span>
+            <span class="s">&quot;Oligo   &quot;</span> <span class="o">+</span> <span class="n">format_</span><span class="p">(</span><span class="n">oligos</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">7</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)),</span>
+            <span class="s">&quot;Twist   &quot;</span> <span class="o">+</span> <span class="n">format_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">oligos</span><span class="p">),</span>
+            <span class="s">&quot;Roll    &quot;</span> <span class="o">+</span> <span class="n">format_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">roll</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">oligos</span><span class="p">),</span>
+            <span class="s">&quot;Tilt    &quot;</span> <span class="o">+</span> <span class="n">format_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tilt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">oligos</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_fromfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return model parameters as dict from file.&quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;rise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">def</span> <span class="nf">readtuple</span><span class="p">(</span><span class="n">itemtype</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="n">alist</span> <span class="o">=</span> <span class="p">[</span><span class="n">itemtype</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]]</span>
+                <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;     &quot;</span><span class="p">):</span>
+                        <span class="n">alist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">itemtype</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">alist</span><span class="p">),</span> <span class="n">line</span>
+
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;oligo&#39;</span><span class="p">],</span> <span class="n">line</span> <span class="o">=</span> <span class="n">readtuple</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;twist&#39;</span><span class="p">],</span> <span class="n">line</span> <span class="o">=</span> <span class="n">readtuple</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;roll&#39;</span><span class="p">],</span> <span class="n">line</span> <span class="o">=</span> <span class="n">readtuple</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="s">&#39;tilt&#39;</span><span class="p">],</span> <span class="n">line</span> <span class="o">=</span> <span class="n">readtuple</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">_fromname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return predefined model parameters as dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_fromclass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aclass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return model parameters as dict from class.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">aclass</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">Model</span><span class="o">.</span><span class="n">STRAIGHT</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_fromdict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return model parameters as dict from dictionary.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">Model</span><span class="o">.</span><span class="n">STRAIGHT</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">adict</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>  <span class="c"># validation</span>
+        <span class="k">return</span> <span class="n">adict</span>
+
+<div class="viewcode-block" id="Model.save"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Model.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save model to file.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="Sequence"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Sequence">[docs]</a><span class="k">class</span> <span class="nc">Sequence</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DNA nucleotide sequence.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human readable label.</span>
+<span class="sd">    comment : str</span>
+<span class="sd">        Single line description of sequence.</span>
+<span class="sd">    string : str</span>
+<span class="sd">        Sequence string containing only ATCG.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    FASTA files must contain ``&gt;name&lt;space&gt;comment&lt;newline&gt;sequence``.</span>
+<span class="sd">    SEQ files must contain ``name&lt;newline&gt;comment&lt;newline&gt;sequence``.</span>
+<span class="sd">    Nucleotides other than ATCG are ignored.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; Sequence(&quot;0AxT-C:G a`t~c&amp;g\t&quot;)[:]</span>
+<span class="sd">    &#39;ATCGATCG&#39;</span>
+<span class="sd">    &gt;&gt;&gt; seq = Sequence(&quot;ATGCAAATTG&quot;*3, name=&quot;Test&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; seq == &quot;ATGCAAATTG&quot;*3</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; seq == None</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; seq.save(&quot;_test.seq&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; seq == Sequence(&quot;_test.seq&quot;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Proc Natl Acad Sci USA, 1983, 80(24), p 7678, Fig 1</span>
+    <span class="n">KINETOPLAST</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">        GATCTAGACT AGACGCTATC GATAAAGTTT AAACAGTACA ACTATCGTGC TACTCACCTG</span>
+<span class="s">        TTGCCAAACA TTGCAAAAAT GCAAAATTGG GCTTGTGGAC GCGGAGAGAA TTCCCAAAAA</span>
+<span class="s">        TGTCAAAAAA TAGGCAAAAA ATGCCAAAAA TCCCAAACTT TTTAGGTCCC TCAGGTAGGG</span>
+<span class="s">        GCGTTCTCCG AAAACCGAAA AATGCATGCA GAAACCCCGT TCAAAAATCG GCCAAAATCG</span>
+<span class="s">        CCATTTTTTC AATTTTCGTG TGAAACTAGG GGTTGGTGTA AAATAGGGGT GGGGCTCCCC</span>
+<span class="s">        GGGGTAATTC TGGAAATTCG GGCCCTCAGG CTAGACCGGT CAAAATTAGG CCTCCTGACC</span>
+<span class="s">        CGTATATTTT TGGATTTCTA AATTTTGTGG CTTTAGATGT GGGAGATTTG GATC&quot;&quot;&quot;</span>
+
+    <span class="n">OUT_OF_PHASE_AAAAAA</span> <span class="o">=</span> <span class="s">&quot;CGCGCGCAAAAAACG&quot;</span>
+    <span class="n">PHASED_AAAAAA</span> <span class="o">=</span> <span class="s">&quot;CGAAAAAACG&quot;</span>
+    <span class="n">PHASED_GGGCCC</span> <span class="o">=</span> <span class="s">&quot;GAGGGCCCTA&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Untitled&quot;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize instance from nucleotide sequence string or file name.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comment</span> <span class="o">=</span> <span class="n">comment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fromfile</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=</span><span class="n">maxlen</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">arg</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="n">arg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fname</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># clean name and comment</span>
+        <span class="k">for</span> <span class="n">sep</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;|&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="s">&#39;;&#39;</span><span class="p">,</span> <span class="s">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="mi">32</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comment</span> <span class="o">=</span> <span class="p">(</span><span class="n">comment</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c"># remove all but ATCG from sequence</span>
+        <span class="n">nucls</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="s">&#39;ATCGatcg&#39;</span><span class="p">,</span> <span class="s">&#39;ATCGATCG&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">nucls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">)</span>
+        <span class="c"># limit length of sequence</span>
+        <span class="k">if</span> <span class="n">maxlen</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxlen</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;sequence truncated to </span><span class="si">%i</span><span class="s"> nucleotides&quot;</span> <span class="o">%</span> <span class="n">maxlen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">[:</span><span class="n">maxlen</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;not a valid sequence&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_fromfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read name, comment and sequence from file.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">firstline</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">firstline</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;&gt;&#39;</span><span class="p">):</span>  <span class="c"># Fasta format</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment</span> <span class="o">=</span> <span class="p">(</span><span class="n">firstline</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">firstline</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">firstline</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">comment</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">maxsize</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sequence.save"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Sequence.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save sequence to file.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Sequence.string"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Sequence.string">[docs]</a>    <span class="k">def</span> <span class="nf">string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return sequence as string.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span>
+</div>
+<div class="viewcode-block" id="Sequence.format"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.Sequence.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return string of sequence formatted in blocks and lines.&quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">chunks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">,</span> <span class="n">block</span><span class="p">),</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">formatstr</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%%%i</span><span class="s">i </span><span class="si">%%</span><span class="s">s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">block</span><span class="o">*</span><span class="n">line</span><span class="p">,</span> <span class="p">)),</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatstr</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">line</span><span class="o">*</span><span class="n">block</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return nucleotide at position.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return number of nucleotides in the sequence.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return iterator over nucleotides.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return result of sequence comparison.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">==</span> <span class="n">other</span><span class="p">[:]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return string representation of sequence.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">())</span>
+
+</div>
+<span class="n">_COMPLEMENTARY</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="p">,</span> <span class="s">&#39;TAGC&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="complementary"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.complementary">[docs]</a><span class="k">def</span> <span class="nf">complementary</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return complementary sequence.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; complementary(&#39;AT CG&#39;)</span>
+<span class="sd">    &#39;CGAT&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">_COMPLEMENTARY</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">nucleotide</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">nucleotide</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">sequence</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="oligonucleotides"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.oligonucleotides">[docs]</a><span class="k">def</span> <span class="nf">oligonucleotides</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">nucleotides</span><span class="o">=</span><span class="s">&quot;AGCT&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate all oligonucleotide sequences of length.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; &quot; &quot;.join(oligonucleotides(2))</span>
+<span class="sd">    &#39;AA AG AC AT GA GG GC GT CA CG CC CT TA TG TC TT&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">rloop</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">part</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">length</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">nucleotide</span> <span class="ow">in</span> <span class="n">nucleotides</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">oligo</span> <span class="ow">in</span> <span class="n">rloop</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">part</span><span class="o">+</span><span class="n">nucleotide</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">oligo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">part</span>
+
+    <span class="k">return</span> <span class="n">rloop</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="unique_oligos"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.unique_oligos">[docs]</a><span class="k">def</span> <span class="nf">unique_oligos</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">nucleotides</span><span class="o">=</span><span class="s">&quot;AGCT&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate all unique oligonucleotide sequences of length.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; &quot; &quot;.join(unique_oligos(2))</span>
+<span class="sd">    &#39;AA AG AC AT GA GG GC CA CG TA&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">oligo</span> <span class="ow">in</span> <span class="n">oligonucleotides</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">nucleotides</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oligo</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">oligo</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">complementary</span><span class="p">(</span><span class="n">oligo</span><span class="p">))</span>
+            <span class="k">yield</span> <span class="n">oligo</span>
+
+</div>
+<div class="viewcode-block" id="chunks"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.chunks">[docs]</a><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return sequence in chunks of size.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; chunks(&#39;ATCG&#39;*4, 10)</span>
+<span class="sd">    [&#39;ATCGATCGAT&#39;, &#39;CGATCG&#39;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">size</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">),</span> <span class="n">size</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="overlapping_chunks"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.overlapping_chunks">[docs]</a><span class="k">def</span> <span class="nf">overlapping_chunks</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return iterator over overlapping chunks of sequence.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; list(overlapping_chunks(&#39;ATCG&#39;*4, 4, 2))</span>
+<span class="sd">    [(0, &#39;ATCGATCG&#39;), (4, &#39;ATCGATCG&#39;), (8, &#39;ATCGATCG&#39;)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">overlap</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">index</span><span class="p">,</span> <span class="n">sequence</span><span class="p">[</span><span class="n">index</span><span class="p">:</span><span class="n">index</span><span class="o">+</span><span class="n">size</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">overlap</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="n">size</span>
+
+</div>
+<div class="viewcode-block" id="dinuc_window"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.dinuc_window">[docs]</a><span class="k">def</span> <span class="nf">dinuc_window</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return window of nucleotides around each dinucleotide in sequence.</span>
+
+<span class="sd">    Return None if window overlaps border.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; list(dinuc_window(&#39;ATCG&#39;, 2))</span>
+<span class="sd">    [&#39;AT&#39;, &#39;TC&#39;, &#39;CG&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; list(dinuc_window(&#39;ATCG&#39;, 3))</span>
+<span class="sd">    [&#39;ATC&#39;, &#39;TCG&#39;, None]</span>
+<span class="sd">    &gt;&gt;&gt; list(dinuc_window(&#39;ATCG&#39;, 4))</span>
+<span class="sd">    [None, &#39;ATCG&#39;, None]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+    <span class="n">border</span> <span class="o">=</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">border</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">None</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span><span class="o">-</span><span class="n">size</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">size</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span><span class="o">-</span><span class="n">size</span><span class="o">+</span><span class="n">border</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="dinucleotide_matrix"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.dinucleotide_matrix">[docs]</a><span class="k">def</span> <span class="nf">dinucleotide_matrix</span><span class="p">(</span><span class="n">rise</span><span class="p">,</span> <span class="n">twist</span><span class="p">,</span> <span class="n">roll</span><span class="p">,</span> <span class="n">tilt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return transformation matrix to move from one nucleotide to next.&quot;&quot;&quot;</span>
+    <span class="n">twist</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+    <span class="n">sinw</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+    <span class="n">cosw</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+    <span class="n">roll</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="o">-</span><span class="n">roll</span><span class="p">)</span>
+    <span class="n">sinr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">roll</span><span class="p">)</span>
+    <span class="n">cosr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">roll</span><span class="p">)</span>
+    <span class="n">tilt</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="o">-</span><span class="n">tilt</span><span class="p">)</span>
+    <span class="n">sint</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span>
+        <span class="p">(</span><span class="n">cost</span><span class="o">*</span><span class="n">cosw</span><span class="p">,</span> <span class="n">sinr</span><span class="o">*</span><span class="n">sint</span><span class="o">*</span><span class="n">cosw</span><span class="o">-</span><span class="n">cosr</span><span class="o">*</span><span class="n">sinw</span><span class="p">,</span> <span class="n">cosr</span><span class="o">*</span><span class="n">sint</span><span class="o">*</span><span class="n">cosw</span><span class="o">+</span><span class="n">sinr</span><span class="o">*</span><span class="n">sinw</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">cost</span><span class="o">*</span><span class="n">sinw</span><span class="p">,</span> <span class="n">sinr</span><span class="o">*</span><span class="n">sint</span><span class="o">*</span><span class="n">sinw</span><span class="o">+</span><span class="n">cosr</span><span class="o">*</span><span class="n">cosw</span><span class="p">,</span> <span class="n">cosr</span><span class="o">*</span><span class="n">sint</span><span class="o">*</span><span class="n">sinw</span><span class="o">-</span><span class="n">sinr</span><span class="o">*</span><span class="n">cosw</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">(</span>    <span class="o">-</span><span class="n">sint</span><span class="p">,</span>                <span class="n">sinr</span><span class="o">*</span><span class="n">cost</span><span class="p">,</span>                <span class="n">cosr</span><span class="o">*</span><span class="n">cost</span><span class="p">,</span> <span class="n">rise</span><span class="p">),</span>
+        <span class="p">(</span>      <span class="mf">0.0</span><span class="p">,</span>                      <span class="mf">0.0</span><span class="p">,</span>                      <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">)),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="superimpose_matrix"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.superimpose_matrix">[docs]</a><span class="k">def</span> <span class="nf">superimpose_matrix</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return matrix to transform given vector set to second vector set.&quot;&quot;&quot;</span>
+    <span class="c"># move centroids to origin</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">v0</span> <span class="o">-=</span> <span class="n">t0</span>
+    <span class="n">v1</span> <span class="o">-=</span> <span class="n">t1</span>
+    <span class="c"># SVD of covariance matrix</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">v0</span><span class="p">))</span>
+    <span class="c"># rotation matrix from SVD orthonormal bases</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">vh</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="c"># correct reflections</span>
+        <span class="n">R</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">u</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">vh</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="mf">2.0</span><span class="p">)</span>
+    <span class="c"># homogeneous transformation matrix</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span>
+    <span class="n">M</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">t1</span>
+    <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">t0</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="norm"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.norm">[docs]</a><span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="n">vector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return length of vector, i.e. its euclidean norm.&quot;&quot;&quot;</span>
+    <span class="c"># return numpy.linalg.norm(vector)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">vector</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

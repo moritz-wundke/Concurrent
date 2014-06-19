@@ -1,0 +1,474 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.samples.mandlebrot.app &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.framework.samples.mandlebrot.app</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sample application demostrating the implementation of the mandlebrot fractal</span>
+
+<span class="sd">File: mandlebrot.app.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.framework.nodes.applicationnode</span> <span class="kn">import</span> <span class="n">ApplicationNode</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">implements</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.task</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskSystem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">BoolItem</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">imshow</span><span class="p">,</span> <span class="n">show</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+
+<div class="viewcode-block" id="MandlebrotNode"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode">[docs]</a><span class="k">class</span> <span class="nc">MandlebrotNode</span><span class="p">(</span><span class="n">ApplicationNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Application node distributing the computation of the mandlebrot set using an autonomous task system</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="MandlebrotNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called just before the main entry. Used as the initialization point instead of the ctor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MandlebrotNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotNode.app_main"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_main">[docs]</a>    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applications main entry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MandlebrotNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotNode.get_task_system"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from the base class when we are connected to a MasterNode and we are </span>
+<span class="sd">        able to send computation tasks over</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1536</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">MandlebrotTaskSystem</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotNode.work_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.work_finished">[docs]</a>    <span class="k">def</span> <span class="nf">work_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when the work has been done, the results is what our ITaskSystem</span>
+<span class="sd">        sent back to us. Check resukt for more info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Total time: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown_main_loop</span><span class="p">()</span>
+        <span class="c"># Reassamble result to be processed further</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">do_post_run</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotNode.push_tasksystem_response"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasksystem_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We just added a ITaskSystem on the framwork. Check result for more info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Tasks system send to computation framework&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotNode.push_tasksystem_failed"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_failed">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasksystem_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We failed to push a ITaskSystem on the computation framework!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Tasks system failed to be send to framework!&quot;</span><span class="p">)</span>
+        <span class="c"># Check if the resuklt dict contains a traceback</span>
+        <span class="k">if</span> <span class="s">&quot;t&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&quot;t&quot;</span><span class="p">])</span>
+</div></div>
+<div class="viewcode-block" id="MandlebrotSimpleNode"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode">[docs]</a><span class="k">class</span> <span class="nc">MandlebrotSimpleNode</span><span class="p">(</span><span class="n">ApplicationNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Application node distributing the computation of the mandlebrot set using just tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
+    
+    <span class="n">send_task_batch</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;task_batch&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Should we send all tasks one by one or should we batch them into a hughe list&quot;&quot;&quot;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="MandlebrotSimpleNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called just before the main entry. Used as the initialization point instead of the ctor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MandlebrotSimpleNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.app_main"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_main">[docs]</a>    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applications main entry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MandlebrotSimpleNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.get_task_system"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from the base class when we are connected to a MasterNode and we are </span>
+<span class="sd">        able to send computation tasks over</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Do not create a tasks system, we will handle tasks on our own</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.start_processing"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.start_processing">[docs]</a>    <span class="k">def</span> <span class="nf">start_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when the app is not using a ITaskSystem and will instead just add tasks and</span>
+<span class="sd">        will take care of the task flow itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Starting computation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot; Task batching enabled&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1536</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        
+        <span class="c"># Init task related stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">=</span>  <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+        
+        <span class="c"># Job handling (very optimistic :D)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="n">job_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+            <span class="c"># Distribute using rows</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+                <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
+                <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
+            
+            <span class="c"># every self.factor rows create a task with the workload. Note that in this case we will force the system_id to be None while setting the client id</span>
+            <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+                    <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+                
+        <span class="c"># Add last task with rest of workload</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+                <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
+        <span class="c"># Send batch or check for eventual end condition</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push_tasks</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Check in case we are already done!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_finished</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.task_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when a task has been done</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c"># Integrate results in our image</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">column</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">+=</span> <span class="mi">1</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_finished</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.check_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.check_finished">[docs]</a>    <span class="k">def</span> <span class="nf">check_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if we finsihed all computation or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;All tasks finished!!&quot;</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Calculated in {} seconds!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shutdown_main_loop</span><span class="p">()</span>
+            <span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">show</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.push_task_response"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_response">[docs]</a>    <span class="k">def</span> <span class="nf">push_task_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We just add a Task to the computation framework</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        <span class="c">#self.log.info(&quot;Task send to computation framework&quot;)</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.push_task_failed"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_failed">[docs]</a>    <span class="k">def</span> <span class="nf">push_task_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We failed to add a Task to the computation framework</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Failed to send task send to computation framework&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.push_tasks_response"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_response">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasks_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We just add a set of Tasks to the computation framework</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Tasks send to computation framework&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotSimpleNode.push_tasks_failed"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_failed">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasks_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We failed to add a set of Tasks to the computation framework</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Failed to send tasks send to computation framework&quot;</span><span class="p">)</span>
+    </div></div>
+<div class="viewcode-block" id="MandlebrotTaskSystem"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem">[docs]</a><span class="k">class</span> <span class="nc">MandlebrotTaskSystem</span><span class="p">(</span><span class="n">ITaskSystem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The task system that is executed on the MasterNode and controls what jobs are required to be performed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">iters</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Default constructor used to initialize the base values. The ctor is</span>
+<span class="sd">        executed on the ApplicationNode and not called on the MasterNode so we can </span>
+<span class="sd">        use it to initialize values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MandlebrotTaskSystem</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        
+        <span class="c"># Init task related stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">=</span> <span class="n">min_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">=</span> <span class="n">max_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="n">min_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">=</span> <span class="n">max_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="n">iters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+        
+<div class="viewcode-block" id="MandlebrotTaskSystem.do_post_run"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.do_post_run">[docs]</a>    <span class="k">def</span> <span class="nf">do_post_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the computation finsihed we reassamble the image here</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
+        
+        <span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">show</span><span class="p">()</span>
+                </div>
+<div class="viewcode-block" id="MandlebrotTaskSystem.init_system"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.init_system">[docs]</a>    <span class="k">def</span> <span class="nf">init_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotTaskSystem.generate_tasks"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.generate_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">generate_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Devide image in width part to distribute work</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c"># Create a number of jobs that will be processed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">job_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+            <span class="c"># Distribute using rows</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+                <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
+                <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
+            
+            <span class="c"># every self.factor rows create a task with the workload</span>
+            <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+                <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c"># Add last task with rest of workload</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">job_list</span>
+        </div>
+<div class="viewcode-block" id="MandlebrotTaskSystem.task_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotTaskSystem.gather_result"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.gather_result">[docs]</a>    <span class="k">def</span> <span class="nf">gather_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the system stated that it has finsihed the MasterNode will request the required results that</span>
+<span class="sd">        are to be send to the originator. Returns a tuple like (result, Error)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Calculated in {} seconds!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_dict</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotTaskSystem.is_complete"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.is_complete">[docs]</a>    <span class="k">def</span> <span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This</span>
+<span class="sd">        gets performed every time a tasks finishes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#print(&quot;%d -&gt; %d&quot; % (self.finished_jobs,self.jobs))</span>
+        <span class="c"># Wait for all tasks to finish</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span>
+</div></div>
+<div class="viewcode-block" id="do_mandel"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.do_mandel">[docs]</a><span class="k">def</span> <span class="nf">do_mandel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given the real and imaginary parts of a complex number,</span>
+<span class="sd">        determine if it is a candidate for membership in the Mandelbrot</span>
+<span class="sd">        set given a fixed number of iterations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mf">0.0j</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">real</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">max_iters</span>
+</div>
+<div class="viewcode-block" id="MandlebrotTask"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTask">[docs]</a><span class="k">class</span> <span class="nc">MandlebrotTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;workload&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;iters&#39;</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate assigned work</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">work</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">workload</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">work</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">work</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">work</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">work</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">do_mandel</span><span class="p">(</span><span class="n">work</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">work</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    
+<div class="viewcode-block" id="MandlebrotTask.finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.finished">[docs]</a>    <span class="k">def</span> <span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the task is finished. Called on the MasterNode within the main thread once</span>
+<span class="sd">        the node has recovered the result data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotTask.clean_up"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed and its results are about to be sent back. This is used</span>
+<span class="sd">        to optimize our network and to cleanup the tasks input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="bp">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.db package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-db-package">
+<h1>concurrent.core.db package<a class="headerlink" href="#concurrent-core-db-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.core.db.api">
+<span id="concurrent-core-db-api-module"></span><h2>concurrent.core.db.api module<a class="headerlink" href="#module-concurrent.core.db.api" title="Permalink to this headline">¶</a></h2>
+<p>API for DB connections</p>
+<dl class="class">
+<dt id="concurrent.core.db.api.IDBEngine">
+<em class="property">class </em><tt class="descclassname">concurrent.core.db.api.</tt><tt class="descname">IDBEngine</tt><a class="reference internal" href="_modules/concurrent/core/db/api.html#IDBEngine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.api.IDBEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>A DB engine represents a component that is used to create a sqlalchemy
+engine.</p>
+<dl class="method">
+<dt id="concurrent.core.db.api.IDBEngine.dbshutdown">
+<tt class="descname">dbshutdown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/api.html#IDBEngine.dbshutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.api.IDBEngine.dbshutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the dbmanager once it gets shutdown</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.api.IDBEngine.get_engine">
+<tt class="descname">get_engine</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/api.html#IDBEngine.get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.api.IDBEngine.get_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a sqlalchemy engine</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.api.IDBEngine.initdb">
+<tt class="descname">initdb</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/api.html#IDBEngine.initdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.api.IDBEngine.initdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the dbmanager once it gets initialized</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.db.dbengines">
+<span id="concurrent-core-db-dbengines-module"></span><h2>concurrent.core.db.dbengines module<a class="headerlink" href="#module-concurrent.core.db.dbengines" title="Permalink to this headline">¶</a></h2>
+<p>SQL Alchemy engines</p>
+<dl class="class">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine">
+<em class="property">class </em><tt class="descclassname">concurrent.core.db.dbengines.</tt><tt class="descname">PostGreSQLEngine</tt><big>(</big><em>compmgr</em>, <em>init=&lt;function __init__ at 0x0000000006642128&gt;</em>, <em>cls=&lt;class 'concurrent.core.db.dbengines.PostGreSQLEngine'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbengines.html#PostGreSQLEngine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<p>PostGreSQL DB Engine</p>
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_echo">
+<tt class="descname">db_echo</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_echo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use SQL Alchemy debug output.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_host">
+<tt class="descname">db_host</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host of the postgresql database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_name">
+<tt class="descname">db_name</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the postgresql database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_pass">
+<tt class="descname">db_pass</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_pass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Password of the postgresql database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_port">
+<tt class="descname">db_port</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port of the postgresql database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.db_user">
+<tt class="descname">db_user</tt><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.db_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>User name of the postgresql database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.dbshutdown">
+<tt class="descname">dbshutdown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbengines.html#PostGreSQLEngine.dbshutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.dbshutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the dbmanager once it gets shutdown</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.get_engine">
+<tt class="descname">get_engine</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbengines.html#PostGreSQLEngine.get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.get_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a PostGreSQL DB Engine</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.dbengines.PostGreSQLEngine.initdb">
+<tt class="descname">initdb</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbengines.html#PostGreSQLEngine.initdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbengines.PostGreSQLEngine.initdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the dbmanager once it gets initialized</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.db.dbengines.EngineCreationFailedError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.db.dbengines.</tt><tt class="descname">EngineCreationFailedError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbengines.html#EngineCreationFailedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbengines.EngineCreationFailedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
+<p>Error raised when we get an engine and we failed</p>
+<dl class="attribute">
+<dt id="concurrent.core.db.dbengines.EngineCreationFailedError.title">
+<tt class="descname">title</tt><em class="property"> = '[DB Engine Error]'</em><a class="headerlink" href="#concurrent.core.db.dbengines.EngineCreationFailedError.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.db.dbmanager">
+<span id="concurrent-core-db-dbmanager-module"></span><h2>concurrent.core.db.dbmanager module<a class="headerlink" href="#module-concurrent.core.db.dbmanager" title="Permalink to this headline">¶</a></h2>
+<p>DataBase Manager</p>
+<dl class="class">
+<dt id="concurrent.core.db.dbmanager.DatabaseManager">
+<em class="property">class </em><tt class="descclassname">concurrent.core.db.dbmanager.</tt><tt class="descname">DatabaseManager</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.core.db.dbmanager.DatabaseManager'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbmanager.html#DatabaseManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbmanager.DatabaseManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<p>Class that handles connection and high-level database access</p>
+<dl class="attribute">
+<dt id="concurrent.core.db.dbmanager.DatabaseManager.db_engines">
+<tt class="descname">db_engines</tt><a class="headerlink" href="#concurrent.core.db.dbmanager.DatabaseManager.db_engines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.dbmanager.DatabaseManager.dbshutdown">
+<tt class="descname">dbshutdown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbmanager.html#DatabaseManager.dbshutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbmanager.DatabaseManager.dbshutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inform engines that we should shutdown</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.db.dbmanager.DatabaseManager.engines">
+<tt class="descname">engines</tt><a class="headerlink" href="#concurrent.core.db.dbmanager.DatabaseManager.engines" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of components that implement <cite>IDBEngine</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.db.dbmanager.DatabaseManager.initdb">
+<tt class="descname">initdb</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/db/dbmanager.html#DatabaseManager.initdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.db.dbmanager.DatabaseManager.initdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all engines we need</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.db">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.db" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.db package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.db.api">concurrent.core.db.api module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.db.dbengines">concurrent.core.db.dbengines module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.db.dbmanager">concurrent.core.db.dbmanager module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.db">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.db.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

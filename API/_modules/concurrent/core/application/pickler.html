@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.application.pickler &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.application.pickler</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pickling of python instances</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">implements</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">IntItem</span><span class="p">,</span> <span class="n">ConfigItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IPickler</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.cryptohelper</span> <span class="kn">import</span> <span class="n">CryptoHelper</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.pyjsonrpc.rpcerror</span> <span class="kn">import</span> <span class="n">JsonRpcError</span><span class="p">,</span> <span class="n">jsonrpcerrors</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">ErrorCodeMap</span>
+
+<span class="c"># Import cPickle over pickle (python 2.7+ and 3+ compatible)</span>
+<span class="k">try</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">cPickle</span> <span class="kn">as</span> <span class="nn">pickle</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+
+<div class="viewcode-block" id="PickleException"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.PickleException">[docs]</a><span class="k">class</span> <span class="nc">PickleException</span><span class="p">(</span><span class="n">JsonRpcError</span><span class="p">):</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">ErrorCodeMap</span><span class="o">.</span><span class="n">PickleException</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">u&quot;Failed to pickle a remote object&quot;</span>
+    </div>
+<span class="n">jsonrpcerrors</span><span class="p">[</span><span class="n">PickleException</span><span class="o">.</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">PickleException</span>
+
+<div class="viewcode-block" id="UnpickleException"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.UnpickleException">[docs]</a><span class="k">class</span> <span class="nc">UnpickleException</span><span class="p">(</span><span class="n">JsonRpcError</span><span class="p">):</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">ErrorCodeMap</span><span class="o">.</span><span class="n">UnpickleException</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">u&quot;Failed to unpickle a remote object&quot;</span>
+    </div>
+<span class="n">jsonrpcerrors</span><span class="p">[</span><span class="n">UnpickleException</span><span class="o">.</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">UnpickleException</span>
+
+
+<div class="viewcode-block" id="Pickler"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler">[docs]</a><span class="k">class</span> <span class="nc">Pickler</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IPickler</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class responsible for pickling and unpickling objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pickle_protocol</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="s">&#39;protocol&#39;</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Protocol used when pickling, by default pickle.HIGHEST_PROTOCOL&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">secret</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="s">&#39;secret&#39;</span><span class="p">,</span> <span class="s">&#39;JhTv535Vg385V&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Default salt used on decrypting encrypting a pickle&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># salt size in bytes</span>
+    <span class="n">salt_size</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="s">&#39;salt_size&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Size of the salt used in the encryption process&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># number of iterations in the key generation</span>
+    <span class="n">num_iterations</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="s">&#39;num_iterations&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Number of iterations used in the key generation&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># the size multiple required for AES</span>
+    <span class="n">aes_padding</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="s">&#39;aes_padding&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Padding used for AES encryption&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pickler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">crypto_helper</span> <span class="o">=</span> <span class="n">CryptoHelper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">salt_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aes_padding</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secret</span> <span class="o">==</span> <span class="n">Pickler</span><span class="o">.</span><span class="n">secret</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Pickler using default secret, please setup you own to avoid security vulnerabilities!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pickler.pickle_f"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.pickle_f">[docs]</a>    <span class="k">def</span> <span class="nf">pickle_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        picke an object into a file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">),</span> <span class="n">protocol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pickle_protocol</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PickleException</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="Pickler.unpickle_f"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.unpickle_f">[docs]</a>    <span class="k">def</span> <span class="nf">unpickle_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unpicke an object from a file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnpickleException</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="Pickler.pickle_s"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.pickle_s">[docs]</a>    <span class="k">def</span> <span class="nf">pickle_s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        pickle an object and return the pickled string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pickle_protocol</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PickleException</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Pickler.pickle_encode_s"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.pickle_encode_s">[docs]</a>    <span class="k">def</span> <span class="nf">pickle_encode_s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode a pickled object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crypto_helper</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pickle_s</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">secret</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PickleException</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="Pickler.unpickle_s"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.unpickle_s">[docs]</a>    <span class="k">def</span> <span class="nf">unpickle_s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pickle_string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        unpickle a string and return an object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickle_string</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnpickleException</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="Pickler.unpickle_decode_s"><a class="viewcode-back" href="../../../../concurrent.core.application.html#concurrent.core.application.pickler.Pickler.unpickle_decode_s">[docs]</a>    <span class="k">def</span> <span class="nf">unpickle_decode_s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pickle_string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unpickle a base64 string and return an object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpickle_s</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crypto_helper</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">pickle_string</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">secret</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnpickleException</span><span class="p">()</span>
+    </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

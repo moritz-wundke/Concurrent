@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.logging package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-logging-package">
+<h1>concurrent.core.logging package<a class="headerlink" href="#concurrent-core-logging-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.core.logging.log">
+<span id="concurrent-core-logging-log-module"></span><h2>concurrent.core.logging.log module<a class="headerlink" href="#module-concurrent.core.logging.log" title="Permalink to this headline">¶</a></h2>
+<p>Logger class that is able to link to a large number of OS dependent
+log&#8217;s. Apart handles log categories and much more.</p>
+<dl class="docutils">
+<dt>TODO:</dt>
+<dd><ul class="first last simple">
+<li>Add categories</li>
+<li>Add remote log ability</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="concurrent.core.logging.log.Log">
+<em class="property">class </em><tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">Log</tt><big>(</big><em>env</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#Log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.Log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logger class that handles several types of loggin including categories and such</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.get_default_log_format">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">get_default_log_format</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#get_default_log_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.get_default_log_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.get_escaped_default_log_format">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">get_escaped_default_log_format</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#get_escaped_default_log_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.get_escaped_default_log_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.get_log_level">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">get_log_level</tt><big>(</big><em>levelstring</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#get_log_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.get_log_level" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.logger_factory">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">logger_factory</tt><big>(</big><em>logtype='syslog'</em>, <em>logfile=None</em>, <em>level='WARNING'</em>, <em>logid='concurrent'</em>, <em>format=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#logger_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.logger_factory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.print_trace">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">print_trace</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#print_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.print_trace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.logging.log.set_extra_log_format">
+<tt class="descclassname">concurrent.core.logging.log.</tt><tt class="descname">set_extra_log_format</tt><big>(</big><em>logtype</em>, <em>format</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/logging/log.html#set_extra_log_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.logging.log.set_extra_log_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.logging">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.logging" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.logging package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.logging.log">concurrent.core.logging.log module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.logging">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.logging.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

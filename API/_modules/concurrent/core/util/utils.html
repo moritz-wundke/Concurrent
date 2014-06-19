@@ -1,0 +1,518 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.util.utils &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.util.utils</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Some usefull base methods and helpers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c"># Python 2</span>
+    <span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">unquote</span><span class="p">,</span> <span class="n">urlencode</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c"># Python 3</span>
+    <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">unquote</span><span class="p">,</span> <span class="n">urlencode</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c"># Python 2</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c"># Python 3</span>
+    <span class="n">izip</span> <span class="o">=</span> <span class="nb">zip</span>
+
+<span class="c"># our imports</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="is_number"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.is_number">[docs]</a><span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="is_digit"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.is_digit">[docs]</a><span class="k">def</span> <span class="nf">is_digit</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="tprint"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.tprint">[docs]</a><span class="k">def</span> <span class="nf">tprint</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print function used to not confuse newlines when printing from different therads</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="c"># -- algorithmic utilities</span>
+</div>
+<span class="n">DIGITS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\d+)&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="embedded_numbers"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.embedded_numbers">[docs]</a><span class="k">def</span> <span class="nf">embedded_numbers</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Comparison function for natural order sorting based on</span>
+<span class="sd">    http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/214202.&quot;&quot;&quot;</span>
+    <span class="n">pieces</span> <span class="o">=</span> <span class="n">DIGITS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">pieces</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pieces</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">pieces</span>
+
+
+<span class="c"># -- os utilities</span>
+</div>
+<div class="viewcode-block" id="NaivePopen"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.NaivePopen">[docs]</a><span class="k">class</span> <span class="nc">NaivePopen</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This is a deadlock-safe version of popen that returns an object with</span>
+<span class="sd">    errorlevel, out (a string) and err (a string).</span>
+
+<span class="sd">    The optional `input`, which must be a `str` object, is first written</span>
+<span class="sd">    to a temporary file from which the process will read.</span>
+<span class="sd">    </span>
+<span class="sd">    (`capturestderr` may not work under Windows 9x.)</span>
+
+<span class="sd">    Example: print Popen3(&#39;grep spam&#39;,&#39;\n\nhere spam\n\n&#39;).out</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">capturestderr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">()</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s">&#39;( </span><span class="si">%s</span><span class="s"> ) &gt; </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="p">:</span>
+            <span class="n">infile</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">()</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">command</span> <span class="o">+</span> <span class="s">&#39; &lt;&#39;</span> <span class="o">+</span> <span class="n">infile</span>
+        <span class="k">if</span> <span class="n">capturestderr</span><span class="p">:</span>
+            <span class="n">errfile</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">()</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">command</span> <span class="o">+</span> <span class="s">&#39; 2&gt;&#39;</span> <span class="o">+</span> <span class="n">errfile</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">errorlevel</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+            <span class="n">outfd</span> <span class="o">=</span> <span class="nb">file</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">outfd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">outfd</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">capturestderr</span><span class="p">:</span>
+                <span class="n">errfd</span> <span class="o">=</span> <span class="nb">file</span><span class="p">(</span><span class="n">errfile</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">errfd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="n">errfd</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outfile</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">input</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">infile</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">capturestderr</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">errfile</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">errfile</span><span class="p">)</span>
+
+<span class="c"># -- sys utils</span>
+</div>
+<div class="viewcode-block" id="arity"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.arity">[docs]</a><span class="k">def</span> <span class="nf">arity</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_argcount</span>
+</div>
+<div class="viewcode-block" id="get_last_traceback"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.get_last_traceback">[docs]</a><span class="k">def</span> <span class="nf">get_last_traceback</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">traceback</span>
+    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+    <span class="n">tb</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">tb</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">tb</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="get_lines_from_file"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.get_lines_from_file">[docs]</a><span class="k">def</span> <span class="nf">get_lines_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return `content` number of lines before and after the specified</span>
+<span class="sd">    `lineno` from the file identified by `filename`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns a `(lines_before, line, lines_after)` tuple.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">fileobj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;U&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">fileobj</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">lbound</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lineno</span> <span class="o">-</span> <span class="n">context</span><span class="p">)</span>
+            <span class="n">ubound</span> <span class="o">=</span> <span class="n">lineno</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">context</span>
+
+
+            <span class="n">charset</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;coding[=:]\s*([-\w.]+)&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">linestr</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">rep</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">linestr</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                    <span class="n">charset</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+            <span class="n">before</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">),</span> <span class="n">charset</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">lbound</span><span class="p">:</span><span class="n">lineno</span><span class="p">]]</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">),</span> <span class="n">charset</span><span class="p">)</span>
+            <span class="n">after</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">),</span> <span class="n">charset</span><span class="p">)</span> \
+                         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">lineno</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">ubound</span><span class="p">]]</span>
+
+            <span class="k">return</span> <span class="n">before</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">after</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">fileobj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">(),</span> <span class="bp">None</span><span class="p">,</span> <span class="p">()</span>
+</div>
+<div class="viewcode-block" id="safe__import__"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.safe__import__">[docs]</a><span class="k">def</span> <span class="nf">safe__import__</span><span class="p">(</span><span class="n">module_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Safe imports: rollback after a failed import.</span>
+<span class="sd">    </span>
+<span class="sd">    Initially inspired from the RollbackImporter in PyUnit,</span>
+<span class="sd">    but it&#39;s now much simpler and works better for our needs.</span>
+<span class="sd">    </span>
+<span class="sd">    See http://pyunit.sourceforge.net/notes/reloading.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">already_imported</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">(),</span> <span class="p">[])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">modname</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">copy</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">already_imported</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">modname</span><span class="p">):</span>
+                <span class="k">del</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">modname</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="n">e</span>
+
+<span class="c"># -- setuptools utils</span>
+</div>
+<div class="viewcode-block" id="get_module_path"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.get_module_path">[docs]</a><span class="k">def</span> <span class="nf">get_module_path</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="c"># Determine the plugin that this component belongs to</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">__file__</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.pyc&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.pyo&#39;</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;__init__.py&#39;</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">base_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">module_name</span><span class="p">):</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">base_path</span><span class="p">)</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">module_name</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">base_path</span>
+</div>
+<div class="viewcode-block" id="get_pkginfo"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.get_pkginfo">[docs]</a><span class="k">def</span> <span class="nf">get_pkginfo</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a dictionary containing package information for a package</span>
+
+<span class="sd">    `dist` can be either a Distribution instance or, as a shortcut,</span>
+<span class="sd">    directly the module instance, if one can safely infer a Distribution</span>
+<span class="sd">    instance from it.</span>
+<span class="sd">    </span>
+<span class="sd">    Always returns a dictionary but it will be empty if no Distribution</span>
+<span class="sd">    instance can be created for the given module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">types</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ModuleType</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">find_distributions</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="n">module_path</span> <span class="o">=</span> <span class="n">get_module_path</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">find_distributions</span><span class="p">(</span><span class="n">module_path</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span> <span class="ow">or</span> \
+                       <span class="n">dist</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">module</span><span class="o">.</span><span class="n">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+    <span class="kn">import</span> <span class="nn">email</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;author&#39;</span><span class="p">,</span> <span class="s">&#39;author-email&#39;</span><span class="p">,</span> <span class="s">&#39;license&#39;</span><span class="p">,</span> <span class="s">&#39;home-page&#39;</span><span class="p">,</span> <span class="s">&#39;summary&#39;</span><span class="p">,</span>
+             <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;version&#39;</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">attr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pkginfo</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">message_from_string</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(</span><span class="s">&#39;PKG-INFO&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attrs</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">pkginfo</span><span class="p">]:</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">normalize</span><span class="p">(</span><span class="n">attr</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pkginfo</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="s">&#39;Failed to read PKG-INFO file for </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">normalize</span><span class="p">(</span><span class="n">attr</span><span class="p">)]</span> <span class="o">=</span> <span class="n">err</span>
+    <span class="k">except</span> <span class="n">email</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">MessageError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="s">&#39;Failed to parse PKG-INFO file for </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">normalize</span><span class="p">(</span><span class="n">attr</span><span class="p">)]</span> <span class="o">=</span> <span class="n">err</span>
+    <span class="k">return</span> <span class="n">info</span>
+
+<span class="c"># -- misc. utils</span>
+</div>
+<div class="viewcode-block" id="Ranges"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.Ranges">[docs]</a><span class="k">class</span> <span class="nc">Ranges</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds information about ranges parsed from a string</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; x = Ranges(&quot;1,2,9-15&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; 1 in x</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; 5 in x</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; 10 in x</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; 16 in x</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; [i for i in range(20) if i in x]</span>
+<span class="sd">    [1, 2, 9, 10, 11, 12, 13, 14, 15]</span>
+<span class="sd">    </span>
+<span class="sd">    Also supports iteration, which makes that last example a bit simpler:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; list(x)</span>
+<span class="sd">    [1, 2, 9, 10, 11, 12, 13, 14, 15]</span>
+<span class="sd">    </span>
+<span class="sd">    Note that it automatically reduces the list and short-circuits when the</span>
+<span class="sd">    desired ranges are a relatively small portion of the entire set:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; x = Ranges(&quot;99&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; 1 in x # really fast</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; x = Ranges(&quot;1, 2, 1-2, 2&quot;) # reduces this to 1-2</span>
+<span class="sd">    &gt;&gt;&gt; x.pairs</span>
+<span class="sd">    [(1, 2)]</span>
+<span class="sd">    &gt;&gt;&gt; x = Ranges(&quot;1-9,2-4&quot;) # handle ranges that completely overlap</span>
+<span class="sd">    &gt;&gt;&gt; list(x)</span>
+<span class="sd">    [1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+
+<span class="sd">    The members &#39;a&#39; and &#39;b&#39; refer to the min and max value of the range, and</span>
+<span class="sd">    are None if the range is empty:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; x.a</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; x.b</span>
+<span class="sd">    9</span>
+<span class="sd">    &gt;&gt;&gt; e = Ranges()</span>
+<span class="sd">    &gt;&gt;&gt; e.a, e.b</span>
+<span class="sd">    (None, None)</span>
+
+<span class="sd">    Empty ranges are ok, and ranges can be constructed in pieces, if you</span>
+<span class="sd">    so choose:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; x = Ranges()</span>
+<span class="sd">    &gt;&gt;&gt; x.appendrange(&quot;1, 2, 3&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; x.appendrange(&quot;5-9&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; x.appendrange(&quot;2-3&quot;) # reduce&#39;d away</span>
+<span class="sd">    &gt;&gt;&gt; list(x)</span>
+<span class="sd">    [1, 2, 3, 5, 6, 7, 8, 9]</span>
+
+<span class="sd">    &#39;&#39;Code contributed by Tim Hatch&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">RE_STR</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;\d+(?:[-:]\d+)?(?:,\d+(?:[-:]\d+)?)*&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">appendrange</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ranges.appendrange"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.Ranges.appendrange">[docs]</a>    <span class="k">def</span> <span class="nf">appendrange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a range (from a string or None) to the current one&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">:</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reduce</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Come up with the minimal representation of the ranges&quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span> <span class="c"># this item overlaps with the next</span>
+                <span class="c"># make the first include the second</span>
+                <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">max</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span> 
+                <span class="k">del</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="c"># delete the second, after adjusting my endpoint</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">p</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="c"># min value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="c"># max value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">None</span>        
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is another way I came up with to do it.  Is it faster?</span>
+<span class="sd">        </span>
+<span class="sd">        from itertools import chain</span>
+<span class="sd">        return chain(*[xrange(a, b+1) for a, b in self.pairs])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">i</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; 55 in Ranges()</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># short-circuit if outside the possible range</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">if</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">:</span> <span class="c"># short-circuit if we&#39;ve gone too far</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide a compact string representation of the range.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; (str(Ranges(&quot;1,2,3,5&quot;)), str(Ranges()), str(Ranges(&#39;2&#39;)))</span>
+<span class="sd">        (&#39;1-3,5&#39;, &#39;&#39;, &#39;2&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; str(Ranges(&#39;99-1&#39;)) # only nondecreasing ranges allowed</span>
+<span class="sd">        &#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The length of the entire span, ignoring holes.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; (len(Ranges(&#39;99&#39;)), len(Ranges(&#39;1-2&#39;)), len(Ranges(&#39;&#39;)))</span>
+<span class="sd">        (1, 2, 0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="to_ranges"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.to_ranges">[docs]</a><span class="k">def</span> <span class="nf">to_ranges</span><span class="p">(</span><span class="n">revs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a list of revisions to a minimal set of ranges.</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; to_ranges([2, 12, 3, 6, 9, 1, 5, 11])</span>
+<span class="sd">    &#39;1-3,5-6,9,11-12&#39;</span>
+<span class="sd">    &gt;&gt;&gt; to_ranges([])</span>
+<span class="sd">    &#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">begin</span> <span class="o">=</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">def</span> <span class="nf">store</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">begin</span><span class="p">:</span>
+            <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">begin</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">rev</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">revs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">begin</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">end</span> <span class="o">=</span> <span class="n">rev</span>
+        <span class="k">elif</span> <span class="n">rev</span> <span class="o">==</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">rev</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">store</span><span class="p">()</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">end</span> <span class="o">=</span> <span class="n">rev</span>
+    <span class="k">if</span> <span class="n">begin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">store</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ranges</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="content_disposition"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.content_disposition">[docs]</a><span class="k">def</span> <span class="nf">content_disposition</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a properly escaped Content-Disposition header&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="nb">type</span> <span class="o">+=</span> <span class="s">&#39;; filename=&#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">type</span>
+</div>
+<div class="viewcode-block" id="partition"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.utils.partition">[docs]</a><span class="k">def</span> <span class="nf">partition</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">order</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

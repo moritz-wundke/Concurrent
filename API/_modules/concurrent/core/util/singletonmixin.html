@@ -1,0 +1,600 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.util.singletonmixin &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.util.singletonmixin</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A Python Singleton mixin class that makes use of some of the ideas</span>
+<span class="sd">found at http://c2.com/cgi/wiki?PythonSingleton. Just inherit</span>
+<span class="sd">from it and you have a singleton. No code is required in</span>
+<span class="sd">subclasses to create singleton behavior -- inheritance from </span>
+<span class="sd">Singleton is all that is needed.</span>
+
+<span class="sd">Singleton creation is threadsafe.</span>
+
+<span class="sd">USAGE:</span>
+
+<span class="sd">Just inherit from Singleton. If you need a constructor, include</span>
+<span class="sd">an __init__() method in your class as you usually would. However,</span>
+<span class="sd">if your class is S, you instantiate the singleton using S.getInstance() </span>
+<span class="sd">instead of S(). Repeated calls to S.getInstance() return the </span>
+<span class="sd">originally-created instance.</span>
+
+<span class="sd">For example:</span>
+
+<span class="sd">class S(Singleton):</span>
+
+<span class="sd">    def __init__(self, a, b=1):</span>
+<span class="sd">        pass</span>
+<span class="sd">        </span>
+<span class="sd">S1 = S.getInstance(1, b=3)</span>
+
+
+<span class="sd">Most of the time, that&#39;s all you need to know. However, there are some</span>
+<span class="sd">other useful behaviors. Read on for a full description:</span>
+
+<span class="sd">1) Getting the singleton:</span>
+
+<span class="sd">    S.getInstance() </span>
+<span class="sd">    </span>
+<span class="sd">returns the instance of S. If none exists, it is created. </span>
+
+<span class="sd">2) The usual idiom to construct an instance by calling the class, i.e.</span>
+
+<span class="sd">    S()</span>
+<span class="sd">    </span>
+<span class="sd">is disabled for the sake of clarity. </span>
+
+<span class="sd">For one thing, the S() syntax means instantiation, but getInstance()</span>
+<span class="sd">usually does not cause instantiation. So the S() syntax would</span>
+<span class="sd">be misleading.</span>
+
+<span class="sd">Because of that, if S() were allowed, a programmer who didn&#39;t </span>
+<span class="sd">happen to notice the inheritance from Singleton (or who</span>
+<span class="sd">wasn&#39;t fully aware of what a Singleton pattern</span>
+<span class="sd">does) might think he was creating a new instance, </span>
+<span class="sd">which could lead to very unexpected behavior.</span>
+
+<span class="sd">So, overall, it is felt that it is better to make things clearer</span>
+<span class="sd">by requiring the call of a class method that is defined in</span>
+<span class="sd">Singleton. An attempt to instantiate via S() will result </span>
+<span class="sd">in a SingletonException being raised.</span>
+
+<span class="sd">3) Use __S.__init__() for instantiation processing,</span>
+<span class="sd">since S.getInstance() runs S.__init__(), passing it the args it has received. </span>
+
+<span class="sd">If no data needs to be passed in at instantiation time, you don&#39;t need S.__init__().</span>
+
+<span class="sd">4) If S.__init__(.) requires parameters, include them ONLY in the</span>
+<span class="sd">first call to S.getInstance(). If subsequent calls have arguments,</span>
+<span class="sd">a SingletonException is raised by default.</span>
+
+<span class="sd">If you find it more convenient for subsequent calls to be allowed to</span>
+<span class="sd">have arguments, but for those argumentsto be ignored, just include </span>
+<span class="sd">&#39;ignoreSubsequent = True&#39; in your class definition, i.e.:</span>
+
+<span class="sd">  class S(Singleton):</span>
+<span class="sd">  </span>
+<span class="sd">      ignoreSubsequent = True</span>
+
+<span class="sd">      def __init__(self, a, b=1):</span>
+<span class="sd">          pass</span>
+
+<span class="sd">5) For testing, it is sometimes convenient for all existing singleton</span>
+<span class="sd">instances to be forgotten, so that new instantiations can occur. For that</span>
+<span class="sd">reason, a forgetAllSingletons() function is included. Just call</span>
+
+<span class="sd">  forgetAllSingletons()</span>
+<span class="sd">  </span>
+<span class="sd">and it is as if no earlier instantiations have occurred.</span>
+
+<span class="sd">6) As an implementation detail, classes that inherit </span>
+<span class="sd">from Singleton may not have their own __new__</span>
+<span class="sd">methods. To make sure this requirement is followed, </span>
+<span class="sd">an exception is raised if a Singleton subclass includ</span>
+<span class="sd">es __new__. This happens at subclass instantiation</span>
+<span class="sd">time (by means of the MetaSingleton metaclass.</span>
+
+
+<span class="sd">By Gary Robinson, grobinson@flyfi.com. No rights reserved -- </span>
+<span class="sd">placed in the public domain -- which is only reasonable considering</span>
+<span class="sd">how much it owes to other people&#39;s code and ideas which are in the</span>
+<span class="sd">public domain. The idea of using a metaclass came from </span>
+<span class="sd">a  comment on Gary&#39;s blog (see </span>
+<span class="sd">http://www.garyrobinson.net/2004/03/python_singleto.html#comments). </span>
+<span class="sd">Other improvements came from comments and email from other</span>
+<span class="sd">people who saw it online. (See the blog post and comments</span>
+<span class="sd">for further credits.)</span>
+
+<span class="sd">Not guaranteed to be fit for any particular purpose. Use at your</span>
+<span class="sd">own risk. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<div class="viewcode-block" id="SingletonException"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.singletonmixin.SingletonException">[docs]</a><span class="k">class</span> <span class="nc">SingletonException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">_stSingletons</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="n">_lockForSingletons</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+<span class="n">_lockForSingletonCreation</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>   <span class="c"># Ensure only one instance of each Singleton</span>
+                                                <span class="c"># class is created.  This is not bound to the </span>
+                                                <span class="c"># individual Singleton class since we need to</span>
+                                                <span class="c"># ensure that there is only one mutex for each</span>
+                                                <span class="c"># Singleton class, which would require having</span>
+                                                <span class="c"># a lock when setting up the Singleton class,</span>
+                                                <span class="c"># which is what this is anyway.  So, when any</span>
+                                                <span class="c"># Singleton is created, we lock this lock and</span>
+                                                <span class="c"># then we don&#39;t need to lock it again for that</span>
+                                                <span class="c"># class.</span>
+
+<span class="k">def</span> <span class="nf">_createSingletonInstance</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lstArgs</span><span class="p">,</span> <span class="n">dctKwArgs</span><span class="p">):</span>
+    <span class="n">_lockForSingletonCreation</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_isInstantiated</span><span class="p">():</span> <span class="c"># some other thread got here first</span>
+            <span class="k">return</span> 
+        
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">lstArgs</span><span class="p">,</span> <span class="o">**</span><span class="n">dctKwArgs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;__init__() takes&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SingletonException</span><span class="p">,</span> <span class="s">&#39;If the singleton requires __init__ args, supply them on first call to getInstance().&#39;</span> 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">cInstance</span> <span class="o">=</span> <span class="n">instance</span>
+        <span class="n">_addSingleton</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_lockForSingletonCreation</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">_addSingleton</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_stSingletons</span>
+        <span class="n">_stSingletons</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">_removeSingleton</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">_stSingletons</span><span class="p">:</span>
+            <span class="n">_stSingletons</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+<div class="viewcode-block" id="forgetAllSingletons"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.singletonmixin.forgetAllSingletons">[docs]</a><span class="k">def</span> <span class="nf">forgetAllSingletons</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;This is useful in tests, since it is hard to know which singletons need to be cleared to make a test work.&#39;&#39;&#39;</span>
+    <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">_stSingletons</span><span class="o">.</span><span class="n">copy</span><span class="p">():</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+
+        <span class="c"># Might have created some Singletons in the process of tearing down.</span>
+        <span class="c"># Try one more time - there should be a limit to this.</span>
+        <span class="n">iNumSingletons</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_stSingletons</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_stSingletons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">_stSingletons</span><span class="o">.</span><span class="n">copy</span><span class="p">():</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+                <span class="n">iNumSingletons</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">assert</span> <span class="n">iNumSingletons</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">_stSingletons</span><span class="p">),</span> <span class="s">&#39;Added a singleton while destroying &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">_stSingletons</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_stSingletons</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_lockForSingletons</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>    
+</div>
+<div class="viewcode-block" id="MetaSingleton"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.singletonmixin.MetaSingleton">[docs]</a><span class="k">class</span> <span class="nc">MetaSingleton</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">metaclass</span><span class="p">,</span> <span class="n">strName</span><span class="p">,</span> <span class="n">tupBases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dct</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;__new__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SingletonException</span><span class="p">,</span> <span class="s">&#39;Can not override __new__ in a Singleton&#39;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MetaSingleton</span><span class="p">,</span> <span class="n">metaclass</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">metaclass</span><span class="p">,</span> <span class="n">strName</span><span class="p">,</span> <span class="n">tupBases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">lstArgs</span><span class="p">,</span> <span class="o">**</span><span class="n">dictArgs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">SingletonException</span><span class="p">,</span> <span class="s">&#39;Singletons may only be instantiated through getInstance()&#39;</span>
+        </div>
+<div class="viewcode-block" id="Singleton"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.singletonmixin.Singleton">[docs]</a><span class="k">class</span> <span class="nc">Singleton</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">MetaSingleton</span>
+    
+<div class="viewcode-block" id="Singleton.getInstance"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.singletonmixin.Singleton.getInstance">[docs]</a>    <span class="k">def</span> <span class="nf">getInstance</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">lstArgs</span><span class="p">,</span> <span class="o">**</span><span class="n">dctKwArgs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call this to instantiate an instance or retrieve the existing instance.</span>
+<span class="sd">        If the singleton requires args to be instantiated, include them the first</span>
+<span class="sd">        time you call getInstance.        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_isInstantiated</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">lstArgs</span> <span class="ow">or</span> <span class="n">dctKwArgs</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="s">&#39;ignoreSubsequent&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">SingletonException</span><span class="p">,</span> <span class="s">&#39;Singleton already instantiated, but getInstance() called with args.&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_createSingletonInstance</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lstArgs</span><span class="p">,</span> <span class="n">dctKwArgs</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">cInstance</span></div>
+    <span class="n">getInstance</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">getInstance</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_isInstantiated</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="c"># Don&#39;t use hasattr(cls, &#39;cInstance&#39;), because that screws things up if there is a singleton that</span>
+        <span class="c"># extends another singleton.  hasattr looks in the base class if it doesn&#39;t find in subclass.</span>
+        <span class="k">return</span> <span class="s">&#39;cInstance&#39;</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__dict__</span>
+    <span class="n">_isInstantiated</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">_isInstantiated</span><span class="p">)</span>
+
+    <span class="c"># This can be handy for public use also</span>
+    <span class="n">isInstantiated</span> <span class="o">=</span> <span class="n">_isInstantiated</span>
+
+    <span class="k">def</span> <span class="nf">_forgetClassInstanceReferenceForTesting</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is designed for convenience in testing -- sometimes you </span>
+<span class="sd">        want to get rid of a singleton during test code to see what</span>
+<span class="sd">        happens when you call getInstance() under a new situation.</span>
+<span class="sd">        </span>
+<span class="sd">        To really delete the object, all external references to it</span>
+<span class="sd">        also need to be deleted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">cInstance</span><span class="p">,</span> <span class="s">&#39;_prepareToForgetSingleton&#39;</span><span class="p">):</span>
+                <span class="c"># tell instance to release anything it might be holding onto.</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">cInstance</span><span class="o">.</span><span class="n">_prepareToForgetSingleton</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">cls</span><span class="o">.</span><span class="n">cInstance</span>
+            <span class="n">_removeSingleton</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c"># run up the chain of base classes until we find the one that has the instance</span>
+            <span class="c"># and then delete it there</span>
+            <span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__bases__</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="n">Singleton</span><span class="p">):</span>
+                    <span class="n">baseClass</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+    <span class="n">_forgetClassInstanceReferenceForTesting</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">)</span>
+    
+    </div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>   
+
+    <span class="kn">import</span> <span class="nn">unittest</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    
+    <span class="k">class</span> <span class="nc">singletonmixin_Public_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">testReturnsSameObject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Demonstrates normal use -- just call getInstance and it returns a singleton instance</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">a1</span><span class="p">),</span> <span class="nb">id</span><span class="p">(</span><span class="n">a2</span><span class="p">))</span>
+            
+        <span class="k">def</span> <span class="nf">testInstantiateWithMultiArgConstructor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            If the singleton needs args to construct, include them in the first</span>
+<span class="sd">            call to get instances.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+                    
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg1</span> <span class="o">=</span> <span class="n">arg1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg2</span> <span class="o">=</span> <span class="n">arg2</span>
+    
+            <span class="n">b1</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s">&#39;arg1 value&#39;</span><span class="p">,</span> <span class="s">&#39;arg2 value&#39;</span><span class="p">)</span>
+            <span class="n">b2</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b1</span><span class="o">.</span><span class="n">arg1</span><span class="p">,</span> <span class="s">&#39;arg1 value&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b1</span><span class="o">.</span><span class="n">arg2</span><span class="p">,</span> <span class="s">&#39;arg2 value&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">b1</span><span class="p">),</span> <span class="nb">id</span><span class="p">(</span><span class="n">b2</span><span class="p">))</span>
+            
+        <span class="k">def</span> <span class="nf">testInstantiateWithKeywordArg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg1</span> <span class="o">=</span> <span class="n">arg1</span>
+    
+            <span class="n">b1</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s">&#39;arg1 value&#39;</span><span class="p">)</span>
+            <span class="n">b2</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b1</span><span class="o">.</span><span class="n">arg1</span><span class="p">,</span> <span class="s">&#39;arg1 value&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">b1</span><span class="p">),</span> <span class="nb">id</span><span class="p">(</span><span class="n">b2</span><span class="p">))</span>
+            
+        <span class="k">def</span> <span class="nf">testTryToInstantiateWithoutNeededArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg1</span> <span class="o">=</span> <span class="n">arg1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg2</span> <span class="o">=</span> <span class="n">arg2</span>
+    
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">)</span>
+            
+        <span class="k">def</span> <span class="nf">testPassTypeErrorIfAllArgsThere</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Make sure the test for capturing missing args doesn&#39;t interfere with a normal TypeError.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg1</span> <span class="o">=</span> <span class="n">arg1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg2</span> <span class="o">=</span> <span class="n">arg2</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="s">&#39;some type error&#39;</span>
+    
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    
+        <span class="k">def</span> <span class="nf">testTryToInstantiateWithoutGetInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Demonstrates that singletons can ONLY be instantiated through</span>
+<span class="sd">            getInstance, as long as they call Singleton.__init__ during construction.</span>
+<span class="sd">            </span>
+<span class="sd">            If this check is not required, you don&#39;t need to call Singleton.__init__().</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+    
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+            
+        <span class="k">def</span> <span class="nf">testDontAllowNew</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+            <span class="k">def</span> <span class="nf">instantiatedAnIllegalClass</span><span class="p">():</span>
+                <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                        <span class="nb">super</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                        
+                    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">metaclass</span><span class="p">,</span> <span class="n">strName</span><span class="p">,</span> <span class="n">tupBases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MetaSingleton</span><span class="p">,</span> <span class="n">metaclass</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">metaclass</span><span class="p">,</span> <span class="n">strName</span><span class="p">,</span> <span class="n">tupBases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+                                        
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">instantiatedAnIllegalClass</span><span class="p">)</span>
+        
+        
+        <span class="k">def</span> <span class="nf">testDontAllowArgsAfterConstruction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                    
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg1</span> <span class="o">=</span> <span class="n">arg1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">arg2</span> <span class="o">=</span> <span class="n">arg2</span>
+    
+            <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s">&#39;arg1 value&#39;</span><span class="p">,</span> <span class="s">&#39;arg2 value&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&#39;arg1 value&#39;</span><span class="p">,</span> <span class="s">&#39;arg2 value&#39;</span><span class="p">)</span>
+            
+        <span class="k">def</span> <span class="nf">test_forgetClassInstanceReferenceForTesting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span> 
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    
+            <span class="c"># check that changing the class after forgetting the instance produces</span>
+            <span class="c"># an instance of the new class</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">a</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;A&#39;</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;B&#39;</span>
+            
+            <span class="c"># check that invoking the &#39;forget&#39; on a subclass still deletes the instance</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">_forgetClassInstanceReferenceForTesting</span><span class="p">()</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;B&#39;</span>
+    
+        <span class="k">def</span> <span class="nf">test_forgetAllSingletons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="c"># Should work if there are no singletons</span>
+            <span class="n">forgetAllSingletons</span><span class="p">()</span>
+    
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+                <span class="n">ciInitCount</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">ciInitCount</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+            <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ciInitCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+            <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ciInitCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+            <span class="n">forgetAllSingletons</span><span class="p">()</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ciInitCount</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    
+        <span class="k">def</span> <span class="nf">test_threadedCreation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="c"># Check that only one Singleton is created even if multiple</span>
+            <span class="c">#  threads try at the same time.  If fails, would see assert in _addSingleton</span>
+            <span class="k">class</span> <span class="nc">Test_Singleton</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">Test_Singleton</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                
+            <span class="k">class</span> <span class="nc">Test_SingletonThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fTargetTime</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">Test_SingletonThread</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_fTargetTime</span> <span class="o">=</span> <span class="n">fTargetTime</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_eException</span> <span class="o">=</span> <span class="bp">None</span>
+    
+                <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">fSleepTime</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_fTargetTime</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">fSleepTime</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">fSleepTime</span><span class="p">)</span>
+                        <span class="n">Test_Singleton</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_eException</span> <span class="o">=</span> <span class="n">e</span>
+                    
+            <span class="n">fTargetTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mf">0.1</span>
+            <span class="n">lstThreads</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">Test_SingletonThread</span><span class="p">(</span><span class="n">fTargetTime</span><span class="p">)</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">lstThreads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">eException</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">lstThreads</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">_eException</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">eException</span><span class="p">:</span>
+                    <span class="n">eException</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">_eException</span>
+            <span class="k">if</span> <span class="n">eException</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">eException</span>
+    
+        <span class="k">def</span> <span class="nf">testNoInit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Demonstrates use with a class not defining __init__</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+    
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span> 
+                <span class="k">pass</span>
+                
+                <span class="c">#INTENTIONALLY UNDEFINED:</span>
+                <span class="c">#def __init__(self):</span>
+                <span class="c">#    super(A, self).__init__()</span>
+    
+            <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span> <span class="c">#Make sure no exception is raised</span>
+            
+        <span class="k">def</span> <span class="nf">testMultipleGetInstancesWithArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+            
+                <span class="n">ignoreSubsequent</span> <span class="o">=</span> <span class="bp">True</span>
+            
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                    
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c"># ignores the second call because of ignoreSubsequent</span>
+                
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+            
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                    
+            <span class="n">b1</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c"># No ignoreSubsequent included</span>
+    
+            <span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+            
+                <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                    
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">SingletonException</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">getInstance</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># No ignoreSubsequent included</span>
+        
+        <span class="k">def</span> <span class="nf">testInheritance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            It&#39;s sometimes said that you can&#39;t subclass a singleton (see, for instance,</span>
+<span class="sd">            http://steve.yegge.googlepages.com/singleton-considered-stupid point e). This</span>
+<span class="sd">            test shows that at least rudimentary subclassing works fine for us.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+    
+            <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Singleton</span><span class="p">):</span>
+            
+                <span class="k">def</span> <span class="nf">setX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+                    
+                <span class="k">def</span> <span class="nf">setZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+                    
+            <span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+                
+                <span class="k">def</span> <span class="nf">setX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="o">-</span><span class="n">x</span>
+                    
+                <span class="k">def</span> <span class="nf">setY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+                    
+            <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">setX</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">setX</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">setY</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="nb">eval</span><span class="p">,</span> <span class="s">&#39;a.setY&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="nb">locals</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">setZ</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

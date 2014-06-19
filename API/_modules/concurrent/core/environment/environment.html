@@ -1,0 +1,725 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.environment.environment &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.environment.environment</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Basic Concurrent environment</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">threading</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">dummy_threading</span> <span class="kn">as</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">setuptools</span>
+<span class="kn">import</span> <span class="nn">sqlalchemy</span>
+<span class="kn">import</span> <span class="nn">web</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c"># Python 2</span>
+    <span class="kn">from</span> <span class="nn">urlparse</span> <span class="kn">import</span> <span class="n">urlsplit</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c"># Python 3</span>
+    <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlsplit</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">ComponentManager</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">implements</span><span class="p">,</span> <span class="n">ExtensionPoint</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.environment.api</span> <span class="kn">import</span> <span class="n">IEnvUpgrader</span><span class="p">,</span> <span class="n">IEnvBackup</span><span class="p">,</span> <span class="n">IEnvDelete</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span><span class="p">,</span> <span class="n">APP_RET_CODE_FAILED</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.application</span> <span class="kn">import</span> <span class="n">ApplicationManager</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.application</span> <span class="kn">import</span> <span class="n">DEFAULT_APPLICATION</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.logging.log</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.util.date</span> <span class="kn">import</span> <span class="n">to_datetime</span><span class="p">,</span> <span class="n">format_time</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.utils</span> <span class="kn">import</span> <span class="n">get_pkginfo</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">printout</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.filehandling</span> <span class="kn">import</span> <span class="n">create_file</span><span class="p">,</span> <span class="n">create_dir_gitsafe</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.filehandling</span> <span class="kn">import</span>  <span class="n">zip_create_from_folder</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.db.dbmanager</span> <span class="kn">import</span> <span class="n">DatabaseManager</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Environment&#39;</span><span class="p">,</span> <span class="s">&#39;EnvFolderCheckError&#39;</span><span class="p">,</span> <span class="s">&#39;EnvWrongVersionError&#39;</span><span class="p">,</span> <span class="s">&#39;EnvSetup&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="EnvFolderCheckError"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvFolderCheckError">[docs]</a><span class="k">class</span> <span class="nc">EnvFolderCheckError</span><span class="p">(</span><span class="n">BaseError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error raised when the env got bad folders</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s">&quot;[Environment Error]&quot;</span>
+</div>
+<div class="viewcode-block" id="EnvWrongVersionError"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvWrongVersionError">[docs]</a><span class="k">class</span> <span class="nc">EnvWrongVersionError</span><span class="p">(</span><span class="n">BaseError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error raised when the env saved was build with a different version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s">&quot;[Environment Error]&quot;</span>
+</div>
+<div class="viewcode-block" id="Environment"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment">[docs]</a><span class="k">class</span> <span class="nc">Environment</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">ComponentManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is our environment, it represents a real physical structure in disc where a aplications</span>
+<span class="sd">    life&#39;s in.</span>
+
+<span class="sd">    The env is a like:</span>
+
+<span class="sd">     BasePath/</span>
+<span class="sd">      - logs/</span>
+<span class="sd">      - configs/</span>
+<span class="sd">      - plugins/</span>
+<span class="sd">      - backups/</span>
+
+<span class="sd">    Every folder in our environment needs a dummy file, this file is used in env checks!</span>
+<span class="sd">    The name of the dummy file is espected to be equal the name of the direct parent folder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">upgrade_components</span> <span class="o">=</span> <span class="n">ExtensionPoint</span><span class="p">(</span><span class="n">IEnvUpgrader</span><span class="p">)</span>
+    <span class="n">backup_components</span> <span class="o">=</span> <span class="n">ExtensionPoint</span><span class="p">(</span><span class="n">IEnvBackup</span><span class="p">)</span>
+    <span class="n">delete_components</span> <span class="o">=</span> <span class="n">ExtensionPoint</span><span class="p">(</span><span class="n">IEnvDelete</span><span class="p">)</span>
+    
+<span class="c">#===============================================================================</span>
+<span class="c"># basic environment item</span>
+<span class="c">#===============================================================================</span>
+
+    <span class="n">extra_plugins_dir</span> <span class="o">=</span> <span class="n">PathItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;plugins&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Path from where we load additional plugins. Apart from</span>
+<span class="sd">        those we&#39;ll load all those located in the path pointed out `plugins`</span>
+<span class="sd">        env var.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">project_name</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;Concurrent - Project&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Name of the project.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">project_desc</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;descr&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Concurrent - Python apps for everyone!&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Short description of the project.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">project_app</span> <span class="o">=</span> <span class="n">ExtensionPointItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;app&#39;</span><span class="p">,</span>
+        <span class="n">IApp</span><span class="p">,</span> <span class="n">DEFAULT_APPLICATION</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Application that will run in this environment.&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># logger configurations</span>
+<span class="c">#===============================================================================</span>
+
+    <span class="n">log_type</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;logging&#39;</span><span class="p">,</span> <span class="s">&#39;log_type&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;type of log we&#39;ll use: (`none`, `file`, `stderr`, `syslog`,</span>
+<span class="sd">         `winlog`)&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;logging&#39;</span><span class="p">,</span> <span class="s">&#39;log_file&#39;</span><span class="p">,</span> <span class="s">&#39;env.log&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;If your log type is `file` this will be the target file&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">log_level</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;logging&#39;</span><span class="p">,</span> <span class="s">&#39;log_level&#39;</span><span class="p">,</span> <span class="s">&#39;DEBUG&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Python logger Level: (`CRITICAL`, `ERROR`, `WARN`, `INFO`,</span>
+<span class="sd">         `DEBUG`)&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">log_format</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;logging&#39;</span><span class="p">,</span> <span class="s">&#39;log_format&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Custom logging format.</span>
+
+<span class="sd">        If nothing is set, the following will be used:</span>
+
+<span class="sd">        %(default_format)s</span>
+
+<span class="sd">        Format can include regular log tags:</span>
+<span class="sd">         - http://docs.python.org/library/logging.html#formatter-objects.</span>
+
+<span class="sd">        Concurrent addes several new tags&#39;:</span>
+<span class="sd">         - $(app)s          - application that is running in this environment</span>
+<span class="sd">         - $(path)s         - full environmnet path</span>
+<span class="sd">         - $(basename)s     - basename of the environmnet path</span>
+<span class="sd">         - $(project_name)s - current project name that lifes in the env&quot;&quot;&quot;</span>
+         <span class="o">%</span> <span class="p">{</span><span class="s">&#39;default_format&#39;</span><span class="p">:</span><span class="n">get_escaped_default_log_format</span><span class="p">()})</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basepath</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open/create an env.</span>
+
+<span class="sd">        @param basepath: The absolute path to our environment</span>
+<span class="sd">        @param create: If true we&#39;ll try to create a new environment in basepath,</span>
+<span class="sd">            if false we&#39;ll load an env (must be created!)</span>
+<span class="sd">        @param args: List of tuples used to setup the env. The tuples are styled like:</span>
+<span class="sd">            (section, name, value)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># handle version and system info</span>
+        <span class="kn">import</span> <span class="nn">concurrent</span>
+        <span class="kn">from</span> <span class="nn">concurrent</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">VERSION</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">systeminfo</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s">&#39;concurrent&#39;</span><span class="p">,</span> <span class="n">get_pkginfo</span><span class="p">(</span><span class="n">concurrent</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;version&#39;</span><span class="p">,</span> <span class="n">VERSION</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;Python&#39;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;setuptools&#39;</span><span class="p">,</span> <span class="n">setuptools</span><span class="o">.</span><span class="n">__version__</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;sqlalchemy&#39;</span><span class="p">,</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">__version__</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;web.py&#39;</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">__version__</span><span class="p">),</span>
+            <span class="p">]</span>
+        
+        <span class="c"># Default empty array, do not do this as a default argument!</span>
+        <span class="c"># see: http://pylint-messages.wikidot.com/messages:w0102</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">ComponentManager</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">basepath</span> <span class="o">=</span> <span class="n">basepath</span>
+
+        <span class="c"># Create all directories if needed</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_create_env_dirs</span><span class="p">()</span>
+
+        <span class="c"># Setup env config items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_config</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="n">create</span><span class="p">)</span>
+
+        <span class="c"># Setup logs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_log</span><span class="p">()</span>
+
+        <span class="c"># Make a separator in the log so we now better when we start</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating new env...&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Launching env...&quot;</span><span class="p">)</span>
+
+        <span class="c"># Now we need to load our components. This needs to be done</span>
+        <span class="c"># because we got some components that catches when a new env</span>
+        <span class="c"># will be created</span>
+        <span class="kn">from</span> <span class="nn">concurrent.core.components.componentloader</span> <span class="kn">import</span> <span class="n">load_components</span>
+        <span class="n">plugins_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_plugins_dir</span>
+        <span class="n">load_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugins_dir</span> <span class="ow">and</span> <span class="p">(</span><span class="n">plugins_dir</span><span class="p">,))</span>
+
+        <span class="c"># initialize db manager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_manager</span> <span class="o">=</span> <span class="n">DatabaseManager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_manager</span><span class="o">.</span><span class="n">initdb</span><span class="p">()</span>
+
+        <span class="c"># Initialize APP Manager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app_manager</span> <span class="o">=</span> <span class="n">ApplicationManager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c"># Create or check the env :D</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Check if the basepath is set well or not :D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+
+        <span class="c"># inform of creation</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">upgrade_component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upgrade_components</span><span class="p">:</span>
+                <span class="n">upgrade_component</span><span class="o">.</span><span class="n">env_created</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Environment.launch_main_app"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.launch_main_app">[docs]</a>    <span class="k">def</span> <span class="nf">launch_main_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method that will launch the registered main app for this environment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_app</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_app</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">APP_RET_CODE_FAILED</span>
+</div>
+<div class="viewcode-block" id="Environment.get_app_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_app_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_app_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return name of currently running application</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">DEFAULT_APPLICATION</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.create"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Will try to create a new environment. Our basepath has already been set in the</span>
+<span class="sd">        constructor.</span>
+
+<span class="sd">        If args contains (&#39;baseon&#39;, &#39;file&#39;), default values will not be</span>
+<span class="sd">        loaded; they are expected to be provided by that file or other options.</span>
+
+<span class="sd">        @param args: List of tuples used to setup the env. The tuples are styled like:</span>
+<span class="sd">            (section, name, value)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">concurrent</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">VERSION</span>
+
+        <span class="c"># Default empty array, do not do this as a default argument!</span>
+        <span class="c"># see: http://pylint-messages.wikidot.com/messages:w0102</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Create base Concurrent files</span>
+        <span class="n">create_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_file_path</span><span class="p">(),</span>
+            <span class="n">_</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(version)s</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">VERSION</span><span class="p">))</span>
+        <span class="n">create_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_readme_file_path</span><span class="p">(),</span>
+            <span class="s">&#39;A simple Concurrent environment</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+        <span class="c"># Create base config file!</span>
+        <span class="n">create_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_configs_dir</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_ini_filename</span><span class="p">()))</span>
+
+        <span class="c"># Setup the default configuration</span>
+        <span class="n">skip_defaults</span> <span class="o">=</span> <span class="n">args</span> <span class="ow">and</span> <span class="p">(</span><span class="s">&#39;baseon&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">section</span><span class="p">,</span> <span class="n">option</span><span class="p">)</span> \
+                <span class="k">for</span> <span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_config</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="ow">not</span> <span class="n">skip_defaults</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">conditional_parse</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Environment.setup_log"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.setup_log">[docs]</a>    <span class="k">def</span> <span class="nf">setup_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup our logger</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span> <span class="o">=</span> <span class="n">Log</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span><span class="o">.</span><span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="Environment.setup_config"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.setup_config">[docs]</a>    <span class="k">def</span> <span class="nf">setup_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_defaults</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Will try to load the environment config file using our config reader.</span>
+<span class="sd">        If we need to use the defaults we&#39;ll also regenerate the config file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">ConfigHandle</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_configs_dir</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_ini_filename</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">use_defaults</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">section</span><span class="p">,</span> <span class="n">default_options</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">defaults</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">default_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">based_on</span> <span class="ow">and</span> \
+                        <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">based_on</span><span class="p">[</span><span class="n">section</span><span class="p">]:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.shutdown"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">except_logging</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shutdown the environment.&quot;&quot;&quot;</span>
+        <span class="c"># Shutdown db manager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_manager</span><span class="o">.</span><span class="n">dbshutdown</span><span class="p">()</span>
+
+        <span class="c"># Flush logger</span>
+        <span class="k">if</span> <span class="n">tid</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">except_logging</span> <span class="ow">and</span> \
+                <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&#39;custom_handler&#39;</span><span class="p">):</span>
+            <span class="n">hdlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">custom_handler</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+            <span class="n">hdlr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="n">hdlr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">custom_handler</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+
+
+    <span class="c"># -- Component manager overwrites</span>
+</div>
+<div class="viewcode-block" id="Environment.activate_component"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.activate_component">[docs]</a>    <span class="k">def</span> <span class="nf">activate_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize member vasr of the component.</span>
+<span class="sd">        Concurrent will initialize the environment (env) the config handle</span>
+<span class="sd">        (config) and the logger (log)&quot;&quot;&quot;</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+</div>
+<div class="viewcode-block" id="Environment.is_component_enabled"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.is_component_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">is_component_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If a compoent is not enabled but it should be (always enabled</span>
+<span class="sd">         componentsor such) return true. Otherwise return false and prevent</span>
+<span class="sd">        enabling.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">component_name</span> <span class="o">=</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__module__</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">component_name</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="n">rules</span> <span class="o">=</span> <span class="p">[(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;enabled&#39;</span><span class="p">,</span> <span class="s">&#39;on&#39;</span><span class="p">))</span>
+                 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="s">&#39;components&#39;</span><span class="p">)]</span>
+        <span class="n">rules</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="o">-</span><span class="nb">cmp</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+
+        <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">enabled</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">component_name</span> <span class="o">==</span> <span class="n">pattern</span> <span class="ow">or</span> <span class="n">pattern</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span> \
+                    <span class="ow">and</span> <span class="n">component_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">pattern</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="n">enabled</span>
+
+        <span class="c"># By default, all components in the trac package are enabled</span>
+        <span class="k">return</span> <span class="n">component_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;concurrent.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.backup_get_default_file_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.backup_get_default_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">backup_get_default_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get default backup file name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time_string</span> <span class="o">=</span> <span class="n">format_time</span><span class="p">(</span><span class="n">to_datetime</span><span class="p">(</span><span class="bp">None</span><span class="p">),</span> <span class="s">&quot;%Y%m</span><span class="si">%d</span><span class="s">_%H%M%S&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir</span><span class="p">(),</span> <span class="n">time_string</span><span class="o">+</span><span class="s">&#39;.zip&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.backup"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.backup">[docs]</a>    <span class="k">def</span> <span class="nf">backup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        backup the whole environment to a zip file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Create backup dir if not set</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir</span><span class="p">()):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir</span><span class="p">())</span>
+
+        <span class="c"># create zip file of all but the backup folder</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dest</span><span class="p">:</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backup_get_default_file_name</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basepath</span>
+        <span class="n">zip_create_from_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir_name</span><span class="p">()])</span>
+
+        <span class="c"># Now go through all backup listeners</span>
+        <span class="k">for</span> <span class="n">backuper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backup_components</span><span class="p">:</span>
+            <span class="c"># TODO: Open the zip file to add stufff to it!</span>
+            <span class="n">backuper</span><span class="o">.</span><span class="n">env_backup</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Environment.restored"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.restored">[docs]</a>    <span class="k">def</span> <span class="nf">restored</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when this env has been restored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">restorer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backup_components</span><span class="p">:</span>
+            <span class="n">restorer</span><span class="o">.</span><span class="n">env_restore</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Environment.delete"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete an environment is like uninstalling it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot; Uninstalling Components&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">deleter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_components</span><span class="p">:</span>
+            <span class="n">deleter</span><span class="o">.</span><span class="n">env_delete</span><span class="p">()</span>
+
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot; Environment successfully uninstalled&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Environment.needs_upgrade"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.needs_upgrade">[docs]</a>    <span class="k">def</span> <span class="nf">needs_upgrade</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return whether the environment needs to be upgraded.&quot;&quot;&quot;</span>
+        <span class="n">dbmanager</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">upgrader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upgrade_components</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">upgrader</span><span class="o">.</span><span class="n">env_need_upgrade</span><span class="p">(</span><span class="n">dbmanager</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Component </span><span class="si">%s</span><span class="s"> requires environment upgrade&#39;</span><span class="p">,</span>
+                    <span class="n">upgrader</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Environment.upgrade"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.upgrade">[docs]</a>    <span class="k">def</span> <span class="nf">upgrade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backup</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">backup_dest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Upgrade database.</span>
+
+<span class="sd">        @param backup: whether or not to backup before upgrading</span>
+<span class="sd">        @param backup_dest: name of the backup file</span>
+<span class="sd">        @return: whether the upgrade was performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dbmanager</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">upgraders</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">upgrader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upgrade_components</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">upgrader</span><span class="o">.</span><span class="n">env_need_upgrade</span><span class="p">(</span><span class="n">dbmanager</span><span class="p">):</span>
+                <span class="n">upgraders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">upgrader</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">upgraders</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">backup</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="n">backup_dest</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">upgrader</span> <span class="ow">in</span> <span class="n">upgraders</span><span class="p">:</span>
+            <span class="n">upgrader</span><span class="o">.</span><span class="n">env_do_upgrade</span><span class="p">(</span><span class="n">dbmanager</span><span class="p">)</span>
+
+        <span class="c"># Database schema may have changed, so close all connections</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">except_logging</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="c"># -- Directory Structure definitions</span>
+</div>
+<div class="viewcode-block" id="Environment.check"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the current basepath is a valid environment. It just checks if all</span>
+<span class="sd">        directories and needed files are in here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Check environment version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_version</span><span class="p">()</span>
+
+        <span class="c"># Check dirs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_logs_dir</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_configs_dir</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_plugins_dir</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir</span><span class="p">())</span>
+        
+        <span class="c"># These are the base folders for any web.py app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_sql_dir</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_templates_dir</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Environment.conditional_create_env_dirs"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.conditional_create_env_dirs">[docs]</a>    <span class="k">def</span> <span class="nf">conditional_create_env_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all dirs the environment needs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Create the directory structure</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">)</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_logs_dir</span><span class="p">())</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_configs_dir</span><span class="p">())</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_plugins_dir</span><span class="p">())</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir</span><span class="p">())</span>
+        
+        <span class="c"># we.py required folders</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_sql_dir</span><span class="p">())</span>
+        <span class="n">create_dir_gitsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_templates_dir</span><span class="p">())</span>
+        
+        <span class="c"># Create gitignore in root of env</span>
+        <span class="n">create_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span><span class="s">&#39;.gitignore&#39;</span><span class="p">),</span> <span class="s">&#39;*.log&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.get_version_from_file"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_version_from_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_version_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the version saved in the &#39;VERSION&#39; file of the env</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_file_path</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="n">EnvWrongVersionError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Env needs a file called `VERSION` &quot;</span>\
+                <span class="s">&quot;to save it&#39;s version in the env root.&quot;</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">file_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_file_path</span><span class="p">(),</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+            <span class="n">saved_version</span> <span class="o">=</span> <span class="n">file_handle</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">saved_version</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EnvWrongVersionError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Version file corrupted!&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Environment.check_version"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.check_version">[docs]</a>    <span class="k">def</span> <span class="nf">check_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks current installed framework version</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">concurrent</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">VERSION</span>
+        <span class="n">saved_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version_from_file</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">saved_version</span> <span class="o">!=</span> <span class="n">VERSION</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EnvWrongVersionError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Version check failed! Saved &quot;</span> \
+                <span class="s">&quot;Version `</span><span class="si">%(saved_version)s</span><span class="s">` != Concurrent Version &quot;</span> \
+                <span class="s">&quot;`</span><span class="si">%(concurrent_version)s</span><span class="s">`&quot;</span> \
+                <span class="p">,</span><span class="n">saved_version</span><span class="o">=</span><span class="n">saved_version</span><span class="p">,</span><span class="n">concurrent_version</span><span class="o">=</span><span class="n">VERSION</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.check_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.check_dir">[docs]</a>    <span class="k">def</span> <span class="nf">check_dir</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the dir has a file with the same name as it&#39;s children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">EnvFolderCheckError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%(dir)s</span><span class="s"> does not exist!&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">dirname</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Environment.get_version_file_path"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_version_file_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_version_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absolute path to the version file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span><span class="s">&#39;VERSION&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.get_readme_file_path"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_readme_file_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_readme_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absolute path to the readme file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span><span class="s">&#39;README&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_ini_filename"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_ini_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_ini_filename</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get the filename we use for our main ini</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">_INI_FILENAME</span>
+        <span class="k">return</span> <span class="n">_INI_FILENAME</span>
+</div>
+<div class="viewcode-block" id="Environment.get_logs_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_logs_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_logs_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our logs are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_logs_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_logs_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_logs_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_logs_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the logs folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;logs&#39;</span>
+</div>
+<div class="viewcode-block" id="Environment.get_configs_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_configs_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_configs_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our configs are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_configs_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_configs_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_configs_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_configs_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the configs folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;configs&#39;</span>
+</div>
+<div class="viewcode-block" id="Environment.get_plugins_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_plugins_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_plugins_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our plugins are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_plugins_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_plugins_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_plugins_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_plugins_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the plugins folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;plugins&#39;</span>
+</div>
+<div class="viewcode-block" id="Environment.get_backups_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_backups_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_backups_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our backups are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backups_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_backups_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_backups_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_backups_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the backups folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;backups&#39;</span>
+    </div>
+<div class="viewcode-block" id="Environment.get_sql_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_sql_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_sql_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our sql schemas are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sql_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_sql_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_sql_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_sql_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the sql folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;sql&#39;</span>
+    </div>
+<div class="viewcode-block" id="Environment.get_templates_dir"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_templates_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_templates_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Absulute path where our templates are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_templates_dir_name</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Environment.get_templates_dir_name"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.Environment.get_templates_dir_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_templates_dir_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the templates folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;templates&#39;</span>
+</div></div>
+<div class="viewcode-block" id="EnvSetup"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup">[docs]</a><span class="k">class</span> <span class="nc">EnvSetup</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Component which will act as the setup manager for the environment. Also</span>
+<span class="sd">    handles main backup/restore procedures if something hapens to the environment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IEnvUpgrader</span><span class="p">,</span> <span class="n">IEnvBackup</span><span class="p">,</span> <span class="n">IEnvDelete</span><span class="p">)</span>
+
+    <span class="c"># IEnvDelete methods</span>
+<div class="viewcode-block" id="EnvSetup.env_delete"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_delete">[docs]</a>    <span class="k">def</span> <span class="nf">env_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an env get&#39;s deleted, env is still valid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;(EnvSetup) Deleting Environment...&quot;</span><span class="p">)</span>
+
+
+    <span class="c"># IEnvBackup methods</span></div>
+<div class="viewcode-block" id="EnvSetup.env_backup"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_backup">[docs]</a>    <span class="k">def</span> <span class="nf">env_backup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when we make a backup</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">backup_data</span> <span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;(EnvSetup) Backup Environment...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">backup_data</span>
+</div>
+<div class="viewcode-block" id="EnvSetup.env_restore"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_restore">[docs]</a>    <span class="k">def</span> <span class="nf">env_restore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when we make a restore</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;(EnvSetup) Restore Environment...&quot;</span><span class="p">)</span>
+
+
+    <span class="c"># IEnvUpgrader methods</span></div>
+<div class="viewcode-block" id="EnvSetup.env_created"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_created">[docs]</a>    <span class="k">def</span> <span class="nf">env_created</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when a new env has been created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;(EnvSetup) Created Environment...&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EnvSetup.env_need_upgrade"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_need_upgrade">[docs]</a>    <span class="k">def</span> <span class="nf">env_need_upgrade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbManager</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when we start an environment, if this call returns true the env will not able to</span>
+<span class="sd">        load until we force an upgrade.</span>
+
+<span class="sd">        TODO: This needs to be done!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="EnvSetup.env_do_upgrade"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.environment.EnvSetup.env_do_upgrade">[docs]</a>    <span class="k">def</span> <span class="nf">env_do_upgrade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbManager</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This will perform the actual upgrade process. Be careful on using db transactions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;(EnvSetup) Uprade Environment...&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

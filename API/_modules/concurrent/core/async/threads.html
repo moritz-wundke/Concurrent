@@ -1,0 +1,781 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.async.threads &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.async.threads</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing various base thread classes and threading helpers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;InterruptibleThread&#39;</span><span class="p">,</span> <span class="s">&#39;ThreadInterruptedError&#39;</span><span class="p">,</span> <span class="s">&#39;ReadWriteLock&#39;</span><span class="p">,</span> <span class="s">&#39;RWLockCache&#39;</span><span class="p">,</span><span class="s">&#39;makeRequests&#39;</span><span class="p">,</span>
+    <span class="s">&#39;NoResultsPending&#39;</span><span class="p">,</span> <span class="s">&#39;NoWorkersAvailable&#39;</span><span class="p">,</span> <span class="s">&#39;ThreadPool&#39;</span><span class="p">,</span> <span class="s">&#39;WorkRequest&#39;</span><span class="p">,</span> <span class="s">&#39;WorkerThread&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ThreadInterruptedError"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadInterruptedError">[docs]</a><span class="k">class</span> <span class="nc">ThreadInterruptedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error used when an interruptible thread has been killed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</div>
+<span class="k">def</span> <span class="nf">_async_raise</span><span class="p">(</span><span class="n">tid</span><span class="p">,</span> <span class="n">exctype</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Raises an exception in the threads with id tid&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">exctype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Only types can be raised (not instances)&quot;</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">pythonapi</span><span class="o">.</span><span class="n">PyThreadState_SetAsyncExc</span><span class="p">(</span><span class="n">tid</span><span class="p">,</span>
+                                                  <span class="n">ctypes</span><span class="o">.</span><span class="n">py_object</span><span class="p">(</span><span class="n">exctype</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;invalid thread id&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">res</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c"># &quot;if it returns a number greater than one, you&#39;re in trouble,</span>
+        <span class="c"># and you should call it again with exc=NULL to revert the effect&quot;</span>
+        <span class="n">ctypes</span><span class="o">.</span><span class="n">pythonapi</span><span class="o">.</span><span class="n">PyThreadState_SetAsyncExc</span><span class="p">(</span><span class="n">tid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s">&quot;PyThreadState_SetAsyncExc failed&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InterruptibleThread"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.InterruptibleThread">[docs]</a><span class="k">class</span> <span class="nc">InterruptibleThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A thread class that supports raising exception in the thread from</span>
+<span class="sd">       another thread. Based on the class from Bluebird75 </span>
+<span class="sd">       [http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+        
+    <span class="k">def</span> <span class="nf">_get_my_tid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;determines this (self&#39;s) thread id</span>
+
+<span class="sd">        CAREFUL : this function is executed in the context of the caller</span>
+<span class="sd">        thread, to get the identity of the thread represented by this</span>
+<span class="sd">        instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAlive</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">threading</span><span class="o">.</span><span class="n">ThreadError</span><span class="p">(</span><span class="s">&quot;the thread is not active&quot;</span><span class="p">)</span>
+
+        <span class="c"># do we have it cached?</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_thread_id&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span>
+
+        <span class="c"># no, look for it in the _active dict</span>
+        <span class="k">for</span> <span class="n">tid</span><span class="p">,</span> <span class="n">tobj</span> <span class="ow">in</span> <span class="n">threading</span><span class="o">.</span><span class="n">_active</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">tobj</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="n">tid</span>
+                <span class="k">return</span> <span class="n">tid</span>
+
+        <span class="c"># TODO: in python 2.6, there&#39;s a simpler way to do : self.ident</span>
+
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&quot;could not determine the thread&#39;s id&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InterruptibleThread.raiseExc"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.InterruptibleThread.raiseExc">[docs]</a>    <span class="k">def</span> <span class="nf">raiseExc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exctype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raises the given exception type in the context of this thread.</span>
+
+<span class="sd">        If the thread is busy in a system call (time.sleep(),</span>
+<span class="sd">        socket.accept(), ...), the exception is simply ignored.</span>
+
+<span class="sd">        If you are sure that your exception should terminate the thread,</span>
+<span class="sd">        one way to ensure that it works is:</span>
+
+<span class="sd">            t = ThreadWithExc( ... )</span>
+<span class="sd">            ...</span>
+<span class="sd">            t.raiseExc( SomeException )</span>
+<span class="sd">            while t.isAlive():</span>
+<span class="sd">                time.sleep( 0.1 )</span>
+<span class="sd">                t.raiseExc( SomeException )</span>
+
+<span class="sd">        If the exception is to be caught by the thread, you need a way to</span>
+<span class="sd">        check that your thread has caught it.</span>
+
+<span class="sd">        CAREFUL : this function is executed in the context of the</span>
+<span class="sd">        caller thread, to raise an excpetion in the context of the</span>
+<span class="sd">        thread represented by this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_async_raise</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_my_tid</span><span class="p">(),</span> <span class="n">exctype</span> <span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="InterruptibleThread.stop_and_wait"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.InterruptibleThread.stop_and_wait">[docs]</a>    <span class="k">def</span> <span class="nf">stop_and_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raises a general exception within the thread and waits uppon completion. We will try to kill the</span>
+<span class="sd">        thread 10 times. If we where not able to kill the thread we return False, other wise True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attempts</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raiseExc</span><span class="p">(</span> <span class="ne">AssertionError</span> <span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">attempts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mf">0.1</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raiseExc</span><span class="p">(</span> <span class="n">ThreadInterruptedError</span> <span class="p">)</span>
+            <span class="n">attempts</span> <span class="o">-=</span> <span class="mi">1</span>
+        
+        <span class="c"># If the thread is alive we failed to kill it!</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAlive</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Failed to kill thread </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div></div>
+<div class="viewcode-block" id="RWLockCache"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.RWLockCache">[docs]</a><span class="k">class</span> <span class="nc">RWLockCache</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple class used to hold a cache of locks. Locks are being accessed as they where members of the class itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">ReadWriteLock</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lock_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">lock_name</span><span class="p">]</span>
+</div>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">rwlock.py - Read-Write lock thread lock implementation</span>
+
+<span class="sd">From http://code.activestate.com/recipes/502283-read-write-lock-class-rlock-like/</span>
+
+<span class="sd">It features the modifications proposed by Jim Pryor (see the snippets comments)</span>
+
+<span class="sd">See the class documentation for more info.</span>
+
+<span class="sd">Copyright (C) 2007, Heiko Wundram.</span>
+<span class="sd">Released under the BSD-license.</span>
+
+<span class="sd">Other modifications done for &#39;Concurrent&#39; are considered under MIT license.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Condition</span><span class="p">,</span> <span class="n">Lock</span><span class="p">,</span> <span class="n">currentThread</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<div class="viewcode-block" id="ReadWriteLock"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock">[docs]</a><span class="k">class</span> <span class="nc">ReadWriteLock</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read-Write lock class. A read-write lock differs from a standard</span>
+<span class="sd">    threading.RLock() by allowing multiple threads to simultaneously hold a</span>
+<span class="sd">    read lock, while allowing only a single thread to hold a write lock at the</span>
+<span class="sd">    same point of time.</span>
+
+<span class="sd">    When a read lock is requested while a write lock is held, the reader</span>
+<span class="sd">    is blocked; when a write lock is requested while another write lock is</span>
+<span class="sd">    held or there are read locks, the writer is blocked.</span>
+
+<span class="sd">    Writers are always preferred by this implementation: if there are blocked</span>
+<span class="sd">    threads waiting for a write lock, current readers may request more read</span>
+<span class="sd">    locks (which they eventually should free, as they starve the waiting</span>
+<span class="sd">    writers otherwise), but a new thread requesting a read lock will not</span>
+<span class="sd">    be granted one, and block. This might mean starvation for readers if</span>
+<span class="sd">    two writer threads interweave their calls to acquireWrite() without</span>
+<span class="sd">    leaving a window only for readers.</span>
+
+<span class="sd">    In case a current reader requests a write lock, this can and will be</span>
+<span class="sd">    satisfied without giving up the read locks first, but, only one thread</span>
+<span class="sd">    may perform this kind of lock upgrade, as a deadlock would otherwise</span>
+<span class="sd">    occur. After the write lock has been granted, the thread will hold a</span>
+<span class="sd">    full write lock, and not be downgraded after the upgrading call to</span>
+<span class="sd">    acquireWrite() has been match by a corresponding release().</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize this read-write lock.&quot;&quot;&quot;</span>
+
+        <span class="c"># Condition variable, used to signal waiters of a change in object</span>
+        <span class="c"># state.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="n">Lock</span><span class="p">())</span>
+
+        <span class="c"># Initialize with no writers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Initialize with no readers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="ReadWriteLock.acquireRead"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock.acquireRead">[docs]</a>    <span class="k">def</span> <span class="nf">acquireRead</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Acquire a read lock for the current thread, waiting at most</span>
+<span class="sd">        timeout seconds or doing a non-blocking check in case timeout is &lt;= 0.</span>
+
+<span class="sd">        In case timeout is None, the call to acquireRead blocks until the</span>
+<span class="sd">        lock request can be serviced.</span>
+
+<span class="sd">        In case the timeout expires before the lock could be serviced, a</span>
+<span class="sd">        RuntimeError is thrown.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">blocking</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="n">timeout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">me</span> <span class="o">=</span> <span class="n">currentThread</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="ow">is</span> <span class="n">me</span><span class="p">:</span>
+                <span class="c"># If we are the writer, grant a new read lock, always.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="c"># Only test anything if there is no current writer.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">me</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">:</span>
+                            <span class="c"># Only grant a read lock if we already have one</span>
+                            <span class="c"># in case writers are waiting for their turn.</span>
+                            <span class="c"># This means that writers can&#39;t easily get starved</span>
+                            <span class="c"># (but see below, readers can).</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">return</span>
+                        <span class="c"># No, we aren&#39;t a reader (yet), wait for our turn.</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c"># Grant a new read lock, always, in case there are</span>
+                        <span class="c"># no pending writers (and no writer).</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">me</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="k">return</span>
+                <span class="k">if</span> <span class="n">endtime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">remaining</span> <span class="o">=</span> <span class="n">endtime</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c"># Timeout has expired, signal caller of this.</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;Acquiring read lock timed out&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">remaining</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ReadWriteLock.acquireWrite"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock.acquireWrite">[docs]</a>    <span class="k">def</span> <span class="nf">acquireWrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Acquire a write lock for the current thread, waiting at most</span>
+<span class="sd">        timeout seconds or doing a non-blocking check in case timeout is &lt;= 0.</span>
+
+<span class="sd">        In case the write lock cannot be serviced due to the deadlock</span>
+<span class="sd">        condition mentioned above, a ValueError is raised.</span>
+
+<span class="sd">        In case timeout is None, the call to acquireWrite blocks until the</span>
+<span class="sd">        lock request can be serviced.</span>
+
+<span class="sd">        In case the timeout expires before the lock could be serviced, a</span>
+<span class="sd">        RuntimeError is thrown.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">blocking</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="n">timeout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">me</span><span class="p">,</span> <span class="n">upgradewriter</span> <span class="o">=</span> <span class="n">currentThread</span><span class="p">(),</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="ow">is</span> <span class="n">me</span><span class="p">:</span>
+                <span class="c"># If we are the writer, grant a new write lock, always.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span>
+            <span class="k">elif</span> <span class="n">me</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">:</span>
+                <span class="c"># If we are a reader, no need to add us to pendingwriters,</span>
+                <span class="c"># we get the upgradewriter slot.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span><span class="p">:</span>
+                    <span class="c"># If we are a reader and want to upgrade, and someone</span>
+                    <span class="c"># else also wants to upgrade, there is no way we can do</span>
+                    <span class="c"># this except if one of us releases all his read locks.</span>
+                    <span class="c"># Signal this to user.</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s">&quot;Inevitable dead lock, denying write lock&quot;</span>
+                        <span class="p">)</span>
+                <span class="n">upgradewriter</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">me</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># We aren&#39;t a reader, so add us to the pending writers queue</span>
+                <span class="c"># for synchronization with the readers.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">me</span><span class="p">)</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="c"># Only test anything if there are no readers and writers.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">upgradewriter</span><span class="p">:</span>
+                            <span class="c"># There is a writer to upgrade, and it&#39;s us. Take</span>
+                            <span class="c"># the write lock.</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="o">=</span> <span class="n">me</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="k">return</span>
+                        <span class="c"># There is a writer to upgrade, but it&#39;s not us.</span>
+                        <span class="c"># Always leave the upgrade writer the advance slot,</span>
+                        <span class="c"># because he presumes he&#39;ll get a write lock directly</span>
+                        <span class="c"># from a previously held read lock.</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">me</span><span class="p">:</span>
+                        <span class="c"># If there are no readers and writers, it&#39;s always</span>
+                        <span class="c"># fine for us to take the writer slot, removing us</span>
+                        <span class="c"># from the pending writers queue.</span>
+                        <span class="c"># This might mean starvation for readers, though.</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="o">=</span> <span class="n">me</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                        <span class="k">return</span>
+                <span class="k">if</span> <span class="n">endtime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">remaining</span> <span class="o">=</span> <span class="n">endtime</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c"># Timeout has expired, signal caller of this.</span>
+                        <span class="k">if</span> <span class="n">upgradewriter</span><span class="p">:</span>
+                            <span class="c"># Put us back on the reader queue. No need to</span>
+                            <span class="c"># signal anyone of this change, because no other</span>
+                            <span class="c"># writer could&#39;ve taken our spot before we got</span>
+                            <span class="c"># here (because of remaining readers), as the test</span>
+                            <span class="c"># for proper conditions is at the start of the</span>
+                            <span class="c"># loop, not at the end.</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__upgradewritercount</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c"># We were a simple pending writer, just remove us</span>
+                            <span class="c"># from the FIFO list.</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__pendingwriters</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">me</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;Acquiring write lock timed out&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">remaining</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ReadWriteLock.release"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock.release">[docs]</a>    <span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Release the currently held lock.</span>
+
+<span class="sd">        In case the current thread holds no lock, a ValueError is thrown.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">me</span> <span class="o">=</span> <span class="n">currentThread</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="ow">is</span> <span class="n">me</span><span class="p">:</span>
+                <span class="c"># We are the writer, take one nesting depth away.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__writercount</span><span class="p">:</span>
+                    <span class="c"># No more write locks; take our writer position away and</span>
+                    <span class="c"># notify waiters of the new circumstances.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__writer</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">me</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">:</span>
+                <span class="c"># We are a reader currently, take one nesting depth away.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]:</span>
+                    <span class="c"># No more read locks, take our reader position away.</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">[</span><span class="n">me</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readers</span><span class="p">:</span>
+                        <span class="c"># No more readers, notify waiters of the new</span>
+                        <span class="c"># circumstances.</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Trying to release unheld lock&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__condition</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="ReadWriteLock.readlock"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock.readlock">[docs]</a>    <span class="k">def</span> <span class="nf">readlock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acquireRead</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="ReadWriteLock.writelock"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ReadWriteLock.writelock">[docs]</a>    <span class="k">def</span> <span class="nf">writelock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acquireWrite</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div></div>
+<span class="sd">&quot;&quot;&quot;Easy to use object-oriented thread pool framework.</span>
+
+<span class="sd">A thread pool is an object that maintains a pool of worker threads to perform</span>
+<span class="sd">time consuming operations in parallel. It assigns jobs to the threads</span>
+<span class="sd">by putting them in a work request queue, where they are picked up by the</span>
+<span class="sd">next available thread. This then performs the requested operation in the</span>
+<span class="sd">background and puts the results in another queue.</span>
+
+<span class="sd">The thread pool object can then collect the results from all threads from</span>
+<span class="sd">this queue as soon as they become available or after all threads have</span>
+<span class="sd">finished their work. It&#39;s also possible, to define callbacks to handle</span>
+<span class="sd">each result as it comes in.</span>
+
+<span class="sd">The basic concept and some code was taken from the book &quot;Python in a Nutshell,</span>
+<span class="sd">2nd edition&quot; by Alex Martelli, O&#39;Reilly 2006, ISBN 0-596-10046-9, from section</span>
+<span class="sd">14.5 &quot;Threaded Program Architecture&quot;. I wrapped the main program logic in the</span>
+<span class="sd">ThreadPool class, added the WorkRequest class and the callback system and</span>
+<span class="sd">tweaked the code here and there. Kudos also to Florent Aide for the exception</span>
+<span class="sd">handling mechanism.</span>
+
+<span class="sd">Basic usage::</span>
+
+<span class="sd">    &gt;&gt;&gt; pool = ThreadPool(poolsize)</span>
+<span class="sd">    &gt;&gt;&gt; requests = makeRequests(some_callable, list_of_args, callback)</span>
+<span class="sd">    &gt;&gt;&gt; [pool.putRequest(req) for req in requests]</span>
+<span class="sd">    &gt;&gt;&gt; pool.wait()</span>
+
+<span class="sd">See the end of the module code for a brief, annotated usage example.</span>
+
+<span class="sd">MIT License</span>
+
+<span class="sd">Website : http://chrisarndt.de/projects/threadpool/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># standard library modules</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+
+<span class="c"># exceptions</span>
+<div class="viewcode-block" id="NoResultsPending"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.NoResultsPending">[docs]</a><span class="k">class</span> <span class="nc">NoResultsPending</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;All work requests have been processed.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="NoWorkersAvailable"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.NoWorkersAvailable">[docs]</a><span class="k">class</span> <span class="nc">NoWorkersAvailable</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;No worker threads available to process remaining requests.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="c"># internal module helper functions</span></div>
+<span class="k">def</span> <span class="nf">_handle_thread_exception</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">exc_info</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Default exception handler callback function.</span>
+
+<span class="sd">    This just prints the exception info via ``traceback.print_exception``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exception</span><span class="p">(</span><span class="o">*</span><span class="n">exc_info</span><span class="p">)</span>
+
+
+<span class="c"># utility functions</span>
+<div class="viewcode-block" id="makeRequests"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.makeRequests">[docs]</a><span class="k">def</span> <span class="nf">makeRequests</span><span class="p">(</span><span class="n">callable_</span><span class="p">,</span> <span class="n">args_list</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">exc_callback</span><span class="o">=</span><span class="n">_handle_thread_exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create several work requests for same callable with different arguments.</span>
+
+<span class="sd">    Convenience function for creating several work requests for the same</span>
+<span class="sd">    callable where each invocation of the callable receives different values</span>
+<span class="sd">    for its arguments.</span>
+
+<span class="sd">    ``args_list`` contains the parameters for each invocation of callable.</span>
+<span class="sd">    Each item in ``args_list`` should be either a 2-item tuple of the list of</span>
+<span class="sd">    positional arguments and a dictionary of keyword arguments or a single,</span>
+<span class="sd">    non-tuple argument.</span>
+
+<span class="sd">    See docstring for ``WorkRequest`` for info on ``callback`` and</span>
+<span class="sd">    ``exc_callback``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">args_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">WorkRequest</span><span class="p">(</span><span class="n">callable_</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+                    <span class="n">exc_callback</span><span class="o">=</span><span class="n">exc_callback</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">WorkRequest</span><span class="p">(</span><span class="n">callable_</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span><span class="p">],</span> <span class="bp">None</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+                    <span class="n">exc_callback</span><span class="o">=</span><span class="n">exc_callback</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">requests</span>
+
+
+<span class="c"># classes</span></div>
+<div class="viewcode-block" id="WorkerThread"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.WorkerThread">[docs]</a><span class="k">class</span> <span class="nc">WorkerThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Background thread connected to the requests/results queues.</span>
+
+<span class="sd">    A worker thread sits in the background and picks up work requests from</span>
+<span class="sd">    one queue and puts the results in another until it is dismissed.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set up thread in daemonic mode and start it immediatedly.</span>
+
+<span class="sd">        ``requests_queue`` and ``results_queue`` are instances of</span>
+<span class="sd">        ``Queue.Queue`` passed by the ``ThreadPool`` class when it creates a new</span>
+<span class="sd">        worker thread.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setDaemon</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span> <span class="o">=</span> <span class="n">requests_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span> <span class="o">=</span> <span class="n">results_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_poll_timeout</span> <span class="o">=</span> <span class="n">poll_timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dismissed</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="WorkerThread.run"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.WorkerThread.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Repeatedly process the job queue until told to exit.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dismissed</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+                <span class="c"># we are dismissed, break out of loop</span>
+                <span class="k">break</span>
+            <span class="c"># get next work request. If we don&#39;t get a new request from the</span>
+            <span class="c"># queue after self._poll_timout seconds, we jump to the start of</span>
+            <span class="c"># the while loop again, to give the thread a chance to exit.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_poll_timeout</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dismissed</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+                    <span class="c"># we are dismissed, put back request in queue and exit loop</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">callable</span><span class="p">(</span><span class="o">*</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">request</span><span class="o">.</span><span class="n">kwds</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">request</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">request</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()))</span>
+</div>
+<div class="viewcode-block" id="WorkerThread.dismiss"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.WorkerThread.dismiss">[docs]</a>    <span class="k">def</span> <span class="nf">dismiss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets a flag to tell the thread to exit when done with current job.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dismissed</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="WorkRequest"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.WorkRequest">[docs]</a><span class="k">class</span> <span class="nc">WorkRequest</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A request to execute a callable for putting in the request queue later.</span>
+
+<span class="sd">    See the module function ``makeRequests`` for the common case</span>
+<span class="sd">    where you want to build several ``WorkRequest`` objects for the same</span>
+<span class="sd">    callable but with different arguments for each call.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callable_</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kwds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">requestID</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">exc_callback</span><span class="o">=</span><span class="n">_handle_thread_exception</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a work request for a callable and attach callbacks.</span>
+
+<span class="sd">        A work request consists of the a callable to be executed by a</span>
+<span class="sd">        worker thread, a list of positional arguments, a dictionary</span>
+<span class="sd">        of keyword arguments.</span>
+
+<span class="sd">        A ``callback`` function can be specified, that is called when the</span>
+<span class="sd">        results of the request are picked up from the result queue. It must</span>
+<span class="sd">        accept two anonymous arguments, the ``WorkRequest`` object and the</span>
+<span class="sd">        results of the callable, in that order. If you want to pass additional</span>
+<span class="sd">        information to the callback, just stick it on the request object.</span>
+
+<span class="sd">        You can also give custom callback for when an exception occurs with</span>
+<span class="sd">        the ``exc_callback`` keyword parameter. It should also accept two</span>
+<span class="sd">        anonymous arguments, the ``WorkRequest`` and a tuple with the exception</span>
+<span class="sd">        details as returned by ``sys.exc_info()``. The default implementation</span>
+<span class="sd">        of this callback just prints the exception info via</span>
+<span class="sd">        ``traceback.print_exception``. If you want no exception handler</span>
+<span class="sd">        callback, just pass in ``None``.</span>
+
+<span class="sd">        ``requestID``, if given, must be hashable since it is used by</span>
+<span class="sd">        ``ThreadPool`` object to store the results of that work request in a</span>
+<span class="sd">        dictionary. It defaults to the return value of ``id(self)``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">requestID</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requestID</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">requestID</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="n">requestID</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;requestID must be hashable.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exc_callback</span> <span class="o">=</span> <span class="n">exc_callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callable</span> <span class="o">=</span> <span class="n">callable_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwds</span> <span class="o">=</span> <span class="n">kwds</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;WorkRequest id=</span><span class="si">%s</span><span class="s"> args=</span><span class="si">%r</span><span class="s"> kwargs=</span><span class="si">%r</span><span class="s"> exception=</span><span class="si">%s</span><span class="s">&gt;&quot;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requestID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exception</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ThreadPool"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool">[docs]</a><span class="k">class</span> <span class="nc">ThreadPool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A thread pool, distributing work requests and collecting results.</span>
+
+<span class="sd">    See the module docstring for more information.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">q_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">resq_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set up the thread pool and start num_workers worker threads.</span>
+
+<span class="sd">        ``num_workers`` is the number of worker threads to start initially.</span>
+
+<span class="sd">        If ``q_size &gt; 0`` the size of the work *request queue* is limited and</span>
+<span class="sd">        the thread pool blocks when the queue is full and it tries to put</span>
+<span class="sd">        more work requests in it (see ``putRequest`` method), unless you also</span>
+<span class="sd">        use a positive ``timeout`` value for ``putRequest``.</span>
+
+<span class="sd">        If ``resq_size &gt; 0`` the size of the *results queue* is limited and the</span>
+<span class="sd">        worker threads will block when the queue is full and they try to put</span>
+<span class="sd">        new results in it.</span>
+
+<span class="sd">        .. warning:</span>
+<span class="sd">            If you set both ``q_size`` and ``resq_size`` to ``!= 0`` there is</span>
+<span class="sd">            the possibilty of a deadlock, when the results queue is not pulled</span>
+<span class="sd">            regularly and too many jobs are put in the work requests queue.</span>
+<span class="sd">            To prevent this, always set ``timeout &gt; 0`` when calling</span>
+<span class="sd">            ``ThreadPool.putRequest()`` and catch ``Queue.Full`` exceptions.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span><span class="n">q_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span><span class="n">resq_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dismissedWorkers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workRequests</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">createWorkers</span><span class="p">(</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ThreadPool.createWorkers"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.createWorkers">[docs]</a>    <span class="k">def</span> <span class="nf">createWorkers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add num_workers worker threads to the pool.</span>
+
+<span class="sd">        ``poll_timout`` sets the interval in seconds (int or float) for how</span>
+<span class="sd">        ofte threads should check whether they are dismissed, while waiting for</span>
+<span class="sd">        requests.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkerThread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="n">poll_timeout</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="ThreadPool.dismissWorkers"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.dismissWorkers">[docs]</a>    <span class="k">def</span> <span class="nf">dismissWorkers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">do_join</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tell num_workers worker threads to quit after their current task.&quot;&quot;&quot;</span>
+        <span class="n">dismiss_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">num_workers</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">))):</span>
+            <span class="n">worker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">dismiss</span><span class="p">()</span>
+            <span class="n">dismiss_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_join</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">dismiss_list</span><span class="p">:</span>
+                <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dismissedWorkers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dismiss_list</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ThreadPool.joinAllDismissedWorkers"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.joinAllDismissedWorkers">[docs]</a>    <span class="k">def</span> <span class="nf">joinAllDismissedWorkers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform Thread.join() on all worker threads that have been dismissed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dismissedWorkers</span><span class="p">:</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dismissedWorkers</span> <span class="o">=</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="ThreadPool.putRequest"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.putRequest">[docs]</a>    <span class="k">def</span> <span class="nf">putRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put work request into work queue and save its id for later.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">WorkRequest</span><span class="p">)</span>
+        <span class="c"># don&#39;t reuse old work requests</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s">&#39;exception&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_requests_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workRequests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">requestID</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
+</div>
+<div class="viewcode-block" id="ThreadPool.poll"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.poll">[docs]</a>    <span class="k">def</span> <span class="nf">poll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process any new results in the queue.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="c"># still results pending?</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">workRequests</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NoResultsPending</span>
+            <span class="c"># are there still workers to process remaining requests?</span>
+            <span class="k">elif</span> <span class="n">block</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NoWorkersAvailable</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># get back next results</span>
+                <span class="n">request</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
+                <span class="c"># has an exception occured?</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">exception</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">exc_callback</span><span class="p">:</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">exc_callback</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="c"># hand results to callback, if any</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="ow">not</span> \
+                       <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">exception</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">exc_callback</span><span class="p">):</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">workRequests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">requestID</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                <span class="k">break</span>
+</div>
+<div class="viewcode-block" id="ThreadPool.wait"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.threads.ThreadPool.wait">[docs]</a>    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wait for results, blocking until all have arrived.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">NoResultsPending</span><span class="p">:</span>
+                <span class="k">break</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.components.component &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.components.component</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base class every component used. A component is handled as a plugin.</span>
+<span class="sd">The features of a plugin is defined by interfaces. Those interfaces will</span>
+<span class="sd">force a component to resolve queries that come from the framework.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Component&#39;</span><span class="p">,</span> <span class="s">&#39;ExtensionPoint&#39;</span><span class="p">,</span> <span class="s">&#39;implements&#39;</span><span class="p">,</span> <span class="s">&#39;Interface&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+
+<div class="viewcode-block" id="Interface"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.Interface">[docs]</a><span class="k">class</span> <span class="nc">Interface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Marker base class for extension point interfaces.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="ExtensionPoint"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.ExtensionPoint">[docs]</a><span class="k">class</span> <span class="nc">ExtensionPoint</span><span class="p">(</span><span class="nb">property</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Marker class for extension points in components.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create the extension point.</span>
+<span class="sd">        </span>
+<span class="sd">        @param interface: the `Interface` subclass that defines the protocol</span>
+<span class="sd">            for the extension point</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">property</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">interface</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;List of components that implement `</span><span class="si">%s</span><span class="s">`&#39;</span> <span class="o">%</span> \
+                               <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExtensionPoint.extensions"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.ExtensionPoint.extensions">[docs]</a>    <span class="k">def</span> <span class="nf">extensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of components that declare to implement the extension</span>
+<span class="sd">        point interface.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extensions</span> <span class="o">=</span> <span class="n">ComponentMeta</span><span class="o">.</span><span class="n">_registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">component</span><span class="o">.</span><span class="n">compmgr</span><span class="p">[</span><span class="n">cls</span><span class="p">]</span> <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">extensions</span><span class="p">])</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a textual representation of the extension point.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;&lt;ExtensionPoint </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">ComponentMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Meta class for components.</span>
+<span class="sd">    </span>
+<span class="sd">    Takes care of component and extension point registration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_registry</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create the component class.&quot;&quot;&quot;</span>
+
+        <span class="n">new_class</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Component&#39;</span><span class="p">:</span>
+            <span class="c"># Don&#39;t put the Component base class in the registry</span>
+            <span class="k">return</span> <span class="n">new_class</span>
+
+        <span class="c"># Only override __init__ for Components not inheriting ComponentManager</span>
+        <span class="k">if</span> <span class="bp">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">issubclass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ComponentManager</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">]:</span>
+            <span class="c"># Allow components to have a no-argument initializer so that</span>
+            <span class="c"># they don&#39;t need to worry about accepting the component manager</span>
+            <span class="c"># as argument and invoking the super-class initializer</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;__init__&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">init</span><span class="p">:</span>
+                <span class="c"># Because we&#39;re replacing the initializer, we need to make sure</span>
+                <span class="c"># that any inherited initializers are also called.</span>
+                <span class="k">for</span> <span class="n">init</span> <span class="ow">in</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">__init__</span><span class="o">.</span><span class="n">_original</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">new_class</span><span class="o">.</span><span class="n">mro</span><span class="p">()</span>
+                             <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Component</span><span class="p">)</span>
+                             <span class="ow">and</span> <span class="s">&#39;__init__&#39;</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">__dict__</span><span class="p">]:</span>
+                    <span class="k">break</span>
+            <span class="k">def</span> <span class="nf">maybe_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compmgr</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">new_class</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">compmgr</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+                    <span class="n">compmgr</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">cls</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+                    <span class="k">if</span> <span class="n">init</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="k">del</span> <span class="n">compmgr</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">cls</span><span class="p">]</span>
+                            <span class="k">raise</span>
+            <span class="n">maybe_init</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">init</span>
+            <span class="n">new_class</span><span class="o">.</span><span class="n">__init__</span> <span class="o">=</span> <span class="n">maybe_init</span>
+
+        <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;abstract&#39;</span><span class="p">):</span>
+            <span class="c"># Don&#39;t put abstract component classes in the registry</span>
+            <span class="k">return</span> <span class="n">new_class</span>
+
+        <span class="n">ComponentMeta</span><span class="o">.</span><span class="n">_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_class</span><span class="p">)</span>
+        <span class="n">registry</span> <span class="o">=</span> <span class="n">ComponentMeta</span><span class="o">.</span><span class="n">_registry</span>
+        <span class="k">for</span> <span class="n">interface</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;_implements&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">registry</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_class</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="p">[</span><span class="n">base</span> <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s">&#39;_implements&#39;</span><span class="p">)]:</span>
+            <span class="k">for</span> <span class="n">interface</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="n">_implements</span><span class="p">:</span>
+                <span class="n">registry</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_class</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">new_class</span>
+
+
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for components.</span>
+
+<span class="sd">    Every component can declare what extension points it provides, as well as</span>
+<span class="sd">    what extension points of other components it extends.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ComponentMeta</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an existing instance of the component if it has already been</span>
+<span class="sd">        activated, otherwise create a new instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># If this component is also the component manager, just invoke that</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ComponentManager</span><span class="p">):</span>
+            <span class="bp">self</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compmgr</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="c"># The normal case where the component is not also the component manager</span>
+        <span class="n">compmgr</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span> <span class="o">=</span> <span class="n">compmgr</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compmgr</span> <span class="o">=</span> <span class="n">compmgr</span>
+            <span class="n">compmgr</span><span class="o">.</span><span class="n">activate_component</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+    
+<div class="viewcode-block" id="Component.is_singleton"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.Component.is_singleton">[docs]</a>    <span class="k">def</span> <span class="nf">is_singleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the component as a singleton or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Component.implements"><a class="viewcode-back" href="../../../../concurrent.core.components.html#concurrent.core.components.component.Component.implements">[docs]</a>    <span class="k">def</span> <span class="nf">implements</span><span class="p">(</span><span class="o">*</span><span class="n">interfaces</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Can be used in the class definiton of `Component` subclasses to</span>
+<span class="sd">        declare the extension points that are extended.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">sys</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">locals_</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span>
+
+        <span class="c"># Some sanity checks</span>
+        <span class="k">assert</span> <span class="n">locals_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span> <span class="ow">and</span> <span class="s">&#39;__module__&#39;</span> <span class="ow">in</span> <span class="n">locals_</span><span class="p">,</span> \
+               <span class="s">&#39;implements() can only be used in a class definition&#39;</span>
+
+        <span class="n">locals_</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;_implements&#39;</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">interfaces</span><span class="p">)</span></div>
+    <span class="n">implements</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">implements</span><span class="p">)</span>
+
+</div>
+<span class="n">implements</span> <span class="o">=</span> <span class="n">Component</span><span class="o">.</span><span class="n">implements</span>
+
+
+<span class="k">class</span> <span class="nc">ComponentManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The component manager keeps a pool of active components.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the component manager.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Component</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return wether the given class is in the list of active components.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Activate the component instance for the given class, or return the</span>
+<span class="sd">        existing instance if the component has already been activated and it&#39;s</span>
+<span class="sd">        marked as a singleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">[</span><span class="n">cls</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_component_enabled</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">[</span><span class="n">cls</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">component</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">component</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">component</span><span class="o">.</span><span class="n">is_singleton</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ComponentMeta</span><span class="o">.</span><span class="n">_components</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BaseError</span><span class="p">(</span><span class="s">&#39;Component &quot;</span><span class="si">%s</span><span class="s">&quot; not registered&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">component</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BaseError</span><span class="p">(</span><span class="s">&#39;Unable to instantiate component </span><span class="si">%r</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span>
+                                <span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">err</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">component</span>
+
+    <span class="k">def</span> <span class="nf">disable_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Force a component to be disabled.</span>
+<span class="sd">        </span>
+<span class="sd">        The argument `component` can be a class or an instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">__class__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">[</span><span class="n">component</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">component</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">activate_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Can be overridden by sub-classes so that special initialization for</span>
+<span class="sd">        components can be provided.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">is_component_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Can be overridden by sub-classes to veto the activation of a</span>
+<span class="sd">        component.</span>
+
+<span class="sd">        If this method returns False, the component with the given class will</span>
+<span class="sd">        not be available.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.transport.pyjsonrpc.http &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.transport.pyjsonrpc.http</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">BaseHTTPServer</span>
+<span class="kn">import</span> <span class="nn">SocketServer</span>
+<span class="kn">import</span> <span class="nn">httplib</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urlparse</span>
+<span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">rpcrequest</span>
+<span class="kn">import</span> <span class="nn">rpcresponse</span>
+<span class="kn">import</span> <span class="nn">rpcerror</span>
+<span class="kn">import</span> <span class="nn">rpclib</span>
+<span class="kn">from</span> <span class="nn">rpcjson</span> <span class="kn">import</span> <span class="n">json</span>
+
+
+<div class="viewcode-block" id="http_request"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.http_request">[docs]</a><span class="k">def</span> <span class="nf">http_request</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">json_string</span><span class="p">,</span> <span class="n">username</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">password</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fetch data from webserver (POST request)</span>
+
+<span class="sd">    :param json_string: JSON-String</span>
+<span class="sd">    :param username: If *username* is given, BASE authentication will be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">request</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">json_string</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json&quot;</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Content-Length&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_string</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">username</span><span class="p">:</span>
+        <span class="n">base64string</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;Basic </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">base64string</span><span class="p">)</span>
+    
+    <span class="c"># enable gzip content</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&#39;Accept-encoding&#39;</span><span class="p">,</span> <span class="s">&#39;gzip&#39;</span><span class="p">)</span>
+    
+    <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Content-Encoding&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;gzip&#39;</span><span class="p">:</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">response_string</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">response_string</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">response_string</span>
+
+</div>
+<div class="viewcode-block" id="HttpClient"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpClient">[docs]</a><span class="k">class</span> <span class="nc">HttpClient</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+
+    <span class="k">class</span> <span class="nc">_Method</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_client_instance</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">http_client_instance</span> <span class="o">=</span> <span class="n">http_client_instance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_client_instance</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">,</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param: URL to the JSON-RPC handler on the HTTP-Server.</span>
+<span class="sd">            Example: ``&quot;https://example.com/jsonrpc&quot;``</span>
+
+<span class="sd">        :param username: If *username* is given, BASE authentication will be used.</span>
+<span class="sd">        :param password: Password for BASE authentication.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">password</span>
+
+
+<div class="viewcode-block" id="HttpClient.call"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpClient.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the JSON-RPC request string, calls the HTTP server, converts</span>
+<span class="sd">        JSON-RPC response string to python and returns the result.</span>
+
+<span class="sd">        :param method: Name of the method which will be called on the HTTP server.</span>
+<span class="sd">            Or a list with RPC-Request-Dictionaries. Syntax::</span>
+
+<span class="sd">                &quot;&lt;MethodName&gt;&quot; or [&lt;JsonRpcRequestDict&gt;, ...]</span>
+
+<span class="sd">            RPC-Request-Dictionaries will be made with the function</span>
+<span class="sd">            *rpcrequest.create_request_dict()*.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Create JSON-RPC-request</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">request_json</span> <span class="o">=</span> <span class="n">rpcrequest</span><span class="o">.</span><span class="n">create_request_json</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="n">args</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span>
+
+        <span class="c"># Call the HTTP-JSON-RPC server</span>
+        <span class="n">response_json</span> <span class="o">=</span> <span class="n">http_request</span><span class="p">(</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">json_string</span> <span class="o">=</span> <span class="n">request_json</span><span class="p">,</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span>
+        <span class="p">)</span>
+
+        <span class="c"># Convert JSON-RPC-response to python-object</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">rpcresponse</span><span class="o">.</span><span class="n">parse_response_json</span><span class="p">(</span><span class="n">response_json</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+            <span class="c"># Raise error</span>
+            <span class="k">raise</span> <span class="n">rpcerror</span><span class="o">.</span><span class="n">jsonrpcerrors</span><span class="p">[</span><span class="n">response</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">code</span><span class="p">](</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">data</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Return result</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Redirects the direct call to *self.call*</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allows the usage of attributes as *method* names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Method</span><span class="p">(</span><span class="n">http_client_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ThreadingHttpServer"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.ThreadingHttpServer">[docs]</a><span class="k">class</span> <span class="nc">ThreadingHttpServer</span><span class="p">(</span><span class="n">SocketServer</span><span class="o">.</span><span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">BaseHTTPServer</span><span class="o">.</span><span class="n">HTTPServer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Threading HTTP Server</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="HttpRequestHandler"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler">[docs]</a><span class="k">class</span> <span class="nc">HttpRequestHandler</span><span class="p">(</span><span class="n">BaseHTTPServer</span><span class="o">.</span><span class="n">BaseHTTPRequestHandler</span><span class="p">,</span> <span class="n">rpclib</span><span class="o">.</span><span class="n">JsonRpc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    HttpRequestHandler for JSON-RPC-Requests</span>
+
+<span class="sd">    Info: http://www.simple-is-better.org/json-rpc/transport_http.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">protocol_version</span> <span class="o">=</span> <span class="s">&quot;HTTP/1.1&quot;</span>
+    <span class="c">#server_version = &quot;BaseHTTP/&quot; + __version__</span>
+
+
+<div class="viewcode-block" id="HttpRequestHandler.set_content_type_json"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_type_json">[docs]</a>    <span class="k">def</span> <span class="nf">set_content_type_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set content-type to &quot;application/json&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="HttpRequestHandler.set_no_cache"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_no_cache">[docs]</a>    <span class="k">def</span> <span class="nf">set_no_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Disable caching</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s">&quot;Cache-Control&quot;</span><span class="p">,</span> <span class="s">&quot;no-cache&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s">&quot;Pragma&quot;</span><span class="p">,</span> <span class="s">&quot;no-cache&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="HttpRequestHandler.set_content_length"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_length">[docs]</a>    <span class="k">def</span> <span class="nf">set_content_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set content-length-header</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s">&quot;Content-Length&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">length</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="HttpRequestHandler.do_GET"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_GET">[docs]</a>    <span class="k">def</span> <span class="nf">do_GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles HTTP-GET-Request</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Parse URL query</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">splitquery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c"># jsonrpc</span>
+        <span class="n">jsonrpc</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;jsonrpc&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">jsonrpc</span><span class="p">:</span>
+            <span class="n">jsonrpc</span> <span class="o">=</span> <span class="n">jsonrpc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># id</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">id</span><span class="p">:</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># method</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;method&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># params</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;params&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">params</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="c"># Create JSON reqeust string</span>
+        <span class="n">request_dict</span> <span class="o">=</span> <span class="n">rpcrequest</span><span class="o">.</span><span class="n">create_request_dict</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">request_dict</span><span class="p">[</span><span class="s">&quot;jsonrpc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jsonrpc</span>
+        <span class="n">request_dict</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_dict</span><span class="p">)</span>
+
+        <span class="c"># Call</span>
+        <span class="n">response_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">request_json</span><span class="p">)</span>
+
+        <span class="c"># Return result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_response</span><span class="p">(</span><span class="n">code</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">OK</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_content_type_json</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_no_cache</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_content_length</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">response_json</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_headers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response_json</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="HttpRequestHandler.do_POST"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_POST">[docs]</a>    <span class="k">def</span> <span class="nf">do_POST</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles HTTP-POST-Request</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Read JSON request</span>
+        <span class="n">content_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Content-Length&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">request_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">content_length</span><span class="p">)</span>
+
+        <span class="c"># Call</span>
+        <span class="n">response_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">request_json</span><span class="p">)</span>
+
+        <span class="c"># Return result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_response</span><span class="p">(</span><span class="n">code</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">OK</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_content_type_json</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_no_cache</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_content_length</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">response_json</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_headers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response_json</span><span class="p">)</span>
+        <span class="k">return</span>
+
+</div></div>
+<div class="viewcode-block" id="handle_cgi_request"><a class="viewcode-back" href="../../../../../concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.http.handle_cgi_request">[docs]</a><span class="k">def</span> <span class="nf">handle_cgi_request</span><span class="p">(</span><span class="n">methods</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the JSON-RPC request from CGI environment and returns the</span>
+<span class="sd">    result to STDOUT</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">cgi</span>
+    <span class="kn">import</span> <span class="nn">cgitb</span>
+    <span class="n">cgitb</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+
+    <span class="c"># get response-body</span>
+    <span class="n">request_json</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">request_json</span><span class="p">:</span>
+        <span class="c"># POST</span>
+        <span class="n">request_json</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">request_json</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># GET</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">()</span>
+        <span class="n">jsonrpc</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s">&quot;jsonrpc&quot;</span><span class="p">)</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s">&quot;method&quot;</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s">&quot;params&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">params</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="c"># Create JSON reqeust string</span>
+        <span class="n">request_dict</span> <span class="o">=</span> <span class="n">rpcrequest</span><span class="o">.</span><span class="n">create_request_dict</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">request_dict</span><span class="p">[</span><span class="s">&quot;jsonrpc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jsonrpc</span>
+        <span class="n">request_dict</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_dict</span><span class="p">)</span>
+
+    <span class="c"># Call</span>
+    <span class="n">response_json</span> <span class="o">=</span> <span class="n">rpclib</span><span class="o">.</span><span class="n">JsonRpc</span><span class="p">(</span><span class="n">methods</span> <span class="o">=</span> <span class="n">methods</span><span class="p">)</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">request_json</span><span class="p">)</span>
+
+    <span class="c"># Return headers</span>
+    <span class="k">print</span> <span class="s">&quot;Content-Type: application/json&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;Cache-Control: no-cache&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;Pragma: no-cache&quot;</span>
+    <span class="k">print</span>
+
+    <span class="c"># Return result</span>
+    <span class="k">print</span> <span class="n">response_json</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

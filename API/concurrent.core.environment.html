@@ -1,0 +1,751 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.environment package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-environment-package">
+<h1>concurrent.core.environment package<a class="headerlink" href="#concurrent-core-environment-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.core.environment.api">
+<span id="concurrent-core-environment-api-module"></span><h2>concurrent.core.environment.api module<a class="headerlink" href="#module-concurrent.core.environment.api" title="Permalink to this headline">¶</a></h2>
+<p>Environment related in interfaces</p>
+<dl class="class">
+<dt id="concurrent.core.environment.api.IEnvUpgrader">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.api.</tt><tt class="descname">IEnvUpgrader</tt><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvUpgrader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvUpgrader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Extension point that defines component which needs to perform any upgrade
+actions</p>
+<p>TODO: &#64;Joze: Integrate database manager, needs to be passed to the component</p>
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvUpgrader.env_created">
+<tt class="descname">env_created</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvUpgrader.env_created"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvUpgrader.env_created" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a new env has been created</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvUpgrader.env_do_upgrade">
+<tt class="descname">env_do_upgrade</tt><big>(</big><em>dbManager</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvUpgrader.env_do_upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvUpgrader.env_do_upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will perform the actual upgrade process. Be careful on using db transactions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvUpgrader.env_need_upgrade">
+<tt class="descname">env_need_upgrade</tt><big>(</big><em>dbManager</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvUpgrader.env_need_upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvUpgrader.env_need_upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we start an environment, if this call returns true the env will not able to
+load until we force an upgrade.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.environment.api.IEnvBackup">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.api.</tt><tt class="descname">IEnvBackup</tt><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvBackup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvBackup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Extension point that defines a component which will be able to act when a backup 
+will be performed.</p>
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvBackup.env_backup">
+<tt class="descname">env_backup</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvBackup.env_backup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvBackup.env_backup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the current env get&#8217;s backedup</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvBackup.env_restore">
+<tt class="descname">env_restore</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvBackup.env_restore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvBackup.env_restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we restored the current env from a backup</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.environment.api.IEnvDelete">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.api.</tt><tt class="descname">IEnvDelete</tt><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvDelete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvDelete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Extension point that defines a component which will be able to act when an
+environment gets deleted</p>
+<dl class="method">
+<dt id="concurrent.core.environment.api.IEnvDelete.env_delete">
+<tt class="descname">env_delete</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/api.html#IEnvDelete.env_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.api.IEnvDelete.env_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the current env get&#8217;s backedup</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.environment.envadmin">
+<span id="concurrent-core-environment-envadmin-module"></span><h2>concurrent.core.environment.envadmin module<a class="headerlink" href="#module-concurrent.core.environment.envadmin" title="Permalink to this headline">¶</a></h2>
+<p>Basic command line application</p>
+<dl class="class">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.envadmin.</tt><tt class="descname">EnvAdmin</tt><big>(</big><em>envdir=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.tools.html#concurrent.tools.console.CMD" title="concurrent.tools.console.CMD"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.tools.console.CMD</span></tt></a></p>
+<p>Bash application that helps us with our env&#8217;s.</p>
+<dl class="classmethod">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.all_docs">
+<em class="property">classmethod </em><tt class="descname">all_docs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.all_docs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.all_docs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add specifc help content</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.ceck_env">
+<tt class="descname">ceck_env</tt><big>(</big><em>print_error=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.ceck_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.ceck_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will return true if the environment can be opened and false otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.complete_plugin">
+<tt class="descname">complete_plugin</tt><big>(</big><em>text</em>, <em>line</em>, <em>begidx</em>, <em>endidx</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.complete_plugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.complete_plugin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_backup">
+<tt class="descname">do_backup</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_backup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_backup" title="Permalink to this definition">¶</a></dt>
+<dd><p>backup the current env</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_createenv">
+<tt class="descname">do_createenv</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_createenv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_createenv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create environment by passed arguments or interactively</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_delete">
+<tt class="descname">do_delete</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_launchenv">
+<tt class="descname">do_launchenv</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_launchenv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_launchenv" title="Permalink to this definition">¶</a></dt>
+<dd><p>launch the current app or a different one in the env.
+Different apps are usful to testing reasons!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_plugin">
+<tt class="descname">do_plugin</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_plugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_plugin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_quit">
+<tt class="descname">do_quit</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_quit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_quit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit app</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_recover">
+<tt class="descname">do_recover</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>backup the current env</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_setdefault">
+<tt class="descname">do_setdefault</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_setdefault"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_setdefault" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.do_update">
+<tt class="descname">do_update</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.do_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.do_update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.doc_header">
+<tt class="descname">doc_header</tt><em class="property"> = 'Concurrent Admin Console 0.0.1\nAvailable Commands:\n'</em><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.doc_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.get_backup_data">
+<tt class="descname">get_backup_data</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.get_backup_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.get_backup_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.get_createenv_data">
+<tt class="descname">get_createenv_data</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.get_createenv_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.get_createenv_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.get_delete_data">
+<tt class="descname">get_delete_data</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.get_delete_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.get_delete_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.get_recover_data">
+<tt class="descname">get_recover_data</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.get_recover_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.get_recover_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.open_env">
+<tt class="descname">open_env</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.open_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.open_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens the currently selected environment</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.print_help_header">
+<tt class="descname">print_help_header</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.print_help_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.print_help_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.print_interactive_header">
+<tt class="descname">print_interactive_header</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.print_interactive_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.print_interactive_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.print_usage_help">
+<tt class="descname">print_usage_help</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.print_usage_help"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.print_usage_help" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.print_version">
+<tt class="descname">print_version</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.print_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.print_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print version of app</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.prompt">
+<tt class="descname">prompt</tt><em class="property"> = 'Con&gt; '</em><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.prompt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.recover_env">
+<tt class="descname">recover_env</tt><big>(</big><em>backupfile</em>, <em>dest_env=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.recover_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.recover_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>recreate an env from a backup file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.envadmin.EnvAdmin.set_env">
+<tt class="descname">set_env</tt><big>(</big><em>name</em>, <em>env=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#EnvAdmin.set_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.EnvAdmin.set_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new env to be used</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.environment.envadmin.RecoverBackupFileError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.environment.envadmin.</tt><tt class="descname">RecoverBackupFileError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#RecoverBackupFileError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.RecoverBackupFileError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
+<p>Simple error used when trying to recover an env from a backup file</p>
+<dl class="attribute">
+<dt id="concurrent.core.environment.envadmin.RecoverBackupFileError.title">
+<tt class="descname">title</tt><em class="property"> = '[Recover Backup Error]'</em><a class="headerlink" href="#concurrent.core.environment.envadmin.RecoverBackupFileError.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.environment.envadmin.main">
+<tt class="descclassname">concurrent.core.environment.envadmin.</tt><tt class="descname">main</tt><big>(</big><em>args=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/envadmin.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.envadmin.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.environment.environment">
+<span id="concurrent-core-environment-environment-module"></span><h2>concurrent.core.environment.environment module<a class="headerlink" href="#module-concurrent.core.environment.environment" title="Permalink to this headline">¶</a></h2>
+<p>Basic Concurrent environment</p>
+<dl class="class">
+<dt id="concurrent.core.environment.environment.Environment">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.environment.</tt><tt class="descname">Environment</tt><big>(</big><em>basepath</em>, <em>create=False</em>, <em>args=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.ComponentManager</span></tt></p>
+<p>This is our environment, it represents a real physical structure in disc where a aplications
+life&#8217;s in.</p>
+<p>The env is a like:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>BasePath/</dt>
+<dd><ul class="first last simple">
+<li>logs/</li>
+<li>configs/</li>
+<li>plugins/</li>
+<li>backups/</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<p>Every folder in our environment needs a dummy file, this file is used in env checks!
+The name of the dummy file is espected to be equal the name of the direct parent folder.</p>
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.activate_component">
+<tt class="descname">activate_component</tt><big>(</big><em>component</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.activate_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.activate_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize member vasr of the component.
+Concurrent will initialize the environment (env) the config handle
+(config) and the logger (log)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.backup">
+<tt class="descname">backup</tt><big>(</big><em>source=None</em>, <em>dest=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.backup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.backup" title="Permalink to this definition">¶</a></dt>
+<dd><p>backup the whole environment to a zip file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.backup_components">
+<tt class="descname">backup_components</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.backup_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of components that implement <cite>IEnvBackup</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.backup_get_default_file_name">
+<tt class="descname">backup_get_default_file_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.backup_get_default_file_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.backup_get_default_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>get default backup file name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.check">
+<tt class="descname">check</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the current basepath is a valid environment. It just checks if all
+directories and needed files are in here.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.check_dir">
+<em class="property">classmethod </em><tt class="descname">check_dir</tt><big>(</big><em>dirname</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.check_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.check_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the dir has a file with the same name as it&#8217;s children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.check_version">
+<tt class="descname">check_version</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.check_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.check_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks current installed framework version</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.conditional_create_env_dirs">
+<tt class="descname">conditional_create_env_dirs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.conditional_create_env_dirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.conditional_create_env_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all dirs the environment needs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.create">
+<tt class="descname">create</tt><big>(</big><em>args=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will try to create a new environment. Our basepath has already been set in the
+constructor.</p>
+<p>If args contains (&#8216;baseon&#8217;, &#8216;file&#8217;), default values will not be
+loaded; they are expected to be provided by that file or other options.</p>
+<dl class="docutils">
+<dt>&#64;param args: List of tuples used to setup the env. The tuples are styled like:</dt>
+<dd>(section, name, value)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an environment is like uninstalling it</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.delete_components">
+<tt class="descname">delete_components</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.delete_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of components that implement <cite>IEnvDelete</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.extra_plugins_dir">
+<tt class="descname">extra_plugins_dir</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.extra_plugins_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path from where we load additional plugins. Apart from
+those we&#8217;ll load all those located in the path pointed out <cite>plugins</cite>
+env var.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_app_name">
+<tt class="descname">get_app_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_app_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_app_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return name of currently running application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_backups_dir">
+<tt class="descname">get_backups_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_backups_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_backups_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our backups are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_backups_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_backups_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_backups_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_backups_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the backups folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_configs_dir">
+<tt class="descname">get_configs_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_configs_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_configs_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our configs are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_configs_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_configs_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_configs_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_configs_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the configs folder</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_ini_filename">
+<em class="property">classmethod </em><tt class="descname">get_ini_filename</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_ini_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_ini_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the filename we use for our main ini</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_logs_dir">
+<tt class="descname">get_logs_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_logs_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_logs_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our logs are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_logs_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_logs_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_logs_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_logs_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the logs folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_plugins_dir">
+<tt class="descname">get_plugins_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_plugins_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_plugins_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our plugins are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_plugins_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_plugins_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_plugins_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_plugins_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the plugins folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_readme_file_path">
+<tt class="descname">get_readme_file_path</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_readme_file_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_readme_file_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absolute path to the readme file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_sql_dir">
+<tt class="descname">get_sql_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_sql_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_sql_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our sql schemas are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_sql_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_sql_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_sql_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_sql_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the sql folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_templates_dir">
+<tt class="descname">get_templates_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_templates_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_templates_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absulute path where our templates are</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="concurrent.core.environment.environment.Environment.get_templates_dir_name">
+<em class="property">classmethod </em><tt class="descname">get_templates_dir_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_templates_dir_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_templates_dir_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the templates folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_version_file_path">
+<tt class="descname">get_version_file_path</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_version_file_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_version_file_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absolute path to the version file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.get_version_from_file">
+<tt class="descname">get_version_from_file</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.get_version_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.get_version_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the version saved in the &#8216;VERSION&#8217; file of the env</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.is_component_enabled">
+<tt class="descname">is_component_enabled</tt><big>(</big><em>cls</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.is_component_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.is_component_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>If a compoent is not enabled but it should be (always enabled</dt>
+<dd>componentsor such) return true. Otherwise return false and prevent</dd>
+</dl>
+<p>enabling.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.launch_main_app">
+<tt class="descname">launch_main_app</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.launch_main_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.launch_main_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that will launch the registered main app for this environment</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.log_file">
+<tt class="descname">log_file</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.log_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>If your log type is <cite>file</cite> this will be the target file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.log_format">
+<tt class="descname">log_format</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.log_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom logging format.</p>
+<p>If nothing is set, the following will be used:</p>
+<p>[$(project_name)s][$(app)s][$(module)s] $(levelname)s: $(message)s</p>
+<dl class="docutils">
+<dt>Format can include regular log tags:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://docs.python.org/library/logging.html#formatter-objects">http://docs.python.org/library/logging.html#formatter-objects</a>.</li>
+</ul>
+</dd>
+<dt>Concurrent addes several new tags&#8217;:</dt>
+<dd><ul class="first last simple">
+<li>$(app)s          - application that is running in this environment</li>
+<li>$(path)s         - full environmnet path</li>
+<li>$(basename)s     - basename of the environmnet path</li>
+<li>$(project_name)s - current project name that lifes in the env</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.log_level">
+<tt class="descname">log_level</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.log_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python logger Level: (<cite>CRITICAL</cite>, <cite>ERROR</cite>, <cite>WARN</cite>, <cite>INFO</cite>,
+<cite>DEBUG</cite>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.log_type">
+<tt class="descname">log_type</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.log_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>type of log we&#8217;ll use: (<cite>none</cite>, <cite>file</cite>, <cite>stderr</cite>, <cite>syslog</cite>,
+<cite>winlog</cite>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.needs_upgrade">
+<tt class="descname">needs_upgrade</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.needs_upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.needs_upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether the environment needs to be upgraded.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.project_app">
+<tt class="descname">project_app</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.project_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Application that will run in this environment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.project_desc">
+<tt class="descname">project_desc</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.project_desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short description of the project.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.project_name">
+<tt class="descname">project_name</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.project_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the project.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.restored">
+<tt class="descname">restored</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.restored"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.restored" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when this env has been restored</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.setup_config">
+<tt class="descname">setup_config</tt><big>(</big><em>use_defaults=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.setup_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.setup_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will try to load the environment config file using our config reader.
+If we need to use the defaults we&#8217;ll also regenerate the config file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.setup_log">
+<tt class="descname">setup_log</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.setup_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.setup_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup our logger</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.shutdown">
+<tt class="descname">shutdown</tt><big>(</big><em>tid=None</em>, <em>except_logging=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown the environment.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.Environment.upgrade">
+<tt class="descname">upgrade</tt><big>(</big><em>backup=False</em>, <em>backup_dest=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#Environment.upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.Environment.upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upgrade database.</p>
+<p>&#64;param backup: whether or not to backup before upgrading
+&#64;param backup_dest: name of the backup file
+&#64;return: whether the upgrade was performed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.Environment.upgrade_components">
+<tt class="descname">upgrade_components</tt><a class="headerlink" href="#concurrent.core.environment.environment.Environment.upgrade_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of components that implement <cite>IEnvUpgrader</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.environment.environment.EnvFolderCheckError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.environment.environment.</tt><tt class="descname">EnvFolderCheckError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvFolderCheckError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvFolderCheckError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
+<p>Error raised when the env got bad folders</p>
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.EnvFolderCheckError.title">
+<tt class="descname">title</tt><em class="property"> = '[Environment Error]'</em><a class="headerlink" href="#concurrent.core.environment.environment.EnvFolderCheckError.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.environment.environment.EnvWrongVersionError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.environment.environment.</tt><tt class="descname">EnvWrongVersionError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvWrongVersionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvWrongVersionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
+<p>Error raised when the env saved was build with a different version</p>
+<dl class="attribute">
+<dt id="concurrent.core.environment.environment.EnvWrongVersionError.title">
+<tt class="descname">title</tt><em class="property"> = '[Environment Error]'</em><a class="headerlink" href="#concurrent.core.environment.environment.EnvWrongVersionError.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.environment.environment.EnvSetup">
+<em class="property">class </em><tt class="descclassname">concurrent.core.environment.environment.</tt><tt class="descname">EnvSetup</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.core.environment.environment.EnvSetup'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<p>Component which will act as the setup manager for the environment. Also
+handles main backup/restore procedures if something hapens to the environment</p>
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_backup">
+<tt class="descname">env_backup</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_backup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_backup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we make a backup</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_created">
+<tt class="descname">env_created</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_created"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_created" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a new env has been created</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_delete">
+<tt class="descname">env_delete</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an env get&#8217;s deleted, env is still valid</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_do_upgrade">
+<tt class="descname">env_do_upgrade</tt><big>(</big><em>dbManager</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_do_upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_do_upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will perform the actual upgrade process. Be careful on using db transactions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_need_upgrade">
+<tt class="descname">env_need_upgrade</tt><big>(</big><em>dbManager</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_need_upgrade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_need_upgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we start an environment, if this call returns true the env will not able to
+load until we force an upgrade.</p>
+<p>TODO: This needs to be done!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.environment.environment.EnvSetup.env_restore">
+<tt class="descname">env_restore</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/environment/environment.html#EnvSetup.env_restore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.environment.environment.EnvSetup.env_restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we make a restore</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.environment">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.environment" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.environment package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.environment.api">concurrent.core.environment.api module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.environment.envadmin">concurrent.core.environment.envadmin module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.environment.environment">concurrent.core.environment.environment module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.environment">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.environment.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.environment.envadmin &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.environment.envadmin</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Basic command line application</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">concurrent</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">VERSION</span>
+<span class="kn">import</span> <span class="nn">concurrent.tools.console</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">to_unicode</span><span class="p">,</span> <span class="nb">raw_input</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">printerr</span><span class="p">,</span> <span class="n">printout</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.environment.environment</span> <span class="kn">import</span> <span class="n">Environment</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.filehandling</span> <span class="kn">import</span> <span class="n">zip_is_valid</span><span class="p">,</span><span class="n">purge_dir</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">_INI_FILENAME</span><span class="p">,</span> <span class="n">get_true_values</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">SUCCESS_RET_CODES</span>
+
+<span class="c"># Our version numbers are handeled by setuptools</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">CONCURRENT_VERSION</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">get_distribution</span><span class="p">(</span><span class="s">&#39;Concurrent&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">version</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">CONCURRENT_VERSION</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="RecoverBackupFileError"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.RecoverBackupFileError">[docs]</a><span class="k">class</span> <span class="nc">RecoverBackupFileError</span><span class="p">(</span><span class="n">BaseError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple error used when trying to recover an env from a backup file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span><span class="o">=</span><span class="s">&quot;[Recover Backup Error]&quot;</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin">[docs]</a><span class="k">class</span> <span class="nc">EnvAdmin</span><span class="p">(</span><span class="n">concurrent</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">CMD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bash application that helps us with our env&#39;s.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Definitions we need (see cmd.Cmd for more info)</span>
+    <span class="n">doc_header</span> <span class="o">=</span> <span class="s">&#39;Concurrent Admin Console </span><span class="si">%(version)s</span><span class="se">\n</span><span class="s">&#39;</span> \
+                 <span class="s">&#39;Available Commands:</span><span class="se">\n</span><span class="s">&#39;</span> \
+                 <span class="o">%</span> <span class="p">{</span><span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="n">CONCURRENT_VERSION</span><span class="p">}</span>
+    <span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;Con&gt; &quot;</span>
+
+<div class="viewcode-block" id="EnvAdmin.print_interactive_header"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.print_interactive_header">[docs]</a>    <span class="k">def</span> <span class="nf">print_interactive_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;[Welcome to Concurrent Environment Admin] </span><span class="si">%(version)s</span><span class="s"></span>
+<span class="s">Copyright (c) 2014 Moritz Wundke</span>
+
+<span class="s">Type:  &#39;?&#39; or &#39;help&#39; for help on commands.</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">CONCURRENT_VERSION</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.print_version"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.print_version">[docs]</a>    <span class="k">def</span> <span class="nf">print_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print version of app</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">CONCURRENT_VERSION</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Environmnet Helpers</span>
+<span class="c">#===============================================================================</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.set_env"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.set_env">[docs]</a>    <span class="k">def</span> <span class="nf">set_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new env to be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">concurrent</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">CMD</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="o">=</span> <span class="n">env</span>
+
+        <span class="c"># Set the new prompt :P</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;Con-[</span><span class="si">%s</span><span class="s">]&gt; &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.open_env"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.open_env">[docs]</a>    <span class="k">def</span> <span class="nf">open_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Opens the currently selected environment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Ups... I could not open the environment!&quot;</span><span class="p">),</span> <span class="n">e</span> <span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.ceck_env"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.ceck_env">[docs]</a>    <span class="k">def</span> <span class="nf">ceck_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_error</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Will return true if the environment can be opened and false otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">print_error</span><span class="p">:</span>
+                <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Ups... I could not open the environment!&quot;</span><span class="p">),</span> <span class="n">e</span> <span class="p">)</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Help</span>
+<span class="c">#===============================================================================</span></div>
+<div class="viewcode-block" id="EnvAdmin.print_help_header"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.print_help_header">[docs]</a>    <span class="k">def</span> <span class="nf">print_help_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Concurrent - Environment Admin&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.print_usage_help"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.print_usage_help">[docs]</a>    <span class="k">def</span> <span class="nf">print_usage_help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Usage: con-admin &lt;/path/to/project&gt; &quot;</span>
+                   <span class="s">&quot;[command [subcommand] [option ...]]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Invoking con-admin without command starts &quot;</span>
+                   <span class="s">&quot;interactive mode.&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.all_docs"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.all_docs">[docs]</a>    <span class="k">def</span> <span class="nf">all_docs</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add specifc help content</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+                <span class="n">concurrent</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">CMD</span><span class="o">.</span><span class="n">all_docs</span><span class="p">()</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_plugin</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_createenv</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_launchenv</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_backup</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_recover</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_update</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_delete</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_setdefault</span>
+                <span class="p">)</span>
+</div>
+    <span class="n">all_docs</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">all_docs</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Quit</span>
+<span class="c">#===============================================================================</span>
+
+<div class="viewcode-block" id="EnvAdmin.do_quit"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_quit">[docs]</a>    <span class="k">def</span> <span class="nf">do_quit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exit app</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># cleanup the env if there is any open</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c"># Nothing to cleanup</span>
+            <span class="k">pass</span>
+
+        <span class="c"># Now finish exit</span>
+        <span class="n">concurrent</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">CMD</span><span class="o">.</span><span class="n">do_quit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Plugin stuff (admin what we got enabled and what not :P)</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_plugin</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s">&#39;plugin list&#39;</span><span class="p">,</span><span class="s">&#39;Show a list of available plugins&#39;</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;plugin setapp &lt;name&gt;&#39;</span><span class="p">,</span><span class="s">&#39;Will set a plugin to be the standart app to run in this environment &#39;</span><span class="p">)</span>
+                    <span class="p">]</span>
+
+<div class="viewcode-block" id="EnvAdmin.complete_plugin"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.complete_plugin">[docs]</a>    <span class="k">def</span> <span class="nf">complete_plugin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">begidx</span><span class="p">,</span> <span class="n">endidx</span><span class="p">):</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;list&#39;</span><span class="p">,</span> <span class="s">&#39;setapp&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">word_complete</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+
+    <span class="c"># TODO: Make plugins configurable here!</span></div>
+<div class="viewcode-block" id="EnvAdmin.do_plugin"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_plugin">[docs]</a>    <span class="k">def</span> <span class="nf">do_plugin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;list&#39;</span><span class="p">:</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;TODO: register plugins&quot;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;setapp&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;TODO: set app to life in env&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_help</span> <span class="p">(</span><span class="s">&#39;plugin&#39;</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Environment launching</span>
+<span class="c"># TODO: Finish components/config in environment</span>
+<span class="c"># TODO: Add daemonize process into launch option!</span>
+<span class="c">#===============================================================================</span></div>
+    <span class="n">_help_launchenv</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;launchenv&#39;</span><span class="p">,</span><span class="s">&#39;Launch app in env (default app)&#39;</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="EnvAdmin.do_launchenv"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_launchenv">[docs]</a>    <span class="k">def</span> <span class="nf">do_launchenv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        launch the current app or a different one in the env.</span>
+<span class="sd">        Different apps are usful to testing reasons!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">launchenv_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Launchenv for &#39;</span><span class="si">%(env)s</span><span class="s">&#39; failed:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                     <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="c"># Open env</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ceck_env</span><span class="p">(</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">launchenv_error</span><span class="p">(</span><span class="s">&quot;Environment not created or corrupted!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="c"># launch application</span>
+        <span class="n">retcode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">launch_main_app</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">retcode</span> <span class="ow">in</span> <span class="n">SUCCESS_RET_CODES</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Executed successfully!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Execution failed!&quot;</span><span class="p">)</span>
+        
+        <span class="kn">import</span> <span class="nn">threading</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Active threads:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threading</span><span class="o">.</span><span class="n">enumerate</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot; - </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="p">))</span>
+            
+        <span class="c"># Close environment!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        
+        <span class="c"># Make sure we kill us :D</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">retcode</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Environment Creation</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_createenv</span> <span class="o">=</span> <span class="p">[</span>
+                       <span class="p">(</span><span class="s">&#39;createenv&#39;</span><span class="p">,</span><span class="s">&#39;Create and initialize a new environment interactively&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s">&#39;createenv &lt;/path/to/project&gt; &lt;project_name&gt; &lt;targetapp&gt;&#39;</span><span class="p">,</span><span class="s">&#39;Create and initialize a new environment&#39;</span><span class="p">)</span>
+                      <span class="p">]</span>
+
+<div class="viewcode-block" id="EnvAdmin.get_createenv_data"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.get_createenv_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_createenv_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">returnvals</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Basic instructions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Starting Interactive environment creation at &lt;</span><span class="si">%(envname)s</span><span class="s">&gt;</span>
+
+<span class="s">This is the interactive guide on environment creation.</span>
+<span class="s">Just follow the instructions.&quot;&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">envname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Env path</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Now enter the absolute path where your environment should be created.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&lt;/path/to/project&gt; [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Environment app</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Enter the name of the project you are about to create&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;My Project&quot;</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;project_name [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">returnvals</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.do_createenv"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_createenv">[docs]</a>    <span class="k">def</span> <span class="nf">do_createenv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create environment by passed arguments or interactively</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">createenv_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Createenv for &#39;</span><span class="si">%(env)s</span><span class="s">&#39; failed:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                     <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ceck_env</span><span class="p">():</span>
+            <span class="n">createenv_error</span><span class="p">(</span><span class="s">&quot;Environment already created in specified path!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">):</span>
+            <span class="n">createenv_error</span><span class="p">(</span><span class="s">&quot;Target folder not empty!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="n">project_name</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c"># get arguments</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">returnvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_createenv_data</span><span class="p">()</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">project_name</span> <span class="o">=</span> <span class="n">returnvals</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">createenv_error</span><span class="p">(</span><span class="s">&#39;Wrong number of arguments: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">project_name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># Uppdate promt and internal stuff</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+            <span class="c"># Start env creation</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Creating and Initializing Environment&quot;</span><span class="p">))</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s">&#39;env&#39;</span><span class="p">,</span> <span class="s">&#39;path&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                <span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="n">project_name</span><span class="p">),</span>
+            <span class="p">]</span>
+
+            <span class="c"># OVER-WRITE THESE OPTIONS from a file</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c"># Bad thing happened!</span>
+                <span class="n">createenv_error</span><span class="p">(</span><span class="s">&#39;Failed to create environment. Created files will be deleted&#39;</span><span class="p">)</span>
+                <span class="n">printerr</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="n">purge_dir</span><span class="p">(</span> <span class="n">path</span> <span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">createenv_error</span><span class="p">(</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="c"># Close environment!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Project environment for &#39;</span><span class="si">%(project_name)s</span><span class="s">&#39; created.</span>
+
+<span class="s">You may now configure the environment by editing the file:</span>
+
+<span class="s">  </span><span class="si">%(config_path)s</span><span class="s"></span>
+
+<span class="s">Have a nice day!</span>
+<span class="s">&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">,</span> <span class="n">project_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">,</span>
+           <span class="n">project_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+           <span class="n">config_path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">get_configs_dir</span><span class="p">(),</span> <span class="n">_INI_FILENAME</span><span class="p">)))</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Update environment</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_update</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s">&#39;update&#39;</span><span class="p">,</span> <span class="s">&#39;Update environment interactively&#39;</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;update &lt;/path/to/project&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;Update environment&#39;</span><span class="p">)</span>
+                   <span class="p">]</span>
+<div class="viewcode-block" id="EnvAdmin.do_update"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_update">[docs]</a>    <span class="k">def</span> <span class="nf">do_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Set default values to env</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_setdefault</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s">&#39;setdefault&#39;</span><span class="p">,</span> <span class="s">&#39;Set default values to env&#39;</span><span class="p">)</span>
+                   <span class="p">]</span>
+<div class="viewcode-block" id="EnvAdmin.do_setdefault"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_setdefault">[docs]</a>    <span class="k">def</span> <span class="nf">do_setdefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Delete environment</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_delete</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s">&#39;delete&#39;</span><span class="p">,</span> <span class="s">&#39;Delete environment interactively&#39;</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;delete &lt;/path/to/project&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;Delete environment&#39;</span><span class="p">)</span>
+                   <span class="p">]</span>
+
+<div class="viewcode-block" id="EnvAdmin.get_delete_data"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.get_delete_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_delete_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">returnvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># Basic instructions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Starting Interactive environment deletion at &lt;</span><span class="si">%(envname)s</span><span class="s">&gt;&quot;&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">envname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Env path</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Now enter the absolute path to the environment that will be deleted.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&lt;/path/to/project&gt; [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">returnvals</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.do_delete"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_delete">[docs]</a>    <span class="k">def</span> <span class="nf">do_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">delete_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Delete for &#39;</span><span class="si">%(env)s</span><span class="s">&#39; failed:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                     <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="c"># get arguments</span>
+        <span class="n">env_dir</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="c"># Interactive or not</span>
+        <span class="n">interactive_delete</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">returnvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_delete_data</span><span class="p">()</span>
+            <span class="n">env_dir</span> <span class="o">=</span> <span class="n">returnvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">interactive_delete</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">delete_error</span><span class="p">(</span><span class="s">&#39;Wrong number of arguments: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">env_dir</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># Set the right env dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">envname</span> <span class="o">=</span> <span class="n">env_dir</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">basepath</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">:</span>
+            <span class="n">delete_error</span><span class="p">(</span><span class="s">&quot;Can not delete currently open environment! Close and open the admin!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="c"># Open env</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ceck_env</span><span class="p">():</span>
+            <span class="n">delete_error</span><span class="p">(</span><span class="s">&quot;Environment not created or corrupted!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">interactive_delete</span><span class="p">:</span>
+            <span class="n">no_option</span> <span class="o">=</span> <span class="s">&quot;no&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Delete Environment? [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                <span class="n">default</span><span class="o">=</span><span class="n">no_option</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">no_option</span>
+            <span class="c"># Ask again if we want to delete the env!</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">get_true_values</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Delete Canceled!&quot;</span><span class="p">))</span>
+                <span class="k">return</span>
+
+        <span class="c"># Delete it!</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Starting Delete Process&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+        <span class="c"># Close environment!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+        <span class="c"># It&#39;s deleted, so purge it!</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot; Purge env directory </span><span class="si">%(purge_dir)s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">purge_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">))</span>
+        <span class="n">purge_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">)</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Environment successfully deleted&quot;</span><span class="p">))</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Backup environment</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_backup</span> <span class="o">=</span> <span class="p">[</span>
+                       <span class="p">(</span><span class="s">&#39;backup&#39;</span><span class="p">,</span><span class="s">&#39;backup an environment interactively&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s">&#39;backup &lt;/path/to/project&gt; &lt;dest_file&gt;&#39;</span><span class="p">,</span><span class="s">&#39;backup an environment&#39;</span><span class="p">)</span>
+                      <span class="p">]</span>
+
+<div class="viewcode-block" id="EnvAdmin.get_backup_data"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.get_backup_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_backup_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">returnvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># Basic instructions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Starting Interactive environment backup at &lt;</span><span class="si">%(envname)s</span><span class="s">&gt;</span>
+
+<span class="s">Follow the instructions to backup the environment!&quot;&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">envname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Env path</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Now enter the absolute path to the environment that you will backup.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&lt;/path/to/project&gt; [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Environment app</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Destination file for tghe backup&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">backup_get_default_file_name</span><span class="p">()</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&lt;/dest/file&gt; [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">dest</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">dest</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">returnvals</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.do_backup"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_backup">[docs]</a>    <span class="k">def</span> <span class="nf">do_backup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        backup the current env</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">backup_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Backup for &#39;</span><span class="si">%(env)s</span><span class="s">&#39; failed:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                     <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="c"># Open env</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ceck_env</span><span class="p">(</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">backup_error</span><span class="p">(</span><span class="s">&quot;Environment not created or corrupted!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="c"># get arguments</span>
+        <span class="n">backup_source</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">backup_dest</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">returnvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backup_data</span><span class="p">()</span>
+            <span class="n">backup_source</span><span class="p">,</span> <span class="n">backup_dest</span> <span class="o">=</span> <span class="n">returnvals</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">backup_error</span><span class="p">(</span><span class="s">&#39;Wrong number of arguments: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backup_source</span><span class="p">,</span> <span class="n">backup_dest</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">backup</span><span class="p">(</span><span class="n">backup_source</span><span class="p">,</span> <span class="n">backup_dest</span><span class="p">)</span>
+
+        <span class="c"># Close environment!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Recover environment from backup</span>
+<span class="c">#===============================================================================</span></div>
+    <span class="n">_help_recover</span> <span class="o">=</span> <span class="p">[</span>
+                       <span class="p">(</span><span class="s">&#39;recover&#39;</span><span class="p">,</span><span class="s">&#39;recover an environment interactively&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s">&#39;recover &lt;/path/to/project&gt; &lt;backup_file&gt;&#39;</span><span class="p">,</span><span class="s">&#39;recover an environment&#39;</span><span class="p">)</span>
+                      <span class="p">]</span>
+
+<div class="viewcode-block" id="EnvAdmin.get_recover_data"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.get_recover_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_recover_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">returnvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># Basic instructions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Starting Interactive environment recovering at &lt;</span><span class="si">%(envname)s</span><span class="s">&gt;</span>
+
+<span class="s">Follow the instructions to recover environment!&quot;&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">envname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Env path</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Now enter the absolute path where your environment should be created.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&lt;/path/to/project&gt; [</span><span class="si">%(default)s</span><span class="s">]&gt; &quot;</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+
+        <span class="c"># Environment app</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot; Enter path where the backup file is locates&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;Backup File [&lt;/path/to/file&gt;]&gt; &quot;</span><span class="p">)</span>
+        <span class="n">returnvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">returnvals</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.recover_env"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.recover_env">[docs]</a>    <span class="k">def</span> <span class="nf">recover_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backupfile</span><span class="p">,</span> <span class="n">dest_env</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        recreate an env from a backup file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">zip_is_valid</span><span class="p">(</span> <span class="n">backupfile</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">dest_env</span><span class="p">:</span>
+                <span class="n">dest_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envname</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_line</span><span class="p">()</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Starting recovery&quot;</span><span class="p">))</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">recovery file: </span><span class="se">\t</span><span class="si">%(backupfile)s</span><span class="s">&quot;</span><span class="p">,</span><span class="n">backupfile</span><span class="o">=</span><span class="n">backupfile</span><span class="p">))</span>
+            <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">env path: </span><span class="se">\t</span><span class="si">%(dest_env)s</span><span class="s">&quot;</span><span class="p">,</span><span class="n">dest_env</span><span class="o">=</span><span class="n">dest_env</span><span class="p">))</span>
+
+            <span class="c">#TODO: call self.__env.restored() on the recovered env!</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecoverBackupFileError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Invalid zip file for recovery!&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EnvAdmin.do_recover"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.EnvAdmin.do_recover">[docs]</a>    <span class="k">def</span> <span class="nf">do_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        backup the current env</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">recover_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Recover for &#39;</span><span class="si">%(env)s</span><span class="s">&#39; failed:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">envname</span><span class="p">),</span>
+                     <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="c"># get arguments</span>
+        <span class="n">backup_file</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">dest_env</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">returnvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recover_data</span><span class="p">()</span>
+            <span class="n">dest_env</span><span class="p">,</span> <span class="n">backup_file</span> <span class="o">=</span> <span class="n">returnvals</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">recover_error</span><span class="p">(</span><span class="s">&#39;Wrong number of arguments: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dest_env</span><span class="p">,</span> <span class="n">backup_file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">recover_env</span><span class="p">(</span><span class="n">backup_file</span><span class="p">,</span> <span class="n">dest_env</span><span class="p">)</span>
+
+        <span class="c"># Close environment!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../../concurrent.core.environment.html#concurrent.core.environment.envadmin.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">admin</span> <span class="o">=</span> <span class="n">EnvAdmin</span><span class="p">()</span>
+    <span class="n">admin</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">pkg_resources</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="s">&#39;Concurrent==</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">VERSION</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

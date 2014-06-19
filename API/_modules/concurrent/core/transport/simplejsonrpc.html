@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.transport.simplejsonrpc &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.transport.simplejsonrpc</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Simple jsonrpc base implementation using decorators.</span>
+
+<span class="sd">    from simplejsonrpc import *</span>
+
+<span class="sd">    loginservice = SimpleJSONRPCService(api_version=1)</span>
+
+<span class="sd">    @jsonremote(loginservice, name=&#39;login&#39;, doc=&#39;Method used to log a user in&#39;)</span>
+<span class="sd">    def login(request, user_name, user_pass):</span>
+<span class="sd">        (...)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># TODO: Make a simple async callback functions for our RPC client: http://stackoverflow.com/questions/1805958/python-asynchronous-callbacks-and-generators</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.util.jsonlib</span> <span class="kn">import</span> <span class="n">json</span><span class="p">,</span> <span class="n">JsonParseError</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.pyjsonrpc.rpcerror</span> <span class="kn">import</span> <span class="n">JsonRpcError</span><span class="p">,</span> <span class="n">jsonrpcerrors</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SimpleJSONRPCService&#39;</span><span class="p">,</span> <span class="s">&#39;jsonremote&#39;</span><span class="p">]</span>
+
+<span class="n">version</span> <span class="o">=</span> <span class="s">&#39;2.0&#39;</span>
+
+<div class="viewcode-block" id="SimpleJSONRPCService"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.SimpleJSONRPCService">[docs]</a><span class="k">class</span> <span class="nc">SimpleJSONRPCService</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple JSON RPC service</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_map</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">method_map</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span> <span class="o">=</span> <span class="n">method_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_version</span> <span class="o">=</span> <span class="n">api_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_map</span> <span class="o">=</span> <span class="p">{}</span>
+    
+<div class="viewcode-block" id="SimpleJSONRPCService.add_method"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.SimpleJSONRPCService.add_method">[docs]</a>    <span class="k">def</span> <span class="nf">add_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+</div>
+<div class="viewcode-block" id="SimpleJSONRPCService.add_doc"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.SimpleJSONRPCService.add_doc">[docs]</a>    <span class="k">def</span> <span class="nf">add_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">doc</span>
+    </div>
+<div class="viewcode-block" id="SimpleJSONRPCService.handle_rpc"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.SimpleJSONRPCService.handle_rpc">[docs]</a>    <span class="k">def</span> <span class="nf">handle_rpc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">json_version</span><span class="p">,</span> <span class="n">method_id</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;jsonrpc&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;method&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">request</span><span class="p">,]</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;params&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">json_version</span> <span class="o">!=</span> <span class="s">&quot;2.0&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32600</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Invalid Request&quot;</span><span class="p">},}</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span><span class="p">[</span><span class="n">method</span><span class="p">](</span><span class="o">*</span><span class="n">params</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">JsonRpcError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c">#traceback.print_exc()</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">},}</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="c">#traceback.print_exc()</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32602</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Invalid params&quot;</span><span class="p">},}</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">method_id</span><span class="p">,</span> <span class="s">&#39;result&#39;</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">method_id</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32601</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Method not found&quot;</span><span class="p">},}</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32700</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Parse error&quot;</span><span class="p">},}</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32600</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Invalid Request&quot;</span><span class="p">},}</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_rpc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">request</span><span class="p">))</span>
+            <span class="n">result_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">batch_rpc</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_rpc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_rpc</span><span class="p">(</span><span class="n">batch_rpc</span><span class="p">,</span> <span class="n">request</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result_list</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">JsonParseError</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32700</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Parse error&quot;</span><span class="p">},})</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&#39;jsonrpc&#39;</span><span class="p">:</span><span class="n">version</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">32603</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Internal error&quot;</span><span class="p">},})</span>
+        
+    
+<div class="viewcode-block" id="SimpleJSONRPCService.api"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.SimpleJSONRPCService.api">[docs]</a>    <span class="k">def</span> <span class="nf">api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">api_description</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_version</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">api_description</span><span class="p">[</span><span class="s">&#39;api_version&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">api_version</span>
+        <span class="n">api_description</span><span class="p">[</span><span class="s">&#39;methods&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_map</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="c"># Document method, still some tweaking required</span>
+            <span class="n">api_description</span><span class="p">[</span><span class="s">&#39;methods&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_map</span><span class="p">:</span>
+                <span class="n">api_description</span><span class="p">[</span><span class="s">&#39;methods&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="s">&#39;doc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_map</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">api_description</span><span class="p">[</span><span class="s">&#39;methods&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="s">&#39;def&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">api_description</span>
+</div></div>
+<div class="viewcode-block" id="jsonremote"><a class="viewcode-back" href="../../../../concurrent.core.transport.simplejsonrpc.html#concurrent.core.transport.simplejsonrpc.jsonremote">[docs]</a><span class="k">def</span> <span class="nf">jsonremote</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    makes SimpleJSONRPCService a decorator so that you can write :</span>
+<span class="sd">    </span>
+<span class="sd">    from simplejsonrpc import *</span>
+
+<span class="sd">    loginservice = SimpleJSONRPCService(api_version=1)</span>
+
+<span class="sd">    @jsonremote(loginservice, name=&#39;login&#39;, doc=&#39;Method used to log a user in&#39;)</span>
+<span class="sd">    def login(request, user_name, user_pass):</span>
+<span class="sd">        (...)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">remotify</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">SimpleJSONRPCService</span><span class="p">):</span>
+            <span class="n">func_name</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="k">if</span> <span class="n">func_name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">func_name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="n">service</span><span class="o">.</span><span class="n">add_method</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">doc</span><span class="p">:</span>
+                <span class="n">service</span><span class="o">.</span><span class="n">add_doc</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Service &quot;</span><span class="si">%s</span><span class="s">&quot; not an instance of SimpleJSONRPCService&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">service</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="k">return</span> <span class="n">remotify</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

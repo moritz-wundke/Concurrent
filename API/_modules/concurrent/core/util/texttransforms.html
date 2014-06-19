@@ -1,0 +1,391 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.util.texttransforms &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.util.texttransforms</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">usefull stuff for text conversations, unicode, tags, etc etc...</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="c"># Just for security, we are aiming Python 3</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c"># Python 2</span>
+    <span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">quote_plus</span><span class="p">,</span> <span class="n">unquote</span><span class="p">,</span> <span class="n">urlencode</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c"># Python 3</span>
+    <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">quote_plus</span><span class="p">,</span> <span class="n">unquote</span><span class="p">,</span> <span class="n">urlencode</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">__builtin__</span> <span class="kn">as</span> <span class="nn">builtins</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">builtins</span>
+
+
+<span class="n">CRLF</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span>
+
+<span class="c"># -- Unicode</span>
+
+<div class="viewcode-block" id="to_unicode"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.to_unicode">[docs]</a><span class="k">def</span> <span class="nf">to_unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">charset</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a `str` object to an `unicode` object.</span>
+
+<span class="sd">    If `charset` is given, we simply assume that encoding for the text,</span>
+<span class="sd">    but we&#39;ll use the &quot;replace&quot; mode so that the decoding will always</span>
+<span class="sd">    succeed.</span>
+<span class="sd">    If `charset` is &#39;&#39;not&#39;&#39; specified, we&#39;ll make some guesses, first</span>
+<span class="sd">    trying the UTF-8 encoding, then trying the locale preferred encoding,</span>
+<span class="sd">    in &quot;replace&quot; mode. This differs from the `unicode` builtin, which</span>
+<span class="sd">    by default uses the locale preferred encoding, in &#39;strict&#39; mode,</span>
+<span class="sd">    and is therefore prompt to raise `UnicodeDecodeError`s.</span>
+
+<span class="sd">    Because of the &quot;replace&quot; mode, the original content might be altered.</span>
+<span class="sd">    If this is not what is wanted, one could map the original byte content</span>
+<span class="sd">    by using an encoding which maps each byte of the input to an unicode</span>
+<span class="sd">    character, e.g. by doing `unicode(text, &#39;iso-8859-1&#39;)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+            <span class="c"># two possibilities for storing unicode strings in exception data:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># custom __str__ method on the exception (e.g. PermissionError)</span>
+                <span class="c"># Python 3 uses str() while 2 used unicode()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+                <span class="c"># unicode arguments given to the exception (e.g. parse_date)</span>
+                <span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">charset</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">charset</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">(),</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">(),</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="exception_to_unicode"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.exception_to_unicode">[docs]</a><span class="k">def</span> <span class="nf">exception_to_unicode</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">traceback</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turn an exception to a unicode string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">traceback</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">concurrent.core.util.utils</span> <span class="kn">import</span> <span class="n">get_last_traceback</span>
+        <span class="n">traceback_only</span> <span class="o">=</span> <span class="n">get_last_traceback</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">to_unicode</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback_only</span><span class="p">)),</span>
+            <span class="n">message</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">message</span>
+</div>
+<div class="viewcode-block" id="unicode_quote"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.unicode_quote">[docs]</a><span class="k">def</span> <span class="nf">unicode_quote</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A unicode aware version of urllib.quote&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">safe</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="unicode_quote_plus"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.unicode_quote_plus">[docs]</a><span class="k">def</span> <span class="nf">unicode_quote_plus</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A unicode aware version of urllib.quote&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">quote_plus</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="unicode_unquote"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.unicode_unquote">[docs]</a><span class="k">def</span> <span class="nf">unicode_unquote</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A unicode aware version of urllib.unquote.</span>
+
+<span class="sd">    Take `str` value previously obtained by `unicode_quote`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="unicode_urlencode"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.unicode_urlencode">[docs]</a><span class="k">def</span> <span class="nf">unicode_urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A unicode aware version of urllib.urlencode&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">urlencode</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="to_utf8"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.to_utf8">[docs]</a><span class="k">def</span> <span class="nf">to_utf8</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">charset</span><span class="o">=</span><span class="s">&#39;iso-8859-15&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a string to UTF-8, assuming the encoding is either UTF-8, ISO</span>
+<span class="sd">    Latin-1, or as specified by the optional `charset` parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># Do nothing if it&#39;s already utf-8</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span>
+    <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># Use the user supplied charset if possible</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">u_string</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">charset</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="n">u_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">charset</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+            <span class="c"># This should always work</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">u_string</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;iso-8859-15&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="n">u_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;iso-8859-15&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="console_print"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.console_print">[docs]</a><span class="k">def</span> <span class="nf">console_print</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Low level console print method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cons_charset</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s">&#39;encoding&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="c"># Windows returns &#39;cp0&#39; to indicate no encoding</span>
+    <span class="k">if</span> <span class="n">cons_charset</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;cp0&#39;</span><span class="p">):</span>
+        <span class="n">cons_charset</span> <span class="o">=</span> <span class="s">&#39;utf-8&#39;</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">cons_charset</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;newline&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="raw_input"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.raw_input">[docs]</a><span class="k">def</span> <span class="nf">raw_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Catch raw input from the console</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">builtins</span><span class="o">.</span><span class="n">raw_input</span><span class="p">(),</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+
+<span class="c"># -- Console text output formating</span>
+</div>
+<div class="viewcode-block" id="printout"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.printout">[docs]</a><span class="k">def</span> <span class="nf">printout</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print to the standard out</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="printerr"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.printerr">[docs]</a><span class="k">def</span> <span class="nf">printerr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print to the standard err</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="print_table"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.print_table">[docs]</a><span class="k">def</span> <span class="nf">print_table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;  &#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="n">charset</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s">&#39;encoding&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;utf-8&#39;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c"># assumes all rows are of equal length</span>
+    <span class="n">col_width</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cols</span><span class="p">):</span>
+        <span class="n">col_width</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]))</span>
+
+    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ridx</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">cidx</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">headers</span> <span class="ow">and</span> <span class="n">ridx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sp</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;</span><span class="si">%%%d</span><span class="s">s&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">sep</span><span class="p">))</span> <span class="o">%</span> <span class="s">&#39; &#39;</span>  <span class="c"># No separator in header</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sp</span> <span class="o">=</span> <span class="n">sep</span>
+            <span class="k">if</span> <span class="n">cidx</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">num_cols</span><span class="p">:</span>
+                <span class="n">sp</span> <span class="o">=</span> <span class="s">&#39;&#39;</span> <span class="c"># No separator after last column</span>
+
+            <span class="n">line</span> <span class="o">=</span> <span class="p">(</span><span class="s">u&#39;</span><span class="si">%%</span><span class="s">-</span><span class="si">%d</span><span class="s">s</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">col_width</span><span class="p">[</span><span class="n">cidx</span><span class="p">],</span> <span class="n">sp</span><span class="p">))</span> <span class="o">%</span> <span class="p">(</span><span class="n">cell</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">charset</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ridx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;-&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span> <span class="o">*</span> <span class="n">cidx</span> <span class="o">+</span>
+                                                      <span class="nb">sum</span><span class="p">(</span><span class="n">col_width</span><span class="p">))]))</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="shorten_line"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.shorten_line">[docs]</a><span class="k">def</span> <span class="nf">shorten_line</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">75</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">maxlen</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">text</span>
+    <span class="n">cut</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">),</span> <span class="n">text</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">cut</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="n">maxlen</span>
+    <span class="k">return</span> <span class="n">text</span><span class="p">[:</span><span class="n">cut</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; ...&#39;</span>
+</div>
+<div class="viewcode-block" id="wrap"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.wrap">[docs]</a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">initial_indent</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">subsequent_indent</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+         <span class="n">linesep</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">linesep</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">textwrap</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">TextWrapper</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">replace_whitespace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                       <span class="n">break_long_words</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                       <span class="n">initial_indent</span><span class="o">=</span><span class="n">initial_indent</span><span class="p">,</span>
+                                       <span class="n">subsequent_indent</span><span class="o">=</span><span class="n">subsequent_indent</span><span class="p">)</span>
+        <span class="n">wrappedLines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+            <span class="n">wrappedLines</span> <span class="o">+=</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span> <span class="ow">or</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">linesep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wrappedLines</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">t</span>
+</div>
+<div class="viewcode-block" id="obfuscate_email_address"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.obfuscate_email_address">[docs]</a><span class="k">def</span> <span class="nf">obfuscate_email_address</span><span class="p">(</span><span class="n">address</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">address</span><span class="p">:</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">at</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">address</span><span class="p">[:</span><span class="n">at</span><span class="p">]</span> <span class="o">+</span> <span class="s">u&#39;@</span><span class="se">\u2026</span><span class="s">&#39;</span> <span class="o">+</span> \
+                   <span class="p">(</span><span class="n">address</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&gt;&#39;</span> <span class="ow">and</span> <span class="s">&#39;&gt;&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">address</span>
+
+<span class="c"># -- Conversion</span>
+</div>
+<div class="viewcode-block" id="cool_size"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.cool_size">[docs]</a><span class="k">def</span> <span class="nf">cool_size</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%.1f</span><span class="s">&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+    <span class="n">jump</span> <span class="o">=</span> <span class="mi">512</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">jump</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> bytes&#39;</span> <span class="o">%</span> <span class="n">size</span>
+
+    <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;KB&#39;</span><span class="p">,</span> <span class="s">&#39;MB&#39;</span><span class="p">,</span> <span class="s">&#39;GB&#39;</span><span class="p">,</span> <span class="s">&#39;TB&#39;</span><span class="p">]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">size</span> <span class="o">&gt;=</span> <span class="n">jump</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">size</span> <span class="o">/=</span> <span class="mf">1024.</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">format</span> <span class="o">+</span> <span class="s">&#39; </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">units</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="expandtabs"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.expandtabs">[docs]</a><span class="k">def</span> <span class="nf">expandtabs</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">tabstop</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">ignoring</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span>
+    <span class="k">if</span> <span class="n">ignoring</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">expandtabs</span><span class="p">(</span><span class="n">tabstop</span><span class="p">)</span>
+
+    <span class="n">outlines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">outlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">tabstop</span><span class="o">-</span><span class="n">p</span><span class="o">%</span><span class="n">tabstop</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">+=</span><span class="n">n</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">ignoring</span> <span class="ow">or</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignoring</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="n">outlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outlines</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="gettext_fake"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.gettext_fake">[docs]</a><span class="k">def</span> <span class="nf">gettext_fake</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="n">string</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">retval</span> <span class="o">%=</span> <span class="n">kwargs</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+<span class="n">N_</span> <span class="o">=</span> <span class="n">gettext_fake</span>
+<span class="n">gettext</span> <span class="o">=</span> <span class="n">_</span> <span class="o">=</span> <span class="n">gettext_fake</span>
+
+<div class="viewcode-block" id="ngettextp_fake"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.texttransforms.ngettextp_fake">[docs]</a><span class="k">def</span> <span class="nf">ngettextp_fake</span><span class="p">(</span><span class="n">singular</span><span class="p">,</span> <span class="n">plural</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">num</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="n">singular</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="n">plural</span>
+    <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;num&#39;</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span> <span class="o">%</span> <span class="n">kwargs</span></div>
+<span class="n">ngettext</span> <span class="o">=</span> <span class="n">ngettextp_fake</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

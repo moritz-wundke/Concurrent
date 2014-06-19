@@ -1,0 +1,344 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.transport package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-transport-package">
+<h1>concurrent.core.transport package<a class="headerlink" href="#concurrent-core-transport-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html">concurrent.core.transport.pyjsonrpc package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.http">concurrent.core.transport.pyjsonrpc.http module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.rpcerror">concurrent.core.transport.pyjsonrpc.rpcerror module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.rpcjson">concurrent.core.transport.pyjsonrpc.rpcjson module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.rpclib">concurrent.core.transport.pyjsonrpc.rpclib module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.rpcrequest">concurrent.core.transport.pyjsonrpc.rpcrequest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc.rpcresponse">concurrent.core.transport.pyjsonrpc.rpcresponse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#module-concurrent.core.transport.pyjsonrpc">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concurrent.core.transport.simplejsonrpc.html">concurrent.core.transport.simplejsonrpc package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concurrent.core.transport.simplejsonrpc.html#module-concurrent.core.transport.simplejsonrpc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="concurrent-core-transport-api-module">
+<h2>concurrent.core.transport.api module<a class="headerlink" href="#concurrent-core-transport-api-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-concurrent.core.transport.api"></span><p>API for transport related modules</p>
+<dl class="class">
+<dt id="concurrent.core.transport.api.IClientSocket">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.api.</tt><tt class="descname">IClientSocket</tt><a class="reference internal" href="_modules/concurrent/core/transport/api.html#IClientSocket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.api.IClientSocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Basic socket interface</p>
+<dl class="method">
+<dt id="concurrent.core.transport.api.IClientSocket.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/api.html#IClientSocket.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.api.IClientSocket.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close socket connection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.api.IClientSocket.connect">
+<tt class="descname">connect</tt><big>(</big><em>host</em>, <em>port</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/api.html#IClientSocket.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.api.IClientSocket.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a given host and port</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.api.IClientSocket.receive">
+<tt class="descname">receive</tt><big>(</big><em>map=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/api.html#IClientSocket.receive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.api.IClientSocket.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive data from a socket mapping the received data if 
+required</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.api.IClientSocket.send">
+<tt class="descname">send</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/api.html#IClientSocket.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.api.IClientSocket.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send data to a socket</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.transport.gzipper">
+<span id="concurrent-core-transport-gzipper-module"></span><h2>concurrent.core.transport.gzipper module<a class="headerlink" href="#module-concurrent.core.transport.gzipper" title="Permalink to this headline">¶</a></h2>
+<p>WSGI gzip middleware adapted from: <a class="reference external" href="http://www.evanfosmark.com/2008/12/python-wsgi-middleware-for-automatic-gzipping/">http://www.evanfosmark.com/2008/12/python-wsgi-middleware-for-automatic-gzipping/</a></p>
+<dl class="class">
+<dt id="concurrent.core.transport.gzipper.Gzipper">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.gzipper.</tt><tt class="descname">Gzipper</tt><big>(</big><em>app</em>, <em>compresslevel=6</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/gzipper.html#Gzipper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.gzipper.Gzipper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>WSGI middleware to wrap around and gzip all output.
+This automatically adds the content-encoding header.</p>
+<dl class="method">
+<dt id="concurrent.core.transport.gzipper.Gzipper.client_wants_gzip">
+<tt class="descname">client_wants_gzip</tt><big>(</big><em>accept_encoding_header</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/gzipper.html#Gzipper.client_wants_gzip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.gzipper.Gzipper.client_wants_gzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to see if the client can accept gzipped output, and whether
+or not it is even the preferred method. If <cite>identity</cite> is higher, then
+no gzipping should occur.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.gzipper.Gzipper.gzip_string">
+<tt class="descname">gzip_string</tt><big>(</big><em>string</em>, <em>compression_level</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/gzipper.html#Gzipper.gzip_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.gzipper.Gzipper.gzip_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>gzip</cite> module didn&#8217;t provide a way to gzip just a string.
+Had to hack together this. I know, it isn&#8217;t pretty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.gzipper.Gzipper.parse_encoding_header">
+<tt class="descname">parse_encoding_header</tt><big>(</big><em>header</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/gzipper.html#Gzipper.parse_encoding_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.gzipper.Gzipper.parse_encoding_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Break up the <cite>HTTP_ACCEPT_ENCODING</cite> header into a dict of
+the form, {&#8216;encoding-name&#8217;:qvalue}.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="concurrent-core-transport-tcpserver-module">
+<h2>concurrent.core.transport.tcpserver module<a class="headerlink" href="#concurrent-core-transport-tcpserver-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-concurrent.core.transport.tcpserver"></span><p>Implementation of our socket server</p>
+<dl class="function">
+<dt id="concurrent.core.transport.tcpserver.tcpremote">
+<tt class="descclassname">concurrent.core.transport.tcpserver.</tt><tt class="descname">tcpremote</tt><big>(</big><em>tcp_opbject</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#tcpremote"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.tcpremote" title="Permalink to this definition">¶</a></dt>
+<dd><p>makes TCPServer or TCPClient a decorator so that you can write :</p>
+<p>from tcpserver import *</p>
+<p>server = TCPServer(...)</p>
+<p>&#64;tcpremote(server, name=&#8217;login&#8217;)
+def login(request, client_address, user_name, user_pass):</p>
+<blockquote>
+<div>(...)</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.transport.tcpserver.TCPHandler">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.tcpserver.</tt><tt class="descname">TCPHandler</tt><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Very simple TCP protocol handler that translates incomming request to function calls</p>
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPHandler.add_method">
+<tt class="descname">add_method</tt><big>(</big><em>name</em>, <em>method</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPHandler.add_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPHandler.add_method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPHandler.handle">
+<tt class="descname">handle</tt><big>(</big><em>handler</em>, <em>request</em>, <em>data</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPHandler.handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPHandler.handle_rpc">
+<tt class="descname">handle_rpc</tt><big>(</big><em>handler</em>, <em>request</em>, <em>data</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPHandler.handle_rpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPHandler.handle_rpc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.transport.tcpserver.TCPServer">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.tcpserver.</tt><tt class="descname">TCPServer</tt><big>(</big><em>host</em>, <em>port</em>, <em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">SocketServer.ThreadingMixIn</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">SocketServer.TCPServer</span></tt>, <a class="reference internal" href="#concurrent.core.transport.tcpserver.TCPHandler" title="concurrent.core.transport.tcpserver.TCPHandler"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.tcpserver.TCPHandler</span></tt></a></p>
+<p>Our threaded socket implementation is a JSON-RPC implementation using a SocketServer. We use this
+technique to be able to achieve high-performance in connectivity and sync between all nodes while
+being felxible and simple within our data interaction.</p>
+<dl class="attribute">
+<dt id="concurrent.core.transport.tcpserver.TCPServer.allow_reuse_address">
+<tt class="descname">allow_reuse_address</tt><em class="property"> = True</em><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPServer.allow_reuse_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPServer.client_connected">
+<tt class="descname">client_connected</tt><big>(</big><em>request</em>, <em>client_address</em>, <em>handler</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPServer.client_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPServer.client_connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPServer.client_disconnected">
+<tt class="descname">client_disconnected</tt><big>(</big><em>request</em>, <em>client_address</em>, <em>handler</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPServer.client_disconnected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPServer.client_disconnected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.transport.tcpserver.TCPServer.daemon_threads">
+<tt class="descname">daemon_threads</tt><em class="property"> = True</em><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPServer.daemon_threads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.transport.tcpserver.TCPClient">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.tcpserver.</tt><tt class="descname">TCPClient</tt><big>(</big><em>log</em>, <em>host</em>, <em>port</em>, <em>node</em>, <em>socket1=None</em>, <em>socket_timeout=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.tcpsocket.TCPSocket</span></tt>, <a class="reference internal" href="#concurrent.core.transport.tcpserver.TCPHandler" title="concurrent.core.transport.tcpserver.TCPHandler"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.tcpserver.TCPHandler</span></tt></a></p>
+<p>TCP client used to map protocol calling mechanisms to a given function. Just
+a special socket that does apart from sending and receiving the translation
+of our protocol.</p>
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPClient.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPClient.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPClient.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close socket connection and client thread</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpserver.TCPClient.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpserver.html#TCPClient.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpserver.TCPClient.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect and start the client thread to listen for responses</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.transport.tcpsocket">
+<span id="concurrent-core-transport-tcpsocket-module"></span><h2>concurrent.core.transport.tcpsocket module<a class="headerlink" href="#module-concurrent.core.transport.tcpsocket" title="Permalink to this headline">¶</a></h2>
+<p>Simple base socket system used in transport protocol based systems</p>
+<dl class="class">
+<dt id="concurrent.core.transport.tcpsocket.IClientSocket">
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.tcpsocket.</tt><tt class="descname">IClientSocket</tt><a class="headerlink" href="#concurrent.core.transport.tcpsocket.IClientSocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Basic socket interface</p>
+<dl class="method">
+<dt id="concurrent.core.transport.tcpsocket.IClientSocket.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#concurrent.core.transport.tcpsocket.IClientSocket.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close socket connection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpsocket.IClientSocket.connect">
+<tt class="descname">connect</tt><big>(</big><em>host</em>, <em>port</em><big>)</big><a class="headerlink" href="#concurrent.core.transport.tcpsocket.IClientSocket.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a given host and port</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpsocket.IClientSocket.receive">
+<tt class="descname">receive</tt><big>(</big><em>map=None</em><big>)</big><a class="headerlink" href="#concurrent.core.transport.tcpsocket.IClientSocket.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive data from a socket mapping the received data if 
+required</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.transport.tcpsocket.IClientSocket.send">
+<tt class="descname">send</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#concurrent.core.transport.tcpsocket.IClientSocket.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send data to a socket</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.transport.tcpsocket.send_to">
+<tt class="descclassname">concurrent.core.transport.tcpsocket.</tt><tt class="descname">send_to</tt><big>(</big><em>sock</em>, <em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpsocket.html#send_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpsocket.send_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send data to a given socket</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.transport.tcpsocket.receive_from">
+<tt class="descclassname">concurrent.core.transport.tcpsocket.</tt><tt class="descname">receive_from</tt><big>(</big><em>sock</em>, <em>map=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/tcpsocket.html#receive_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.tcpsocket.receive_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive data from a give socket</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.transport">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.transport" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.transport package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#concurrent-core-transport-api-module">concurrent.core.transport.api module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.transport.gzipper">concurrent.core.transport.gzipper module</a></li>
+<li><a class="reference internal" href="#concurrent-core-transport-tcpserver-module">concurrent.core.transport.tcpserver module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.transport.tcpsocket">concurrent.core.transport.tcpsocket module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.transport">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.transport.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

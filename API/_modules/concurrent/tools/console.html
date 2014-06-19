@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.tools.console &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.tools.console</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Basic command line application</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">cmd</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">_</span><span class="p">,</span> <span class="n">to_unicode</span><span class="p">,</span> <span class="n">console_print</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">printerr</span><span class="p">,</span> <span class="n">printout</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+
+
+<div class="viewcode-block" id="CMD"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD">[docs]</a><span class="k">class</span> <span class="nc">CMD</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">Cmd</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Basic CMD application</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Definitions we need (see cmd.Cmd for more info)</span>
+    <span class="n">intro</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">doc_header</span> <span class="o">=</span> <span class="s">&#39;DEFINE HEADER&#39;</span>
+    <span class="n">ruler</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;CMD&gt; &quot;</span>
+    <span class="n">__env</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_date_format</span> <span class="o">=</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span>
+    <span class="n">_datetime_format</span> <span class="o">=</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span>
+    <span class="n">_date_format_hint</span> <span class="o">=</span> <span class="s">&#39;YYYY-MM-DD&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">envdir</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">Cmd</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">envdir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env_set</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">envdir</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_permsys</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">envname</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+<div class="viewcode-block" id="CMD.emptyline"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.emptyline">[docs]</a>    <span class="k">def</span> <span class="nf">emptyline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="CMD.onecmd"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.onecmd">[docs]</a>    <span class="k">def</span> <span class="nf">onecmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`line` may be a `str` or an `unicode` object&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">:</span>
+                    <span class="n">encoding</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">encoding</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">encoding</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">()</span> <span class="c"># sys.argv</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\\\</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">Cmd</span><span class="o">.</span><span class="n">onecmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="ne">SystemExit</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="n">BaseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Command failed:&quot;</span><span class="p">),</span> <span class="n">e</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="CMD.set_env"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.set_env">[docs]</a>    <span class="k">def</span> <span class="nf">set_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new env to be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">envname</span> <span class="o">=</span> <span class="n">name</span>
+</div>
+<div class="viewcode-block" id="CMD.print_interactive_header"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_interactive_header">[docs]</a>    <span class="k">def</span> <span class="nf">print_interactive_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;[Generic CMD App]</span>
+<span class="s">Copyright (c) 2014 Moritz Wundke</span>
+
+<span class="s">Type:  &#39;?&#39; or &#39;help&#39; for help on commands.</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="CMD.run"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_interactive_header</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmdloop</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="CMD.print_version"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_version">[docs]</a>    <span class="k">def</span> <span class="nf">print_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print version of app</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s">&#39;0&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CMD.main"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.main">[docs]</a>    <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Main entry point for this application</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;-h&#39;</span><span class="p">,</span> <span class="s">&#39;--help&#39;</span><span class="p">,</span> <span class="s">&#39;help&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">onecmd</span><span class="p">(</span><span class="s">&#39;help&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">,</span><span class="s">&#39;--version&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">print_version</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">env_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="nb">unicode</span><span class="p">(</span><span class="n">env_path</span><span class="p">,</span> <span class="s">&#39;ascii&#39;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">env_path</span><span class="p">,</span> <span class="s">&#39;ascii&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+                    <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;non-ascii environment path &#39;</span><span class="si">%(path)s</span><span class="s">&#39; not &quot;</span>
+                               <span class="s">&quot;supported.&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">env_path</span><span class="p">))</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="n">env_path</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">s_args</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">:]])</span>
+                    <span class="n">command</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span><span class="n">s_args</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">onecmd</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">do_quit</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">do_quit</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Miscs</span>
+<span class="c">#===============================================================================</span></div>
+<div class="viewcode-block" id="CMD.print_line"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_line">[docs]</a>    <span class="k">def</span> <span class="nf">print_line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a line :P</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;&quot;&quot;--------------------------------------------------------------------------&quot;&quot;&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="CMD.unicod_safe_split"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.unicod_safe_split">[docs]</a>    <span class="k">def</span> <span class="nf">unicod_safe_split</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argstr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        `argstr` is an `str` string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">unicode</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">argstr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))]</span> <span class="ow">or</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">argstr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))]</span> <span class="ow">or</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="CMD.complete_word"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.complete_word">[docs]</a>    <span class="k">def</span> <span class="nf">complete_word</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">words</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">startswith</span> <span class="p">(</span><span class="n">text</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="CMD.print_help"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_help">[docs]</a>    <span class="k">def</span> <span class="nf">print_help</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">docs</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stream</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">docs</span><span class="p">:</span> <span class="k">return</span>
+        <span class="k">for</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">:</span>
+            <span class="n">console_print</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s">&#39; * [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">console_print</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">   - </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">doc</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+    <span class="n">print_help</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">print_help</span><span class="p">)</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Help</span>
+<span class="c">#===============================================================================</span>
+
+    <span class="n">_help_help</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;help&#39;</span><span class="p">,</span><span class="s">&#39;Show help&#39;</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="CMD.all_docs"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.all_docs">[docs]</a>    <span class="k">def</span> <span class="nf">all_docs</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_help</span> <span class="o">+</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_help_quit</span>
+                <span class="p">)</span>
+</div>
+    <span class="n">all_docs</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">all_docs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CMD.print_help_header"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_help_header">[docs]</a>    <span class="k">def</span> <span class="nf">print_help_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Concurrent - Console application&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="CMD.print_usage_help"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.print_usage_help">[docs]</a>    <span class="k">def</span> <span class="nf">print_usage_help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Usage: &lt;appname&gt; &lt;/path/to/projenv&gt; &quot;</span>
+                   <span class="s">&quot;[command [subcommand] [option ...]]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Invoking &lt;appname&gt; without command starts &quot;</span>
+                   <span class="s">&quot;interactive mode.&quot;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="CMD.do_help"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.do_help">[docs]</a>    <span class="k">def</span> <span class="nf">do_help</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_help_header</span><span class="p">()</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unicod_safe_split</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">doc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_help_&quot;</span> <span class="o">+</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">print_help</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">printerr</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;No documentation found for &#39;</span><span class="si">%(cmd)s</span><span class="s">&#39;&quot;</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_usage_help</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_help</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_docs</span><span class="p">())</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># Commands - Exit (EOF or quit)</span>
+<span class="c">#===============================================================================</span>
+</div>
+    <span class="n">_help_quit</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&#39;quit&#39;</span><span class="p">,</span> <span class="s">&#39;Exit&#39;</span><span class="p">]]</span>
+    <span class="n">_help_exit</span> <span class="o">=</span> <span class="n">_help_quit</span>
+    <span class="n">_help_EOF</span> <span class="o">=</span> <span class="n">_help_quit</span>
+
+<div class="viewcode-block" id="CMD.do_quit"><a class="viewcode-back" href="../../../concurrent.tools.html#concurrent.tools.console.CMD.do_quit">[docs]</a>    <span class="k">def</span> <span class="nf">do_quit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">See you soon!&quot;</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="c"># make aliasses for the others</span></div>
+    <span class="n">do_exit</span> <span class="o">=</span> <span class="n">do_quit</span>
+    <span class="n">do_EOF</span> <span class="o">=</span> <span class="n">do_quit</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

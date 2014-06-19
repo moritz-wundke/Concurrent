@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.util.filehandling &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.util.filehandling</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File handling utils</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">cmd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">_</span><span class="p">,</span> <span class="n">printerr</span><span class="p">,</span> <span class="n">printout</span>
+
+<div class="viewcode-block" id="create_file"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.create_file">[docs]</a><span class="k">def</span> <span class="nf">create_file</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple file creator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="create_dir_gitsafe"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.create_dir_gitsafe">[docs]</a><span class="k">def</span> <span class="nf">create_dir_gitsafe</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create directory and add a nice git safe file in so we will handle</span>
+<span class="sd">    the folder in version control</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
+    <span class="n">create_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span><span class="s">&#39;.gitkeep&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="purge_dir"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.purge_dir">[docs]</a><span class="k">def</span> <span class="nf">purge_dir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Purge a whole dir, including all it&#39;s containing files and subfolders!&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">topdown</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>        
+        <span class="c"># remove all files</span>
+        <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="nb">file</span><span class="p">))</span>        
+        <span class="c"># remove all dirs</span>
+        <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="nb">dir</span><span class="p">))</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>     
+    </div>
+<div class="viewcode-block" id="create_unique_file"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.create_unique_file">[docs]</a><span class="k">def</span> <span class="nf">create_unique_file</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new file. An index is added if the path exists&quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">flags</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">O_CREAT</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">O_WRONLY</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">O_EXCL</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s">&#39;O_BINARY&#39;</span><span class="p">):</span>
+                <span class="n">flags</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">O_BINARY</span>
+            <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="mi">0</span><span class="n">o666</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c"># A sanity check</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Failed to create unique name: &#39;</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%d%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">idx</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    </div>
+<div class="viewcode-block" id="copytree"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.copytree">[docs]</a><span class="k">def</span> <span class="nf">copytree</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">symlinks</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Recursively copy a directory tree using copy2() (from shutil.copytree.)</span>
+
+<span class="sd">    Added a `skip` parameter consisting of absolute paths</span>
+<span class="sd">    which we don&#39;t want to copy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">str_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getfilesystemencoding</span><span class="p">()</span> <span class="ow">or</span>
+                               <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">path</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="p">[</span><span class="n">str_path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">copytree_rec</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">srcname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">srcname</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">dstname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">symlinks</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">islink</span><span class="p">(</span><span class="n">srcname</span><span class="p">):</span>
+                    <span class="n">linkto</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">readlink</span><span class="p">(</span><span class="n">srcname</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">linkto</span><span class="p">,</span> <span class="n">dstname</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">srcname</span><span class="p">):</span>
+                    <span class="n">copytree_rec</span><span class="p">(</span><span class="n">srcname</span><span class="p">,</span> <span class="n">dstname</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">srcname</span><span class="p">,</span> <span class="n">dstname</span><span class="p">)</span>
+                <span class="c"># XXX What about devices, sockets etc.?</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">why</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">srcname</span><span class="p">,</span> <span class="n">dstname</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">why</span><span class="p">)))</span>
+            <span class="c"># catch the Error from the recursive copytree so that we can</span>
+            <span class="c"># continue with other files</span>
+            <span class="k">except</span> <span class="n">shutil</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copystat</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">why</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">why</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">shutil</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+    <span class="n">copytree_rec</span><span class="p">(</span><span class="n">str_path</span><span class="p">(</span><span class="n">src</span><span class="p">),</span> <span class="n">str_path</span><span class="p">(</span><span class="n">dst</span><span class="p">))</span>
+    
+<span class="c"># -- zipfile handling</span></div>
+<div class="viewcode-block" id="zip_print_info"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.zip_print_info">[docs]</a><span class="k">def</span> <span class="nf">zip_print_info</span><span class="p">(</span> <span class="n">zip_file_name</span> <span class="p">):</span>
+    <span class="n">zf</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span> <span class="n">zip_file_name</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">infolist</span><span class="p">():</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tComment:t&quot;</span><span class="p">,</span><span class="n">info</span><span class="o">.</span><span class="n">comment</span><span class="p">))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tModified:t&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">info</span><span class="o">.</span><span class="n">date_time</span><span class="p">)))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tSystem:tt&quot;</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">create_system</span><span class="p">,</span> <span class="s">&#39;(0 = Windows, 3 = Unix)&#39;</span><span class="p">))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tZIP version:t&quot;</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">create_version</span><span class="p">))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tCompressed:t&quot;</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">compress_size</span><span class="p">,</span> <span class="s">&#39;bytes&#39;</span><span class="p">))</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;tUncompressed:t&quot;</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">file_size</span><span class="p">,</span> <span class="s">&#39;bytes&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="zip_is_valid"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.zip_is_valid">[docs]</a><span class="k">def</span> <span class="nf">zip_is_valid</span><span class="p">(</span> <span class="n">zip_file_name</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if the file name is pointing to a zip file. Otherwise False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span> <span class="n">zip_file_name</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="zip_open"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.zip_open">[docs]</a><span class="k">def</span> <span class="nf">zip_open</span><span class="p">(</span> <span class="n">zip_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">allowZip64</span><span class="o">=</span><span class="bp">True</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Open a zip file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">allowZip64</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="zip_create_from_folder"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.filehandling.zip_create_from_folder">[docs]</a><span class="k">def</span> <span class="nf">zip_create_from_folder</span><span class="p">(</span> <span class="n">source_dir</span><span class="p">,</span> <span class="n">dest_file</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">exclude_dirs</span><span class="o">=</span><span class="p">[],</span> <span class="n">include_root</span><span class="o">=</span><span class="bp">True</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method that just.</span>
+<span class="sd">    Inpired by: http://stackoverflow.com/questions/458436/adding-folders-to-a-zip-file-using-python</span>
+<span class="sd">    @param source_dir: The folder that will be zipped</span>
+<span class="sd">    @param dest_file: Destination zip file. If not set `source_dir` base name will be used</span>
+<span class="sd">    @param exclude_dirs: List of directories that should be excluded </span>
+<span class="sd">    @param include_root: If True `source_dir` will be included in the resulting zip   </span>
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="c"># Build right dest_file name and verify if source exists</span>
+    <span class="k">if</span> <span class="n">dest_file</span> <span class="ow">is</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">dest_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">source_dir</span><span class="p">),</span><span class="s">&#39;.zip&#39;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">source_dir</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s">&quot;source_folder argument must point to a valid directory.&quot;</span><span class="p">)</span>
+    
+    <span class="n">base_dir</span><span class="p">,</span> <span class="n">root_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">source_dir</span><span class="p">)</span>
+    
+    <span class="c">#Little nested function to prepare the proper archive path</span>
+    <span class="k">def</span> <span class="nf">trim_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">archive_dir</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base_dir</span><span class="p">:</span>
+            <span class="n">archive_dir</span> <span class="o">=</span> <span class="n">archive_dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_root</span><span class="p">:</span>
+            <span class="n">archive_dir</span> <span class="o">=</span> <span class="n">archive_dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">archive_dir</span><span class="p">)</span>
+    
+    <span class="c"># nested function to exclude a file from beeing added to the zip file</span>
+    <span class="k">def</span> <span class="nf">should_be_excluded</span><span class="p">(</span> <span class="nb">dir</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">excluded_dir</span> <span class="ow">in</span> <span class="n">exclude_dirs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="n">excluded_dir</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    
+    <span class="c"># Create file</span>
+    <span class="n">out_file</span> <span class="o">=</span> <span class="n">zip_open</span><span class="p">(</span><span class="n">dest_file</span><span class="p">)</span>
+    
+    <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span> <span class="s">&quot;Creating Zip </span><span class="si">%(NewZip)s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">NewZip</span><span class="o">=</span><span class="n">dest_file</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source_dir</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="c"># Check excluded dirs!</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">should_be_excluded</span><span class="p">(</span> <span class="n">root</span> <span class="p">):</span>                
+                <span class="c"># Write the file</span>
+                <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span> <span class="s">&quot; - Adding </span><span class="si">%(file_path)s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">trim_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)))</span>
+                <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">trim_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+        
+        <span class="c"># Empty folder needs to be added too       </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dirs</span><span class="p">:</span>
+            <span class="n">zipInfo</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipInfo</span><span class="p">(</span><span class="n">trim_path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">out_file</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="n">zipInfo</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">out_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">printout</span><span class="p">(</span><span class="n">_</span><span class="p">(</span> <span class="s">&quot;Zip file created successfully!&quot;</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

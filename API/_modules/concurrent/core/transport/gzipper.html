@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.transport.gzipper &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.transport.gzipper</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">WSGI gzip middleware adapted from: http://www.evanfosmark.com/2008/12/python-wsgi-middleware-for-automatic-gzipping/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">gzip</span> <span class="kn">import</span> <span class="n">GzipFile</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+
+<div class="viewcode-block" id="Gzipper"><a class="viewcode-back" href="../../../../concurrent.core.transport.html#concurrent.core.transport.gzipper.Gzipper">[docs]</a><span class="k">class</span> <span class="nc">Gzipper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; WSGI middleware to wrap around and gzip all output.</span>
+<span class="sd">        This automatically adds the content-encoding header.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compresslevel</span> <span class="o">=</span> <span class="n">compresslevel</span>
+ 
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Do the actual work. If the host doesn&#39;t support gzip as a proper encoding,</span>
+<span class="sd">            then simply pass over to the next app on the wsgi stack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">accept_encoding_header</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;HTTP_ACCEPT_ENCODING&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_wants_gzip</span><span class="p">(</span><span class="n">accept_encoding_header</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+ 
+        <span class="k">def</span> <span class="nf">_start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Wrapper around the original `start_response` function.</span>
+<span class="sd">                The sole purpose being to add the proper headers automatically.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&quot;Content-Encoding&quot;</span><span class="p">,</span> <span class="s">&quot;gzip&quot;</span><span class="p">))</span>
+            <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&quot;Vary&quot;</span><span class="p">,</span> <span class="s">&quot;Accept-Encoding&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+ 
+        <span class="c"># Unfortunately, we can&#39;t gzip data chunk-by-chunk, so we need to join up whatever</span>
+        <span class="c"># is being sent out first. (Remember, WSGI apps return items which can be iterated.)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">_start_response</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gzip_string</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compresslevel</span><span class="p">)]</span>
+    
+<div class="viewcode-block" id="Gzipper.parse_encoding_header"><a class="viewcode-back" href="../../../../concurrent.core.transport.html#concurrent.core.transport.gzipper.Gzipper.parse_encoding_header">[docs]</a>    <span class="k">def</span> <span class="nf">parse_encoding_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Break up the `HTTP_ACCEPT_ENCODING` header into a dict of</span>
+<span class="sd">            the form, {&#39;encoding-name&#39;:qvalue}.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">encodings</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;identity&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}</span>
+     
+        <span class="k">for</span> <span class="n">encoding</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;;&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">encoding</span><span class="p">,</span> <span class="n">qvalue</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;;&quot;</span><span class="p">)</span>
+                <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">qvalue</span> <span class="o">=</span> <span class="n">qvalue</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">qvalue</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span><span class="p">):</span>
+                    <span class="n">encodings</span><span class="p">[</span><span class="n">encoding</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">qvalue</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">encodings</span><span class="p">[</span><span class="n">encoding</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encodings</span><span class="p">[</span><span class="n">encoding</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">encodings</span>
+     </div>
+<div class="viewcode-block" id="Gzipper.client_wants_gzip"><a class="viewcode-back" href="../../../../concurrent.core.transport.html#concurrent.core.transport.gzipper.Gzipper.client_wants_gzip">[docs]</a>    <span class="k">def</span> <span class="nf">client_wants_gzip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accept_encoding_header</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check to see if the client can accept gzipped output, and whether</span>
+<span class="sd">            or not it is even the preferred method. If `identity` is higher, then</span>
+<span class="sd">            no gzipping should occur.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">encodings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_encoding_header</span><span class="p">(</span><span class="n">accept_encoding_header</span><span class="p">)</span>
+     
+        <span class="c"># Do the actual comparisons</span>
+        <span class="k">if</span><span class="p">(</span><span class="s">&#39;gzip&#39;</span> <span class="ow">in</span> <span class="n">encodings</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">encodings</span><span class="p">[</span><span class="s">&#39;gzip&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">encodings</span><span class="p">[</span><span class="s">&#39;identity&#39;</span><span class="p">]</span>
+     
+        <span class="k">elif</span><span class="p">(</span><span class="s">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">encodings</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">encodings</span><span class="p">[</span><span class="s">&#39;*&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">encodings</span><span class="p">[</span><span class="s">&#39;identity&#39;</span><span class="p">]</span>
+     
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="Gzipper.gzip_string"><a class="viewcode-back" href="../../../../concurrent.core.transport.html#concurrent.core.transport.gzipper.Gzipper.gzip_string">[docs]</a>    <span class="k">def</span> <span class="nf">gzip_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">compression_level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The `gzip` module didn&#39;t provide a way to gzip just a string.</span>
+<span class="sd">            Had to hack together this. I know, it isn&#39;t pretty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fake_file</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">gz_file</span> <span class="o">=</span> <span class="n">GzipFile</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">,</span> <span class="n">compression_level</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fake_file</span><span class="p">)</span>
+        <span class="n">gz_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="n">gz_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fake_file</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.logging.log &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.logging.log</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Logger class that is able to link to a large number of OS dependent</span>
+<span class="sd">log&#39;s. Apart handles log categories and much more.</span>
+
+<span class="sd">TODO:</span>
+<span class="sd">  * Add categories</span>
+<span class="sd">  * Add remote log ability</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">logging.handlers</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="c"># Simple dict that defines available log levels</span>
+<span class="n">_LOG_LEVEL_DICTIONARY</span> <span class="o">=</span> <span class="p">{</span>\
+   <span class="p">(</span><span class="s">&#39;DEBUG&#39;</span><span class="p">,</span><span class="s">&#39;ALL&#39;</span><span class="p">):</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>\
+   <span class="p">(</span><span class="s">&#39;INFO&#39;</span><span class="p">):</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>\
+   <span class="p">(</span><span class="s">&#39;WARN&#39;</span><span class="p">):</span><span class="n">logging</span><span class="o">.</span><span class="n">WARN</span><span class="p">,</span>\
+   <span class="p">(</span><span class="s">&#39;ERROR&#39;</span><span class="p">):</span><span class="n">logging</span><span class="o">.</span><span class="n">WARN</span><span class="p">,</span>\
+   <span class="p">(</span><span class="s">&#39;CRITICAL&#39;</span><span class="p">):</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>\
+   <span class="p">}</span>
+<span class="n">_LOG_LEVEL_DEFAULT</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+
+<span class="c"># Logtypes</span>
+<span class="n">_EXTRA_LOG_TYPE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;stderr&#39;</span><span class="p">,</span><span class="s">&#39;file&#39;</span><span class="p">)</span>
+<span class="n">_FILE_LOGTYPE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;file&#39;</span><span class="p">)</span>
+<span class="n">_WIN_LOGTYPE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;winlog&#39;</span><span class="p">,</span> <span class="s">&#39;eventlog&#39;</span><span class="p">,</span> <span class="s">&#39;nteventlog&#39;</span><span class="p">)</span>
+<span class="n">_SYSLOG_LOGTYPE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;syslog&#39;</span><span class="p">,</span><span class="s">&#39;unix&#39;</span><span class="p">)</span>
+<span class="n">_STREAM_LOGTYPE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;stderr&#39;</span><span class="p">)</span>
+
+
+<span class="n">_DEFAULT_LOG_FORMAT</span> <span class="o">=</span> <span class="s">&#39;[</span><span class="si">%(project_name)s</span><span class="s">][</span><span class="si">%(app)s</span><span class="s">][</span><span class="si">%(module)s</span><span class="s">] </span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span>
+
+<div class="viewcode-block" id="print_trace"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.print_trace">[docs]</a><span class="k">def</span> <span class="nf">print_trace</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_stack</span><span class="p">():</span>
+        <span class="k">print</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="set_extra_log_format"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.set_extra_log_format">[docs]</a><span class="k">def</span> <span class="nf">set_extra_log_format</span><span class="p">(</span><span class="n">logtype</span><span class="p">,</span><span class="n">format</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_EXTRA_LOG_TYPE_LIST</span><span class="p">:</span>
+        <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> &#39;</span> <span class="o">+</span> <span class="n">format</span>
+    <span class="k">return</span> <span class="n">format</span>
+</div>
+<div class="viewcode-block" id="get_log_level"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.get_log_level">[docs]</a><span class="k">def</span> <span class="nf">get_log_level</span><span class="p">(</span><span class="n">levelstring</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_LOG_LEVEL_DICTIONARY</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">levelstring</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">_LOG_LEVEL_DEFAULT</span>
+</div>
+<div class="viewcode-block" id="get_default_log_format"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.get_default_log_format">[docs]</a><span class="k">def</span> <span class="nf">get_default_log_format</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_DEFAULT_LOG_FORMAT</span>
+</div>
+<div class="viewcode-block" id="get_escaped_default_log_format"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.get_escaped_default_log_format">[docs]</a><span class="k">def</span> <span class="nf">get_escaped_default_log_format</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_DEFAULT_LOG_FORMAT</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;$&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="logger_factory"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.logger_factory">[docs]</a><span class="k">def</span> <span class="nf">logger_factory</span><span class="p">(</span><span class="n">logtype</span><span class="o">=</span><span class="s">&#39;syslog&#39;</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s">&#39;WARNING&#39;</span><span class="p">,</span>
+                   <span class="n">logid</span><span class="o">=</span><span class="s">&#39;concurrent&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">logid</span><span class="p">)</span>
+    <span class="n">logtype</span> <span class="o">=</span> <span class="n">logtype</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c"># Make sure we do not use unix logging on windows</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="s">&#39;nt&#39;</span> <span class="ow">and</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_SYSLOG_LOGTYPE_LIST</span><span class="p">:</span>
+        <span class="n">logtype</span> <span class="o">=</span> <span class="n">_WIN_LOGTYPE_LIST</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_FILE_LOGTYPE_LIST</span><span class="p">:</span>
+        <span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_WIN_LOGTYPE_LIST</span><span class="p">:</span>
+        <span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">NTEventLogHandler</span><span class="p">(</span><span class="n">logid</span><span class="p">,</span> <span class="n">logtype</span><span class="o">=</span><span class="s">&#39;Application&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_SYSLOG_LOGTYPE_LIST</span><span class="p">:</span>
+        <span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">SysLogHandler</span><span class="p">(</span><span class="s">&#39;/dev/log&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">logtype</span> <span class="ow">in</span> <span class="n">_STREAM_LOGTYPE_LIST</span><span class="p">:</span>
+        <span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">BufferingHandler</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">datefmt</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">logtype</span> <span class="o">==</span> <span class="s">&#39;stderr&#39;</span><span class="p">:</span>
+        <span class="n">datefmt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%X</span><span class="s">&#39;</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">get_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
+
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">datefmt</span><span class="p">)</span>
+    <span class="n">hdlr</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+
+    <span class="c"># Add handler</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">==</span> <span class="s">&#39;DEBUG&#39;</span> <span class="ow">or</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;All&#39;</span> <span class="ow">or</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;INFO&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">logtype</span> <span class="ow">in</span> <span class="n">_STREAM_LOGTYPE_LIST</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">))</span>
+
+    <span class="c"># Remember our handler so that we can remove it later</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">custom_handler</span> <span class="o">=</span> <span class="n">hdlr</span>
+
+    <span class="k">return</span> <span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="Log"><a class="viewcode-back" href="../../../../concurrent.core.logging.html#concurrent.core.logging.log.Log">[docs]</a><span class="k">class</span> <span class="nc">Log</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logger class that handles several types of loggin including categories and such</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for our logger. Will initialize all needed structures.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Save env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">log_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">log_file</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_format</span><span class="p">()</span>
+
+        <span class="c"># Check existence of the log file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logtype</span> <span class="o">==</span> <span class="s">&#39;file&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="p">):</span>
+            <span class="n">logfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get_logs_dir</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logtype</span><span class="p">,</span> <span class="n">logfile</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">basepath</span><span class="p">,</span>
+                                  <span class="n">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the format string for our logger, here we add information of the</span>
+<span class="sd">        project and it&#39;s application we are running</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">log_format</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">_DEFAULT_LOG_FORMAT</span>
+
+        <span class="c"># Look if we need to add some extra stuff to our format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">set_extra_log_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;$(&#39;</span><span class="p">,</span> <span class="s">&#39;%(&#39;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(app)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_app_name</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(path)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">basepath</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(basename)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">basepath</span><span class="p">))</span> \
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(project_name)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

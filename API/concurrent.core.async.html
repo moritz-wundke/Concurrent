@@ -1,0 +1,644 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.async package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-async-package">
+<h1>concurrent.core.async package<a class="headerlink" href="#concurrent-core-async-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.core.async.api">
+<span id="concurrent-core-async-api-module"></span><h2>concurrent.core.async.api module<a class="headerlink" href="#module-concurrent.core.async.api" title="Permalink to this headline">¶</a></h2>
+<p>Base interface for async tasks classes</p>
+<dl class="class">
+<dt id="concurrent.core.async.api.ITaskManager">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.api.</tt><tt class="descname">ITaskManager</tt><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Interface used to define what a task manager is for us</p>
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.create_task">
+<tt class="descname">create_task</tt><big>(</big><em>task_class</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.create_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.create_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a task using a given type. TaskManager will assign a unique id to the created task</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.get_num_workers">
+<tt class="descname">get_num_workers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.get_num_workers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.get_num_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of workers we use for our processing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.get_results_queue">
+<tt class="descname">get_results_queue</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.get_results_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.get_results_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a refernce to the result queue</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.init">
+<tt class="descname">init</tt><big>(</big><em>identity</em>, <em>address</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the manager using the provided master server data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push a task that should be completed by the workers</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start our worker processes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.stop">
+<tt class="descname">stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop our worker processes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.update_pool">
+<tt class="descname">update_pool</tt><big>(</big><em>_num_workers</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.update_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.update_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of workers the task manager should use</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskManager.wait_for_all">
+<tt class="descname">wait_for_all</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskManager.wait_for_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskManager.wait_for_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait until all tasks has been finished</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.api.ITaskSystem">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.api.</tt><tt class="descname">ITaskSystem</tt><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A task system is an implemented system that provides a scheduler with tasks to be executed</p>
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.gather_result">
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
+are to be send to the originator. Returns a tuple like (result, Error)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.generate_tasks">
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the initial tasks this system requires</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.get_system_id">
+<tt class="descname">get_system_id</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.get_system_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.get_system_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.init_system">
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the system</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.is_complete">
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.api.ITaskSystem.system_id">
+<tt class="descname">system_id</tt><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.system_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.system_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskSystem.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.api.ITaskScheduler">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.api.</tt><tt class="descname">ITaskScheduler</tt><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Interface used by our distributed task scheduler. A scheduler receives an implemented system
+that will be executed on the distributed system through pickleing Python instances.</p>
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.handle_task">
+<tt class="descname">handle_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.handle_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.handle_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a task to a slave or in case it failed queue the task back</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put a task on the global task queue</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.push_tasks">
+<tt class="descname">push_tasks</tt><big>(</big><em>tasks</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.push_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.push_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push all tasks on the global task queue</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.rate_slaves">
+<tt class="descname">rate_slaves</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.rate_slaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.rate_slaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update slaves</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.setup">
+<tt class="descname">setup</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the scheduler with required data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.start_system">
+<tt class="descname">start_system</tt><big>(</big><em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.start_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.start_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start an incomming task system</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduler.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduler.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduler.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>A slave has finished a new task, update its rank</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.api.ITaskScheduleStrategy">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.api.</tt><tt class="descname">ITaskScheduleStrategy</tt><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduleStrategy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduleStrategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Implements a schedule strategy to select the next valid slave that should process a given task</p>
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduleStrategy.get_next_slave">
+<tt class="descname">get_next_slave</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduleStrategy.get_next_slave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduleStrategy.get_next_slave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the slave that should process the next task</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduleStrategy.rate">
+<tt class="descname">rate</tt><big>(</big><em>slave</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduleStrategy.rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduleStrategy.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rate a slave without</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.api.ITaskScheduleStrategy.setup">
+<tt class="descname">setup</tt><big>(</big><em>scheduler</em>, <em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/api.html#ITaskScheduleStrategy.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.api.ITaskScheduleStrategy.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the stratey with required data</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="concurrent-core-async-task-module">
+<h2>concurrent.core.async.task module<a class="headerlink" href="#concurrent-core-async-task-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-concurrent.core.async.task"></span><p>Base class for any of our async tasks that a job is made of.</p>
+<dl class="class">
+<dt id="concurrent.core.async.task.Task">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.task.</tt><tt class="descname">Task</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A simple tasks that just executes a function in a fire and forget way</p>
+<dl class="method">
+<dt id="concurrent.core.async.task.Task.clean_up">
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed and its results are about to be sent back. This is used
+to optimize our network and to cleanup the tasks input data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.Task.finished">
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the task is finished. Called on the MasterNode within the main thread once
+the node has recovered the result data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.task.Task.name">
+<tt class="descname">name</tt><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.task.Task.system_id">
+<tt class="descname">system_id</tt><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task.system_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task.system_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.task.Task.task_id">
+<tt class="descname">task_id</tt><a class="reference internal" href="_modules/concurrent/core/async/task.html#Task.task_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.Task.task_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.task.GenericTaskManager">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.task.</tt><tt class="descname">GenericTaskManager</tt><big>(</big><em>compmgr</em>, <em>init=&lt;function __init__ at 0x00000000056434A8&gt;</em>, <em>cls=&lt;class 'concurrent.core.async.task.GenericTaskManager'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.get_num_workers">
+<tt class="descname">get_num_workers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.get_num_workers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.get_num_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of workers we use for our processing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.get_results_queue">
+<tt class="descname">get_results_queue</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.get_results_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.get_results_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a refernce to the result queue</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.init">
+<tt class="descname">init</tt><big>(</big><em>identity</em>, <em>address</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the manager</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.task.GenericTaskManager.num_workers">
+<tt class="descname">num_workers</tt><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.num_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of worker processed to be created, -1 will spawn as much as physical cores.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push a task that should be completed by the workers</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start our worker processes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.stop">
+<tt class="descname">stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop our worker processes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.update_pool">
+<tt class="descname">update_pool</tt><big>(</big><em>_num_workers=-1</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.update_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.update_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of workers the task manager should use</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.task.GenericTaskManager.wait_for_all">
+<tt class="descname">wait_for_all</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/task.html#GenericTaskManager.wait_for_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager.wait_for_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait until all tasks has been finished</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.async.threads">
+<span id="concurrent-core-async-threads-module"></span><h2>concurrent.core.async.threads module<a class="headerlink" href="#module-concurrent.core.async.threads" title="Permalink to this headline">¶</a></h2>
+<p>Module containing various base thread classes and threading helpers</p>
+<dl class="class">
+<dt id="concurrent.core.async.threads.InterruptibleThread">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">InterruptibleThread</tt><big>(</big><em>log</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#InterruptibleThread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.InterruptibleThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></tt></a></p>
+<p>A thread class that supports raising exception in the thread from
+another thread. Based on the class from Bluebird75 
+[<a class="reference external" href="http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python">http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python</a>]</p>
+<dl class="method">
+<dt id="concurrent.core.async.threads.InterruptibleThread.raiseExc">
+<tt class="descname">raiseExc</tt><big>(</big><em>exctype</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#InterruptibleThread.raiseExc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.InterruptibleThread.raiseExc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises the given exception type in the context of this thread.</p>
+<p>If the thread is busy in a system call (time.sleep(),
+socket.accept(), ...), the exception is simply ignored.</p>
+<p>If you are sure that your exception should terminate the thread,
+one way to ensure that it works is:</p>
+<blockquote>
+<div><p>t = ThreadWithExc( ... )
+...
+t.raiseExc( SomeException )
+while t.isAlive():</p>
+<blockquote>
+<div>time.sleep( 0.1 )
+t.raiseExc( SomeException )</div></blockquote>
+</div></blockquote>
+<p>If the exception is to be caught by the thread, you need a way to
+check that your thread has caught it.</p>
+<p>CAREFUL : this function is executed in the context of the
+caller thread, to raise an excpetion in the context of the
+thread represented by this instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.InterruptibleThread.stop_and_wait">
+<tt class="descname">stop_and_wait</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#InterruptibleThread.stop_and_wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.InterruptibleThread.stop_and_wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises a general exception within the thread and waits uppon completion. We will try to kill the
+thread 10 times. If we where not able to kill the thread we return False, other wise True.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.async.threads.ThreadInterruptedError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">ThreadInterruptedError</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadInterruptedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadInterruptedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></a></p>
+<p>Error used when an interruptible thread has been killed</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.threads.ReadWriteLock">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">ReadWriteLock</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Read-Write lock class. A read-write lock differs from a standard
+threading.RLock() by allowing multiple threads to simultaneously hold a
+read lock, while allowing only a single thread to hold a write lock at the
+same point of time.</p>
+<p>When a read lock is requested while a write lock is held, the reader
+is blocked; when a write lock is requested while another write lock is
+held or there are read locks, the writer is blocked.</p>
+<p>Writers are always preferred by this implementation: if there are blocked
+threads waiting for a write lock, current readers may request more read
+locks (which they eventually should free, as they starve the waiting
+writers otherwise), but a new thread requesting a read lock will not
+be granted one, and block. This might mean starvation for readers if
+two writer threads interweave their calls to acquireWrite() without
+leaving a window only for readers.</p>
+<p>In case a current reader requests a write lock, this can and will be
+satisfied without giving up the read locks first, but, only one thread
+may perform this kind of lock upgrade, as a deadlock would otherwise
+occur. After the write lock has been granted, the thread will hold a
+full write lock, and not be downgraded after the upgrading call to
+acquireWrite() has been match by a corresponding release().</p>
+<dl class="method">
+<dt id="concurrent.core.async.threads.ReadWriteLock.acquireRead">
+<tt class="descname">acquireRead</tt><big>(</big><em>blocking=True</em>, <em>timeout=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock.acquireRead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock.acquireRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquire a read lock for the current thread, waiting at most
+timeout seconds or doing a non-blocking check in case timeout is &lt;= 0.</p>
+<p>In case timeout is None, the call to acquireRead blocks until the
+lock request can be serviced.</p>
+<p>In case the timeout expires before the lock could be serviced, a
+RuntimeError is thrown.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ReadWriteLock.acquireWrite">
+<tt class="descname">acquireWrite</tt><big>(</big><em>blocking=True</em>, <em>timeout=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock.acquireWrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock.acquireWrite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquire a write lock for the current thread, waiting at most
+timeout seconds or doing a non-blocking check in case timeout is &lt;= 0.</p>
+<p>In case the write lock cannot be serviced due to the deadlock
+condition mentioned above, a ValueError is raised.</p>
+<p>In case timeout is None, the call to acquireWrite blocks until the
+lock request can be serviced.</p>
+<p>In case the timeout expires before the lock could be serviced, a
+RuntimeError is thrown.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.threads.ReadWriteLock.readlock">
+<tt class="descname">readlock</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock.readlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock.readlock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ReadWriteLock.release">
+<tt class="descname">release</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock.release"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock.release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release the currently held lock.</p>
+<p>In case the current thread holds no lock, a ValueError is thrown.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.async.threads.ReadWriteLock.writelock">
+<tt class="descname">writelock</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ReadWriteLock.writelock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ReadWriteLock.writelock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.threads.RWLockCache">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">RWLockCache</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#RWLockCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.RWLockCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A simple class used to hold a cache of locks. Locks are being accessed as they where members of the class itself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.core.async.threads.makeRequests">
+<tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">makeRequests</tt><big>(</big><em>callable_</em>, <em>args_list</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x00000000055F8828&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#makeRequests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.makeRequests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create several work requests for same callable with different arguments.</p>
+<p>Convenience function for creating several work requests for the same
+callable where each invocation of the callable receives different values
+for its arguments.</p>
+<p><tt class="docutils literal"><span class="pre">args_list</span></tt> contains the parameters for each invocation of callable.
+Each item in <tt class="docutils literal"><span class="pre">args_list</span></tt> should be either a 2-item tuple of the list of
+positional arguments and a dictionary of keyword arguments or a single,
+non-tuple argument.</p>
+<p>See docstring for <tt class="docutils literal"><span class="pre">WorkRequest</span></tt> for info on <tt class="docutils literal"><span class="pre">callback</span></tt> and
+<tt class="docutils literal"><span class="pre">exc_callback</span></tt>.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.async.threads.NoResultsPending">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">NoResultsPending</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#NoResultsPending"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.NoResultsPending" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></a></p>
+<p>All work requests have been processed.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.async.threads.NoWorkersAvailable">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">NoWorkersAvailable</tt><a class="reference internal" href="_modules/concurrent/core/async/threads.html#NoWorkersAvailable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.NoWorkersAvailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></a></p>
+<p>No worker threads available to process remaining requests.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.threads.ThreadPool">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">ThreadPool</tt><big>(</big><em>num_workers</em>, <em>q_size=0</em>, <em>resq_size=0</em>, <em>poll_timeout=5</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>A thread pool, distributing work requests and collecting results.</p>
+<p>See the module docstring for more information.</p>
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.createWorkers">
+<tt class="descname">createWorkers</tt><big>(</big><em>num_workers</em>, <em>poll_timeout=5</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.createWorkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.createWorkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add num_workers worker threads to the pool.</p>
+<p><tt class="docutils literal"><span class="pre">poll_timout</span></tt> sets the interval in seconds (int or float) for how
+ofte threads should check whether they are dismissed, while waiting for
+requests.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.dismissWorkers">
+<tt class="descname">dismissWorkers</tt><big>(</big><em>num_workers</em>, <em>do_join=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.dismissWorkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.dismissWorkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell num_workers worker threads to quit after their current task.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.joinAllDismissedWorkers">
+<tt class="descname">joinAllDismissedWorkers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.joinAllDismissedWorkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.joinAllDismissedWorkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Thread.join() on all worker threads that have been dismissed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.poll">
+<tt class="descname">poll</tt><big>(</big><em>block=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.poll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.poll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process any new results in the queue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.putRequest">
+<tt class="descname">putRequest</tt><big>(</big><em>request</em>, <em>block=True</em>, <em>timeout=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.putRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.putRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put work request into work queue and save its id for later.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.ThreadPool.wait">
+<tt class="descname">wait</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#ThreadPool.wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.ThreadPool.wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for results, blocking until all have arrived.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.threads.WorkRequest">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">WorkRequest</tt><big>(</big><em>callable_</em>, <em>args=None</em>, <em>kwds=None</em>, <em>requestID=None</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x00000000055F8828&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#WorkRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>A request to execute a callable for putting in the request queue later.</p>
+<p>See the module function <tt class="docutils literal"><span class="pre">makeRequests</span></tt> for the common case
+where you want to build several <tt class="docutils literal"><span class="pre">WorkRequest</span></tt> objects for the same
+callable but with different arguments for each call.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.async.threads.WorkerThread">
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">WorkerThread</tt><big>(</big><em>requests_queue</em>, <em>results_queue</em>, <em>poll_timeout=5</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#WorkerThread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkerThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></tt></a></p>
+<p>Background thread connected to the requests/results queues.</p>
+<p>A worker thread sits in the background and picks up work requests from
+one queue and puts the results in another until it is dismissed.</p>
+<dl class="method">
+<dt id="concurrent.core.async.threads.WorkerThread.dismiss">
+<tt class="descname">dismiss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#WorkerThread.dismiss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkerThread.dismiss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a flag to tell the thread to exit when done with current job.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.async.threads.WorkerThread.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/async/threads.html#WorkerThread.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkerThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repeatedly process the job queue until told to exit.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.async">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.async" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.async package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.async.api">concurrent.core.async.api module</a></li>
+<li><a class="reference internal" href="#concurrent-core-async-task-module">concurrent.core.async.task module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.async.threads">concurrent.core.async.threads module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.async">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.async.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

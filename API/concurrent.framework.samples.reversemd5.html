@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.samples.reversemd5 package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-framework-samples-reversemd5-package">
+<h1>concurrent.framework.samples.reversemd5 package<a class="headerlink" href="#concurrent-framework-samples-reversemd5-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.framework.samples.reversemd5.app">
+<span id="concurrent-framework-samples-reversemd5-app-module"></span><h2>concurrent.framework.samples.reversemd5.app module<a class="headerlink" href="#module-concurrent.framework.samples.reversemd5.app" title="Permalink to this headline">¶</a></h2>
+<p>Sample application using Concurrent to perform a reverse hash</p>
+<p>File: reversemd5.app.py</p>
+<dl class="class">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.reversemd5.app.</tt><tt class="descname">MD5HashReverseNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.reversemd5.app.MD5HashReverseNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
+<p>Reverse hash application</p>
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applications main entry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.get_task_system">
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the base class when we are connected to a MasterNode and we are 
+able to send computation tasks over</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.push_tasksystem_response">
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.work_finished">
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the work has been done, the results is what our ITaskSystem
+sent back to us. Check resukt for more info</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.reversemd5.app.</tt><tt class="descname">MD5HashReverseTaskSystem</tt><big>(</big><em>jobs=128</em>, <em>hash_number=1763965</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
+<p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.gather_result">
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
+are to be send to the originator. Returns a tuple like (result, Error)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.generate_tasks">
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the initial tasks this system requires</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.init_system">
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the system</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.is_complete">
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
+gets performed every time a tasks finishes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5HashReverseTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5HashReverseTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5ReverseTask">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.reversemd5.app.</tt><tt class="descname">MD5ReverseTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5ReverseTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5ReverseTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5ReverseTask.clean_up">
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5ReverseTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5ReverseTask.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed and its results are about to be sent back. This is used
+to optimize our network and to cleanup the tasks input data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.reversemd5.app.MD5ReverseTask.finished">
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/reversemd5/app.html#MD5ReverseTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.reversemd5.app.MD5ReverseTask.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the task is finished. Called on the MasterNode within the main thread once
+the node has recovered the result data.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.samples.reversemd5.setup">
+<span id="concurrent-framework-samples-reversemd5-setup-module"></span><h2>concurrent.framework.samples.reversemd5.setup module<a class="headerlink" href="#module-concurrent.framework.samples.reversemd5.setup" title="Permalink to this headline">¶</a></h2>
+<p>Sample application using Concurrent to perform a reverse hash</p>
+</div>
+<div class="section" id="module-concurrent.framework.samples.reversemd5">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.framework.samples.reversemd5" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.framework.samples.reversemd5 package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.reversemd5.app">concurrent.framework.samples.reversemd5.app module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.reversemd5.setup">concurrent.framework.samples.reversemd5.setup module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.reversemd5">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.framework.samples.reversemd5.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

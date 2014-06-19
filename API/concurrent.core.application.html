@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.application package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-core-application-package">
+<h1>concurrent.core.application package<a class="headerlink" href="#concurrent-core-application-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.core.application.api">
+<span id="concurrent-core-application-api-module"></span><h2>concurrent.core.application.api module<a class="headerlink" href="#module-concurrent.core.application.api" title="Permalink to this headline">¶</a></h2>
+<p>Base interface representing an application.</p>
+<dl class="class">
+<dt id="concurrent.core.application.api.IApp">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.api.</tt><tt class="descname">IApp</tt><a class="reference internal" href="_modules/concurrent/core/application/api.html#IApp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.api.IApp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Interface" title="concurrent.core.components.component.Interface"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Interface</span></tt></a></p>
+<p>Extension point that defines a component that will be handled as an application.
+Applications are components that run in an environment</p>
+<dl class="method">
+<dt id="concurrent.core.application.api.IApp.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/api.html#IApp.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.api.IApp.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.api.IApp.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/api.html#IApp.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.api.IApp.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry point for the application. The app should return a return code or None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.application.api.NodeType">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.api.</tt><tt class="descname">NodeType</tt><a class="reference internal" href="_modules/concurrent/core/application/api.html#NodeType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.api.NodeType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Node types that life in the framework</p>
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeType.client">
+<tt class="descname">client</tt><em class="property"> = 2</em><a class="headerlink" href="#concurrent.core.application.api.NodeType.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeType.invalid">
+<tt class="descname">invalid</tt><em class="property"> = -1</em><a class="headerlink" href="#concurrent.core.application.api.NodeType.invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeType.master">
+<tt class="descname">master</tt><em class="property"> = 0</em><a class="headerlink" href="#concurrent.core.application.api.NodeType.master" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeType.slave">
+<tt class="descname">slave</tt><em class="property"> = 1</em><a class="headerlink" href="#concurrent.core.application.api.NodeType.slave" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.application.api.NodeState">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.api.</tt><tt class="descname">NodeState</tt><a class="reference internal" href="_modules/concurrent/core/application/api.html#NodeState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.api.NodeState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Node state within the framework</p>
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeState.active">
+<tt class="descname">active</tt><em class="property"> = 1</em><a class="headerlink" href="#concurrent.core.application.api.NodeState.active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeState.inactive">
+<tt class="descname">inactive</tt><em class="property"> = 2</em><a class="headerlink" href="#concurrent.core.application.api.NodeState.inactive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeState.inactive_forced">
+<tt class="descname">inactive_forced</tt><em class="property"> = 3</em><a class="headerlink" href="#concurrent.core.application.api.NodeState.inactive_forced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeState.invalid">
+<tt class="descname">invalid</tt><em class="property"> = -1</em><a class="headerlink" href="#concurrent.core.application.api.NodeState.invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.api.NodeState.pending">
+<tt class="descname">pending</tt><em class="property"> = 0</em><a class="headerlink" href="#concurrent.core.application.api.NodeState.pending" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.application.application">
+<span id="concurrent-core-application-application-module"></span><h2>concurrent.core.application.application module<a class="headerlink" href="#module-concurrent.core.application.application" title="Permalink to this headline">¶</a></h2>
+<p>Base interface representing an application.</p>
+<dl class="class">
+<dt id="concurrent.core.application.application.DefaultApplication">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.application.</tt><tt class="descname">DefaultApplication</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.core.application.application.DefaultApplication'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/application.html#DefaultApplication"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.application.DefaultApplication" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.core.application.application.DefaultApplication.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/application.html#DefaultApplication.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.application.DefaultApplication.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.application.DefaultApplication.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/application.html#DefaultApplication.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.application.DefaultApplication.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default Main implementation</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.application.application.ApplicationManager">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.application.</tt><tt class="descname">ApplicationManager</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.core.application.application.ApplicationManager'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/application.html#ApplicationManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.application.ApplicationManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<p>The application manager is a component that just handles a list of available applications</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.application.application.ApplicationNotImplementedError">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.application.application.</tt><tt class="descname">ApplicationNotImplementedError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/application.html#ApplicationNotImplementedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.application.ApplicationNotImplementedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
+<p>Error used when an app dose not implement a specifc methos</p>
+<dl class="attribute">
+<dt id="concurrent.core.application.application.ApplicationNotImplementedError.title">
+<tt class="descname">title</tt><em class="property"> = '[Config Error]'</em><a class="headerlink" href="#concurrent.core.application.application.ApplicationNotImplementedError.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.application.pickler">
+<span id="concurrent-core-application-pickler-module"></span><h2>concurrent.core.application.pickler module<a class="headerlink" href="#module-concurrent.core.application.pickler" title="Permalink to this headline">¶</a></h2>
+<p>Pickling of python instances</p>
+<dl class="exception">
+<dt id="concurrent.core.application.pickler.PickleException">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.application.pickler.</tt><tt class="descname">PickleException</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#PickleException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.PickleException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.PickleException.code">
+<tt class="descname">code</tt><em class="property"> = -10001</em><a class="headerlink" href="#concurrent.core.application.pickler.PickleException.code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.PickleException.message">
+<tt class="descname">message</tt><em class="property"> = u'Failed to pickle a remote object'</em><a class="headerlink" href="#concurrent.core.application.pickler.PickleException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.core.application.pickler.Pickler">
+<em class="property">class </em><tt class="descclassname">concurrent.core.application.pickler.</tt><tt class="descname">Pickler</tt><big>(</big><em>compmgr</em>, <em>init=&lt;function __init__ at 0x0000000005321908&gt;</em>, <em>cls=&lt;class 'concurrent.core.application.pickler.Pickler'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.Pickler.aes_padding">
+<tt class="descname">aes_padding</tt><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.aes_padding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Padding used for AES encryption</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.Pickler.num_iterations">
+<tt class="descname">num_iterations</tt><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.num_iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of iterations used in the key generation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.pickle_encode_s">
+<tt class="descname">pickle_encode_s</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.pickle_encode_s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.pickle_encode_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode a pickled object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.pickle_f">
+<tt class="descname">pickle_f</tt><big>(</big><em>fname</em>, <em>obj</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.pickle_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.pickle_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>picke an object into a file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.Pickler.pickle_protocol">
+<tt class="descname">pickle_protocol</tt><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.pickle_protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol used when pickling, by default pickle.HIGHEST_PROTOCOL</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.pickle_s">
+<tt class="descname">pickle_s</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.pickle_s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.pickle_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>pickle an object and return the pickled string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.Pickler.salt_size">
+<tt class="descname">salt_size</tt><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.salt_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the salt used in the encryption process</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.Pickler.secret">
+<tt class="descname">secret</tt><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.secret" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default salt used on decrypting encrypting a pickle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.unpickle_decode_s">
+<tt class="descname">unpickle_decode_s</tt><big>(</big><em>pickle_string</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.unpickle_decode_s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.unpickle_decode_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpickle a base64 string and return an object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.unpickle_f">
+<tt class="descname">unpickle_f</tt><big>(</big><em>fname</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.unpickle_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.unpickle_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpicke an object from a file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.core.application.pickler.Pickler.unpickle_s">
+<tt class="descname">unpickle_s</tt><big>(</big><em>pickle_string</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#Pickler.unpickle_s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.Pickler.unpickle_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>unpickle a string and return an object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.core.application.pickler.UnpickleException">
+<em class="property">exception </em><tt class="descclassname">concurrent.core.application.pickler.</tt><tt class="descname">UnpickleException</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/application/pickler.html#UnpickleException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.application.pickler.UnpickleException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.transport.pyjsonrpc.html#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.UnpickleException.code">
+<tt class="descname">code</tt><em class="property"> = -10002</em><a class="headerlink" href="#concurrent.core.application.pickler.UnpickleException.code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.core.application.pickler.UnpickleException.message">
+<tt class="descname">message</tt><em class="property"> = u'Failed to unpickle a remote object'</em><a class="headerlink" href="#concurrent.core.application.pickler.UnpickleException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.core.application">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.core.application" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.core.application package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.application.api">concurrent.core.application.api module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.application.application">concurrent.core.application.application module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.application.pickler">concurrent.core.application.pickler module</a></li>
+<li><a class="reference internal" href="#module-concurrent.core.application">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.core.application.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

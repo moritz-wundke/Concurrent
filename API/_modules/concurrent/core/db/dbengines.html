@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.db.dbengines &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.db.dbengines</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SQL Alchemy engines</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">implements</span><span class="p">,</span> <span class="n">ExtensionPoint</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.db.api</span> <span class="kn">import</span> <span class="n">IDBEngine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">ConfigItem</span><span class="p">,</span> <span class="n">BoolItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;PostGreSQLEngine&#39;</span><span class="p">,</span><span class="s">&#39;EngineCreationFailedError&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="EngineCreationFailedError"><a class="viewcode-back" href="../../../../concurrent.core.db.html#concurrent.core.db.dbengines.EngineCreationFailedError">[docs]</a><span class="k">class</span> <span class="nc">EngineCreationFailedError</span><span class="p">(</span><span class="n">BaseError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error raised when we get an engine and we failed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span><span class="o">=</span><span class="s">&quot;[DB Engine Error]&quot;</span>
+    </div>
+<div class="viewcode-block" id="PostGreSQLEngine"><a class="viewcode-back" href="../../../../concurrent.core.db.html#concurrent.core.db.dbengines.PostGreSQLEngine">[docs]</a><span class="k">class</span> <span class="nc">PostGreSQLEngine</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PostGreSQL DB Engine</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IDBEngine</span><span class="p">)</span>
+    
+    <span class="n">db_user</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="s">&#39;postgresql&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;User name of the postgresql database.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">db_pass</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Password of the postgresql database.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">db_host</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;host&#39;</span><span class="p">,</span> <span class="s">&#39;localhost&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Host of the postgresql database.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">db_port</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">,</span> <span class="s">&#39;5432&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Port of the postgresql database.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">db_name</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;databasename&#39;</span><span class="p">,</span> <span class="s">&#39;mydb&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Name of the postgresql database.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">db_echo</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;postgresqlengine&#39;</span><span class="p">,</span> <span class="s">&#39;echo&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Use SQL Alchemy debug output.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize engine</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">_get_connection_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method to build the current connection string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;postgresql://</span><span class="si">%(user)s</span><span class="s">:</span><span class="si">%(password)s</span><span class="s">@</span><span class="si">%(host)s</span><span class="s">:</span><span class="si">%(port)s</span><span class="s">/</span><span class="si">%(dbname)s</span><span class="s">&quot;</span><span class="p">,</span> 
+                              <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_pass</span><span class="p">,</span> 
+                              <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_port</span><span class="p">,</span>
+                              <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
+                              
+<div class="viewcode-block" id="PostGreSQLEngine.get_engine"><a class="viewcode-back" href="../../../../concurrent.core.db.html#concurrent.core.db.dbengines.PostGreSQLEngine.get_engine">[docs]</a>    <span class="k">def</span> <span class="nf">get_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a PostGreSQL DB Engine</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">:</span>  
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_connection_string</span><span class="p">(),</span> <span class="n">echo</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_echo</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span>
+    </div>
+<div class="viewcode-block" id="PostGreSQLEngine.initdb"><a class="viewcode-back" href="../../../../concurrent.core.db.html#concurrent.core.db.dbengines.PostGreSQLEngine.initdb">[docs]</a>    <span class="k">def</span> <span class="nf">initdb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from the dbmanager once it gets initialized</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#if not self.get_engine():</span>
+        <span class="c">#    raise EngineCreationFailedError(_(&quot;Failed to create db engine for: %(connectionstring)s&quot;, connectionstring=self._get_connection_string()))</span>
+    </div>
+<div class="viewcode-block" id="PostGreSQLEngine.dbshutdown"><a class="viewcode-back" href="../../../../concurrent.core.db.html#concurrent.core.db.dbengines.PostGreSQLEngine.dbshutdown">[docs]</a>    <span class="k">def</span> <span class="nf">dbshutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from the dbmanager once it gets shutdown</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

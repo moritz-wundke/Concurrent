@@ -1,0 +1,859 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.async.task &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.async.task</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base class for any of our async tasks that a job is made of.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">Traceback</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Task&#39;</span><span class="p">,</span> <span class="s">&#39;GenericTaskManager&#39;</span><span class="p">,</span> <span class="s">&#39;GenericTaskSchduler&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">implements</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskManager</span><span class="p">,</span> <span class="n">ITaskScheduler</span><span class="p">,</span> <span class="n">ITaskScheduleStrategy</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.threads</span> <span class="kn">import</span> <span class="n">InterruptibleThread</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">IntItem</span><span class="p">,</span> <span class="n">ExtensionPointItem</span><span class="p">,</span> <span class="n">HostItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">NodeType</span><span class="p">,</span> <span class="n">NodeState</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.stats</span> <span class="kn">import</span> <span class="n">Stats</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.utils</span> <span class="kn">import</span> <span class="n">tprint</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.tcpsocket</span> <span class="kn">import</span> <span class="n">send_to_zmq_zipped</span><span class="p">,</span> <span class="n">receive_from_zmq_zipped</span><span class="p">,</span> <span class="n">TCPSocketZMQ</span>
+
+<span class="kn">from</span> <span class="nn">bunch</span> <span class="kn">import</span> <span class="n">Bunch</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">zmq</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c"># Port used for our worker process using zmq instead of queues for best performance</span>
+<span class="n">WORKER_PORT</span> <span class="o">=</span> <span class="mi">5557</span>
+
+<span class="c"># http://glitterbug.in/blog/task-queuing-in-django-with-zeromq-5/show/</span>
+<span class="c"># http://zguide.zeromq.org/py:rtreq</span>
+<span class="c"># http://www.jeffknupp.com/blog/2014/02/11/a-celerylike-python-task-queue-in-55-lines-of-code/</span>
+<span class="c"># Or back to queues?</span>
+
+<span class="c"># We use zipped pickles because they transmit way faster!</span>
+
+<div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple tasks that just executes a function in a fire and forget way</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the task itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">())</span>
+        
+        <span class="c"># The system ID is the ID of the system that owns the task. We use this</span>
+        <span class="c"># ID to send the task back to its owner once finished</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_system_id</span> <span class="o">=</span> <span class="n">system_id</span>
+        
+        <span class="c"># The slave ID is the ID of the slave that processed the task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slave_id</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="c"># The client ID is set when a push a task onto the framework</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_id</span> <span class="o">=</span> <span class="n">client_id</span>
+            
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Task.name"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task.name">[docs]</a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+    </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Task.task_id"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task.task_id">[docs]</a>    <span class="k">def</span> <span class="nf">task_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span>
+    </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Task.system_id"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task.system_id">[docs]</a>    <span class="k">def</span> <span class="nf">system_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_system_id</span>
+</div>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executer a task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Subclasses should implement this!&quot;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Task.clean_up"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed and its results are about to be sent back. This is used</span>
+<span class="sd">        to optimize our network and to cleanup the tasks input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="Task.finished"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.Task.finished">[docs]</a>    <span class="k">def</span> <span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the task is finished. Called on the MasterNode within the main thread once</span>
+<span class="sd">        the node has recovered the result data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Subclasses should implement this!&quot;</span><span class="p">)</span>
+</div></div>
+<span class="k">class</span> <span class="nc">TaskProcess</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A TaskProcess is the base consumer class of work orders</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">,</span> <span class="n">process_id</span><span class="p">,</span> <span class="n">task_queue</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="n">process_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pid</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span> <span class="o">=</span> <span class="n">result_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span> <span class="o">=</span> <span class="n">task_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">=</span> <span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        
+        <span class="c"># Create logger for each process!</span>
+    
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="n">tprint</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">][</span><span class="si">%d</span><span class="s">] </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pid</span><span class="p">,</span> <span class="n">msg</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
+        <span class="c">#self.context = zmq.Context()</span>
+        <span class="c">#self.work_receiver = context.socket(zmq.PULL)</span>
+        <span class="c">#self.work_receiver.connect(&quot;tcp://127.0.0.1:%d&quot; % WORKER_PORT)</span>
+        
+        <span class="c"># Create sockets to communicate with master, this way we optimize our resources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">=</span><span class="n">TCPSocketZMQ</span><span class="p">(</span><span class="s">&quot;{}_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&quot;Running&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c">#next_task = receive_from_zmq_zipped(self.work_receiver)</span>
+                <span class="n">next_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">next_task</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="c"># A None task is used to shut us down</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+                    <span class="k">break</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">next_task</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+                    <span class="n">ellapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&quot;task-time&quot;</span><span class="p">,</span><span class="n">ellapsed</span><span class="p">)</span>
+                    <span class="c">#self.log(&quot;Finished [%s:%s]&quot; % (next_task.name, next_task.task_id))</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="n">err</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="c">#self.result_queue.put(Bunch({&#39;task&#39;:next_task,&#39;result&#39;:result,&#39;error&#39;:error}))</span>
+                    <span class="c">#print(&quot;sending back&quot;)</span>
+                    <span class="n">next_task</span><span class="o">.</span><span class="n">clean_up</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_to</span><span class="p">(</span><span class="s">&#39;task_finished&#39;</span><span class="p">,</span> <span class="n">next_task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&quot;Keyboard interrupt received, exiting!&quot;</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c">#self.work_receiver.close()</span>
+        <span class="c">#self.context.term()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&quot;Exiting&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GenericTaskManager"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager">[docs]</a><span class="k">class</span> <span class="nc">GenericTaskManager</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskManager</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple task manager used in simple single job applications</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">num_workers</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;GenericTaskManager&#39;</span><span class="p">,</span> <span class="s">&#39;num_workers&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Number of worker processed to be created, -1 will spawn as much as physical cores.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Component</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># Initialize base manager stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">JoinableQueue</span><span class="p">()</span>
+        
+<div class="viewcode-block" id="GenericTaskManager.init"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.init">[docs]</a>    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the manager</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">=</span> <span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+            
+        <span class="c"># We now prepare our queues, both the joinable and the results</span>
+        <span class="c"># queues. Then we just create a process for each worker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">JoinableQueue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processes</span> <span class="o">=</span> <span class="p">[</span><span class="n">TaskProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span><span class="p">)]</span>
+        <span class="c">#self.processes = [TaskProcess(self.results, i) for i in range(self._num_workers)]</span>
+        
+        <span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ventilator_send</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ventilator_send</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&quot;tcp://127.0.0.1:</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">WORKER_PORT</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="GenericTaskManager.get_num_workers"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.get_num_workers">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of workers we use for our processing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span>
+    </div>
+<div class="viewcode-block" id="GenericTaskManager.start"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start our worker processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processes</span><span class="p">:</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GenericTaskManager.stop"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop our worker processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span><span class="p">):</span>
+            <span class="c">#send_to_zmq_zipped(self.ventilator_send, None)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="c"># Poison for result listener</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GenericTaskManager.update_pool"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.update_pool">[docs]</a>    <span class="k">def</span> <span class="nf">update_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_num_workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the number of workers the task manager should use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">_num_workers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GenericTaskManager.push_task"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.push_task">[docs]</a>    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push a task that should be completed by the workers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c">#send_to_zmq_zipped(self.ventilator_send, task)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="GenericTaskManager.wait_for_all"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.wait_for_all">[docs]</a>    <span class="k">def</span> <span class="nf">wait_for_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wait until all tasks has been finished</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="GenericTaskManager.get_results_queue"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.get_results_queue">[docs]</a>    <span class="k">def</span> <span class="nf">get_results_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a refernce to the result queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span>
+    </div>
+<div class="viewcode-block" id="GenericTaskManager.task_finished"><a class="viewcode-back" href="../../../../concurrent.core.async.html#concurrent.core.async.task.GenericTaskManager.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+</div></div>
+<span class="k">class</span> <span class="nc">GenericTaskScheduleStrategy</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskScheduleStrategy</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements a schedule strategy to select the next valid slave that should process a given task.</span>
+<span class="sd">    We update the workers and rank them so that we give a slave with idle workers a better</span>
+<span class="sd">    rating than a worker with pending work.</span>
+<span class="sd">     - If rank &gt; 0 =&gt; Slave has idle processes</span>
+<span class="sd">     - If rank == 0 =&gt; Slave has currently the same number of tasks then processes</span>
+<span class="sd">     - If rank &lt; 0 =&gt; Slave has currently more tasks thank workers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span> <span class="o">=</span> <span class="n">scheduler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+    
+    <span class="k">def</span> <span class="nf">rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slave</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rate a slave without any lock. Less if better.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Worst rating if we have a slave without workers!</span>
+        <span class="k">if</span> <span class="n">slave</span><span class="o">.</span><span class="n">workers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max</span>
+        
+        <span class="c"># Basic rating is the task/worker ratio</span>
+        <span class="n">rating</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">slave</span><span class="o">.</span><span class="n">tasks</span> <span class="o">/</span> <span class="p">(</span><span class="n">slave</span><span class="o">.</span><span class="n">workers</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">))</span>
+        
+        <span class="c"># TODO: Add task finished per second ratio</span>
+        
+        <span class="k">return</span> <span class="n">rating</span>
+    
+    <span class="k">def</span> <span class="nf">get_next_slave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the slave that should process the next task, get the one with better rating</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+            <span class="c"># Find the best score</span>
+            <span class="n">best_rating</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max</span>
+            <span class="n">best_node</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span> \
+                        <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> \
+                        <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">rating</span> <span class="o">&lt;</span> <span class="n">best_rating</span><span class="p">:</span>
+                    <span class="n">best_rating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">rating</span>
+                    <span class="n">best_node</span> <span class="o">=</span> <span class="n">node</span>
+            
+            <span class="c"># Get all nodes with the same or similar score (some nice epsilon?)</span>
+            <span class="c">#Nodes ...</span>
+            <span class="c">#for node in self.master.node_registry:</span>
+            <span class="c">#    if node and node.rating == best_rating:</span>
+            <span class="c">#        best_rating = node.rating            </span>
+            <span class="c"># Get a random slave form the first 10% of slaves. This will give us a bit</span>
+            <span class="c"># of randomness in case sending the tasks failes</span>
+            
+            <span class="c"># For now we just use the best node</span>
+            <span class="k">if</span> <span class="n">best_node</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">best_node</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<span class="k">class</span> <span class="nc">schedule_thread</span><span class="p">(</span><span class="n">InterruptibleThread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The schedule thread is responsible to pickup tasks from the global task queue and to send then to a slave.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">task_queue</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="n">InterruptibleThread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span> <span class="o">=</span> <span class="n">task_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+        
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># A None task is used to shut us down</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+            <span class="c"># Send task to one of our slaves</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;schedule_thread exiting&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;schedule_thread stopped&quot;</span><span class="p">)</span>
+        
+<span class="k">class</span> <span class="nc">GenericTaskScheduler</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskScheduler</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interface used by our distributed task scheduler. A scheduler receives an implemented system</span>
+<span class="sd">    that will be executed on the distributed system through pickleing Python instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">ExtensionPointItem</span><span class="p">(</span><span class="s">&#39;generictaskscheduler&#39;</span><span class="p">,</span> <span class="s">&#39;strategy&#39;</span><span class="p">,</span> <span class="n">ITaskScheduleStrategy</span><span class="p">,</span> <span class="s">&#39;GenericTaskScheduleStrategy&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Task schedulers used to schedule execution&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Component</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+        
+        <span class="c"># Map that maps tasks and slaves to be able to resend the tasks if the slave was deleted from the system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_map</span> <span class="o">=</span> <span class="p">{}</span>
+        
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">registry_lock</span>
+        
+        <span class="c"># This is the global systems task queue. Every time we add tasks we will add them to this queue.</span>
+        <span class="c"># The global queue is where the current strategy will pickup tasks and decide which ones shall</span>
+        <span class="c"># be sent over a slave to be processed (this is getting done from a thread that waits for the queue)</span>
+        <span class="c"># If a new tasks gets added or a task gets completed we will notify the strategy which then decides to </span>
+        <span class="c"># pickup and process a new task.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">JoinableQueue</span><span class="p">()</span>
+        
+        <span class="c"># Schedule thread which will pickup processabel task and send them to a good slave</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedule_thread</span> <span class="o">=</span> <span class="n">schedule_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_task</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedule_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        
+        <span class="c"># Do not pass the lock to the strategy, we have to ensure we handle locks for it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedule_thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">_valid_id_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slave_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if slave id is pointing to a valid slave without any lock</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">slave_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_slave_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">_valid_slave_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slave</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if a slave is valid without using any locks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">slave</span> <span class="ow">and</span> <span class="n">slave</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> <span class="ow">and</span> <span class="n">slave</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span>
+        
+    <span class="k">def</span> <span class="nf">rate_slaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update slaves</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">slave_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_slave_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">]):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">rating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">rate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">])</span>
+            <span class="n">ellapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&quot;GenericTaskScheduleStrategy-rate-time&quot;</span><span class="p">,</span><span class="n">ellapsed</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">start_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start an incomming task system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_tasks</span><span class="p">(</span><span class="n">task_system</span><span class="o">.</span><span class="n">generate_tasks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">push_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push all tasks on the global task queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Put a task on the global task queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Do not poison ourselfs!</span>
+        <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">handle_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send a task to a slave or in case it failed queue the task back</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">reschedule</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">slave_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">get_next_slave</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">slave_id</span><span class="p">:</span>
+                    <span class="c">#TODO: Pickle task and send to slave</span>
+                    <span class="n">task</span><span class="o">.</span><span class="n">slave_id</span> <span class="o">=</span> <span class="n">slave_id</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">tcp_proxy</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                    <span class="c">#print(&quot;Sending task: {} in {}&quot;.format(task.name, time.time() - start))</span>
+                    <span class="n">reschedule</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="c"># Add task id to this slave so we could resend the task</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_tasked_pushed</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">)</span>       
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c">#self.log.error(&quot;Failed to send task to slave: %s. Queueing task again!&quot; % str(e))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&quot;GenericTaskScheduler-task-send-failed&quot;</span><span class="p">)</span>
+                
+            <span class="c"># Make sure we try it again!</span>
+            <span class="k">if</span> <span class="n">reschedule</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_tasked_pushed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slave_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A slave has aquired a new task, update its rank</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#with self.lock.readlock:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_id_no_lock</span><span class="p">(</span><span class="n">slave_id</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">tasks</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">rating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">rate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">slave_id</span><span class="p">])</span>
+            <span class="c">#print(&quot;Push: {}&quot;.format(self.master.node_registry[slave_id].tasks))</span>
+    
+    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A slave has finished a new task, update its rank</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+        <span class="c"># Do not aquiere any write lock if the id is not valid!</span>
+        <span class="c">#with self.lock.readlock:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_id_no_lock</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">tasks</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">]</span><span class="o">.</span><span class="n">rating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">rate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">slave_id</span><span class="p">])</span>
+            <span class="c">#print(&quot;Pop: {}&quot;.format(self.master.node_registry[task.slave_id].tasks))</span>
+        
+        <span class="c">#self.strategy.task_finished(result[&#39;task_id&#39;] check results!)</span>
+
+<span class="k">class</span> <span class="nc">ZMQTaskManager</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskManager</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple task manager used in simple single job applications</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">num_workers</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;ZMQTaskManager&#39;</span><span class="p">,</span> <span class="s">&#39;num_workers&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Number of worker processed to be created, -1 will spawn as much as physical cores.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">master_backend_port</span> <span class="o">=</span> <span class="n">HostItem</span><span class="p">(</span><span class="s">&#39;ZMQTaskManager&#39;</span><span class="p">,</span> <span class="s">&#39;master_backend_port&#39;</span><span class="p">,</span> <span class="s">&#39;localhost:5001&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Masters backend port where we will request tasks.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Component</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+        <span class="c"># Some thread related stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="c"># Create contect and socket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        
+        <span class="c"># Initialize base manager stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">JoinableQueue</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the manager</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">=</span> <span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+            
+        <span class="c"># We now prepare our queues, both the joinable and the results</span>
+        <span class="c"># queues. Then we just create a process for each worker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">JoinableQueue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processes</span> <span class="o">=</span> <span class="p">[</span><span class="n">TaskProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span><span class="p">)]</span>
+        <span class="c">#self.processes = [TaskProcess(self.results, i) for i in range(self._num_workers)]</span>
+        
+        <span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ventilator_send</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ventilator_send</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&quot;tcp://127.0.0.1:</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">WORKER_PORT</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">get_num_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of workers we use for our processing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span>
+    
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start our worker processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processes</span><span class="p">:</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop our worker processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Shutting down ZMQTaskManager&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span><span class="p">):</span>
+            <span class="c">#send_to_zmq_zipped(self.ventilator_send, None)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="c"># Poison for result listener</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        
+        <span class="c"># Kill our own thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskManager shutdown finished&quot;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskManager started&quot;</span><span class="p">)</span>
+        
+        <span class="c"># Create and connect to our scheduler socket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;tcp://{host}:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_backend_port</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_backend_port</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        
+        <span class="c"># Start receiving messages</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span><span class="p">:</span>
+                <span class="n">next_task</span> <span class="o">=</span> <span class="n">receive_from_zmq_zipped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">next_task</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskManager stopped&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_num_workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the number of workers the task manager should use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">_num_workers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push a task that should be completed by the workers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c">#send_to_zmq_zipped(self.ventilator_send, task)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">wait_for_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wait until all tasks has been finished</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    
+    <span class="k">def</span> <span class="nf">get_results_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a refernce to the result queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span>
+    
+    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+        
+<span class="k">class</span> <span class="nc">ZMQTaskScheduler</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskScheduler</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Different task scheduler implementation using ZMQ push/pull sockets. Uses a simple round-robin</span>
+<span class="sd">    mechanism to handle multiple slaves.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">frontend_port</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;ZMQTaskScheduler&#39;</span><span class="p">,</span> <span class="s">&#39;frontend_port&#39;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Frontend port used to send tasks to the scheduler&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">backend_port</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;ZMQTaskScheduler&#39;</span><span class="p">,</span> <span class="s">&#39;backend_port&#39;</span><span class="p">,</span> <span class="mi">5001</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Backend port used to send tasks to the scheduler. Slaves will receive tasks on it.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Component</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+        
+        <span class="c"># Some thread related stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="c"># The socket framework</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;tcp://*:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend_port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;tcp://*:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">))</span>
+        
+        <span class="c"># Connected socket locally to frontend to send tasks, this socket</span>
+        <span class="c"># provides a lock to be able to be thread-safe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;tcp://localhost:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend_port</span><span class="p">))</span>
+        
+        <span class="c"># Our lock used to protect the frontend_push socket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskScheduler started&quot;</span><span class="p">)</span>
+        <span class="c"># Start receiving messages</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zmq</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskScheduler stopped&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+            
+    <span class="k">def</span> <span class="nf">start_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start an incomming task system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_tasks</span><span class="p">(</span><span class="n">task_system</span><span class="o">.</span><span class="n">generate_tasks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">_push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        No lock variant of push task method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">send_to_zmq_zipped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">push_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push all tasks on the global task queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="c"># DO NOT USE push_task to queue tasks! It would be a deadlock!</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="c">#self.tasks.put(task)</span>
+    
+    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Put a task on the global task queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="c"># Do not poison ourselfs!</span>
+            <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="c">#self.tasks.put(task)</span>
+    
+    <span class="k">def</span> <span class="nf">rate_slaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update slaves</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    
+    <span class="k">def</span> <span class="nf">_tasked_pushed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slave_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A slave has aquired a new task, update its rank</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    
+    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A slave has finished a new task, update its rank</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">AdvancedTaskManager</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">ITaskManager</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Advanced task manager which</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c">#</span>
+    <span class="c"># Our async task update logic. This gets executed from our step</span>
+    <span class="c"># controller from the nodes main loop.</span>
+    <span class="c"># </span>
+    <span class="c"># The update loop is composed by:</span>
+    <span class="c">#  - Generate task list</span>
+    <span class="c">#  - Execute task for current stat using current delta time and step count</span>
+    <span class="c">#  - Collect results and syncronize between systems (we still need to define what</span>
+    <span class="c">#    a system is, just a component that implements the system ExtensionPoint)</span>
+    <span class="c">#</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update call from the frameworks main loop.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_pre_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called before a step is exeuted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_post_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called after a step has been performed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute a given step of the framework execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

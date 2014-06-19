@@ -1,0 +1,784 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.nodes.masternode &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.framework.nodes.masternode</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing the framework master node implementation</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">implements</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span><span class="p">,</span> <span class="n">SUCCESS_RET_CODES</span><span class="p">,</span> <span class="n">APP_RET_CODE_FAILED</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.simplejsonrpc</span> <span class="kn">import</span> <span class="n">jsonremote</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskScheduler</span><span class="p">,</span> <span class="n">ITaskSystem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.task</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">BoolItem</span><span class="p">,</span> <span class="n">ExtensionPointItem</span><span class="p">,</span> <span class="n">HostItem</span><span class="p">,</span> <span class="n">FloatItem</span><span class="p">,</span> <span class="n">IntItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.threads</span> <span class="kn">import</span> <span class="n">InterruptibleThread</span>
+<span class="kn">from</span> <span class="nn">concurrent.framework.nodes.basenodes</span> <span class="kn">import</span> <span class="n">BaseNode</span><span class="p">,</span> <span class="n">ComputeNode</span><span class="p">,</span> <span class="n">NodeType</span><span class="p">,</span> <span class="n">NodeState</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.tcpserver</span> <span class="kn">import</span> <span class="n">TCPServer</span><span class="p">,</span> <span class="n">tcpremote</span><span class="p">,</span> <span class="n">NoResponseRequired</span><span class="p">,</span> <span class="n">TCPServerZMQ</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">bunch</span> <span class="kn">import</span> <span class="n">Bunch</span>
+
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;MasterNode&#39;</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">master_thread</span><span class="p">(</span><span class="n">InterruptibleThread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The master thread is responsible to compile incomming applications, and handle long running tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+        <span class="n">InterruptibleThread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span> <span class="o">=</span> <span class="bp">False</span>
+        
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;master_thread exiting&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;master_thread stopped&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MasterNode"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode">[docs]</a><span class="k">class</span> <span class="nc">MasterNode</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="n">BaseNode</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A MasterNode is a compute node that can act and be used in computation when in standalone mode</span>
+<span class="sd">    but is mainly used to dsitribute jobs along registered slaves. Once the jobs of a slave, or</span>
+<span class="sd">    its own, are finished we will redistribute the results to the responsible client nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_standalone</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;masternode&#39;</span><span class="p">,</span> <span class="s">&#39;is_standalone&#39;</span><span class="p">,</span> <span class="s">&#39;False&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Master node is also a slave and a standalone application&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">inactivity_time_multiplier</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;inactivity_time_multiplier&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Inactivty multiplier multiplies the heartbeat time to ensure inactivity is always several heartbeats&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">registry_mirror_timer</span> <span class="o">=</span> <span class="n">FloatItem</span><span class="p">(</span><span class="s">&#39;masternode&#39;</span><span class="p">,</span> <span class="s">&#39;registry_mirror_timer&#39;</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Timer used to update node registry mirror&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">registry_cleanup_timer</span> <span class="o">=</span> <span class="n">FloatItem</span><span class="p">(</span><span class="s">&#39;masternode&#39;</span><span class="p">,</span> <span class="s">&#39;registry_cleanup_timer&#39;</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Timer used to cleanup the node registry&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">task_scheduler</span><span class="o">=</span> <span class="n">ExtensionPointItem</span><span class="p">(</span><span class="s">&#39;masternode&#39;</span><span class="p">,</span> <span class="s">&#39;task_scheduler&#39;</span><span class="p">,</span> <span class="n">ITaskScheduler</span><span class="p">,</span> <span class="s">&#39;GenericTaskScheduler&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Task scheduler used by the master node&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">master_port</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;master_port&#39;</span><span class="p">,</span> <span class="mi">8081</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Port used by the master node for high-performance communication and dedicated persistent connections&quot;&quot;&quot;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="MasterNode.app_init"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize application just before running it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MasterNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+        
+        <span class="c"># Start our TCPServer,</span>
+        <span class="c">#self.server = TCPServer(&quot;localhost&quot;, self.master_port, self)</span>
+        <span class="c">#self.server_thread = threading.Thread(name=&quot;tcp_server&quot;, target=self.server.serve_forever)</span>
+        <span class="c">#self.server_thread.daemon = True</span>
+        
+        <span class="c"># Setup our ZeroMQ asyn server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span> <span class="o">=</span> <span class="n">TCPServerZMQ</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master_port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        
+        <span class="c"># The node registry holds updated into about slaves/clients and its processing</span>
+        <span class="c"># we week track of number of tasks submitted to each slave, how they perform</span>
+        <span class="c"># general statistics and more.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span><span class="o">.</span><span class="n">registry_lock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_cleanup_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_cleanup_timer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+        <span class="c"># Our client registry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span><span class="o">.</span><span class="n">client_registry_lock</span>
+        
+        <span class="c"># The registry mirror is used to send all updates from time to time and cache it.</span>
+        <span class="c"># We use a different dict so client status request do not block</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_registry_mirror</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span><span class="o">.</span><span class="n">registry_mirror_lock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_timer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span> <span class="o">=</span> <span class="bp">True</span>
+        
+        <span class="c"># Client registry mirror</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror_lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span><span class="o">.</span><span class="n">client_registry_mirror_lock</span>
+        
+        <span class="c"># Timer which controls inactivity handling of a node, being it a slave or a client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_timer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_timer</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">inactivity_time_multiplier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_unregister_timer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_timer</span> <span class="o">*</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_timer</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_timer</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_app_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()</span>
+        
+        <span class="c"># Our task system registry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_tasksystem</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span><span class="o">.</span><span class="n">tasksystem_lock</span>
+        
+        <span class="c"># Create master thread</span>
+        <span class="c">#self.master_thread = master_thread(self.log)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.app_main"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.app_main">[docs]</a>    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launch a concurrent application</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Initializing MasterNode&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MasterNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUCCESS_RET_CODES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="c"># Start the main server thread</span>
+        <span class="c">#self.server_thread.start()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            
+        <span class="c"># Enter mail loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_loop</span><span class="p">()</span>
+        
+        <span class="c"># Stop all threads processes</span>
+        <span class="c">#self.server.shutdown()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notify_shutdown</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_api_thread</span><span class="p">()</span>
+        <span class="c">#self.stop_master_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>        
+        
+        <span class="c"># Now launch base node</span>
+        <span class="k">return</span> <span class="n">result</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.handle_echo"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.handle_echo">[docs]</a>    <span class="k">def</span> <span class="nf">handle_echo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">makefile</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.stop_master_thread"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.stop_master_thread">[docs]</a>    <span class="k">def</span> <span class="nf">stop_master_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master_thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+         </div>
+<div class="viewcode-block" id="MasterNode.generate_api"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.generate_api">[docs]</a>    <span class="k">def</span> <span class="nf">generate_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all rpc methods the node requires</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MasterNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">generate_api</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_standalone</span><span class="p">:</span>
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">register_slave</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;register_slave&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="p">[</span><span class="s">&#39;ip&#39;</span><span class="p">],</span> <span class="n">port</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">)</span>
+            
+            <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;register_slave&#39;</span><span class="p">)</span>
+            <span class="c">#@tcpremote(self.server, name=&#39;register_slave&#39;)</span>
+            <span class="k">def</span> <span class="nf">register_slave_tcp</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;register_slave_tcp&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_node_tcp</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">)</span>
+            
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">register_client</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;register_client&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="p">[</span><span class="s">&#39;ip&#39;</span><span class="p">],</span> <span class="n">port</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+            
+            <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;register_client&#39;</span><span class="p">)</span>
+            <span class="c">#@tcpremote(self.server, name=&#39;register_client&#39;)</span>
+            <span class="k">def</span> <span class="nf">register_client_tcp</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;register_client_tcp&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_node_tcp</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+            
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">unregister_slave</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;unregister_slave&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unregister_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">)</span>
+            
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">unregister_client</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;unregister_client&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unregister_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+            
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">heartbeat_slave</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;heartbeat_slave&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">)</span>
+            
+            <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">heartbeat_client</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;heartbeat_client&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+            
+            <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+            <span class="c">#@tcpremote(self.server)</span>
+            <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;task_finished&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_finished</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+                <span class="c"># This is an end method for the interaction</span>
+                <span class="k">raise</span> <span class="n">NoResponseRequired</span><span class="p">()</span>
+            
+            <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+            <span class="c">#@tcpremote(self.server)</span>
+            <span class="k">def</span> <span class="nf">push_task_response</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+                <span class="c"># TODO: Handle failure when result is False!</span>
+                <span class="k">pass</span>
+            
+            <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+            <span class="c">#@tcpremote(self.server)</span>
+            <span class="k">def</span> <span class="nf">push_task_failed</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+                <span class="c"># TODO: Handle failure when pushing tasks failed!</span>
+                <span class="k">pass</span>
+
+        <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+        <span class="c">#@tcpremote(self.server)</span>
+        <span class="k">def</span> <span class="nf">push_tasksystem</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">tasksystem</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Push a application onto the computation framework</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;push_tasksystem&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push_tasksystem</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">tasksystem</span><span class="p">)</span>
+        
+        <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+        <span class="c">#@tcpremote(self.server)</span>
+        <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Push a task onto the computation framework</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;push_task&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        
+        <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+        <span class="c">#@tcpremote(self.server)</span>
+        <span class="k">def</span> <span class="nf">push_tasks</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Push a set of tasks onto the computation framework</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;push_tasks&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        
+        <span class="nd">@tcpremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="p">)</span>
+        <span class="c">#@tcpremote(self.server)</span>
+        <span class="k">def</span> <span class="nf">test_method</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;test_method from {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">NoResponseRequired</span><span class="p">()</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_generate_status_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;type&#39;</span><span class="p">:</span><span class="n">node</span><span class="o">.</span><span class="n">type</span><span class="p">,</span><span class="s">&#39;state&#39;</span><span class="p">:</span><span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="p">}</span>
+    
+<div class="viewcode-block" id="MasterNode.status"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.status">[docs]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">ComputeNode</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">status</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_status_dict</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry_mirror</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">status</span><span class="p">[</span><span class="s">&#39;clients&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_status_dict</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">status</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.on_update"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.on_update">[docs]</a>    <span class="k">def</span> <span class="nf">on_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_time</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MasterNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">on_update</span><span class="p">(</span><span class="n">delta_time</span><span class="p">)</span>
+        
+        <span class="c"># Update map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_threshold</span> <span class="o">-=</span> <span class="n">delta_time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_registry_mirror</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_timer</span>
+        
+        <span class="c"># Handle inactive nodes or cleanup empty nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_threshold</span> <span class="o">-=</span> <span class="n">delta_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_cleanup_threshold</span> <span class="o">-=</span> <span class="n">delta_time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_inactive_nodes</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_timer</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_cleanup_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clean_node_map</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_cleanup_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_cleanup_timer</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.has_master"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.has_master">[docs]</a>    <span class="k">def</span> <span class="nf">has_master</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the node has a master or not. Master node has no master itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_handle_timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle state for a given node checking the nodes timestamp value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ellapsed_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">node</span><span class="p">[</span><span class="s">&#39;heartbeat&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="s">&#39;state&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span> <span class="ow">and</span> <span class="n">ellapsed_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_timer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Node </span><span class="si">%s</span><span class="s"> set to inactive (t:</span><span class="si">%f</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">&#39;node_id&#39;</span><span class="p">],</span> <span class="n">ellapsed_time</span><span class="p">))</span>
+            <span class="n">node</span><span class="p">[</span><span class="s">&#39;state&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="s">&#39;state&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span> <span class="ow">and</span> <span class="n">ellapsed_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_unregister_timer</span><span class="p">:</span>
+            <span class="c"># Delete node! To much time inactive!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Node </span><span class="si">%s</span><span class="s"> kicked from system! To much time of inactivity! (t:</span><span class="si">%f</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">&#39;node_id&#39;</span><span class="p">],</span> <span class="n">ellapsed_time</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">node</span>
+    
+<div class="viewcode-block" id="MasterNode.set_registry_dirty"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.set_registry_dirty">[docs]</a>    <span class="k">def</span> <span class="nf">set_registry_dirty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the registry dirty, this will force an update of the task scheduler</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_scheduler</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="MasterNode.update_scheduler"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.update_scheduler">[docs]</a>    <span class="k">def</span> <span class="nf">update_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update task scheduler with the current list of slaves</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">rate_slaves</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="MasterNode.update_inactive_nodes"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.update_inactive_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">update_inactive_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when we check for inactive nodes, those that have not send any heartbeat for a while</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Checking for inactive nodes...&quot;</span><span class="p">)</span> 
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_timeout</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_timeout</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.update_registry_mirror"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.update_registry_mirror">[docs]</a>    <span class="k">def</span> <span class="nf">update_registry_mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the registry mirror with a copy of the registry. Used to expose a copy dict to the public.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Updating node registry mirror...&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">node_registry_mirror</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_mirror</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span> <span class="o">=</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.clean_node_map"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.clean_node_map">[docs]</a>    <span class="k">def</span> <span class="nf">clean_node_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clean node map for any empty node values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Cleaning node registry...&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_node_id_no_lock"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_node_id_no_lock">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_id_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="n">url</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_node_id"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_node_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a node id given an url</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node_id_no_lock</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node_id</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_client_id_no_lock"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_client_id_no_lock">[docs]</a>    <span class="k">def</span> <span class="nf">get_client_id_no_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="n">url</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_client_id"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_client_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_client_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a client id given an url</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_client_id_no_lock</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node_id</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_node"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_node">[docs]</a>    <span class="k">def</span> <span class="nf">get_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a node representation given an url</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node_id_no_lock</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node_id</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">node</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.get_client"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.get_client">[docs]</a>    <span class="k">def</span> <span class="nf">get_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a node representation given an url</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_client_id_no_lock</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node_id</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">node</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_default_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    
+    <span class="k">def</span> <span class="nf">_default_tasksystem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Bunch</span><span class="p">({})</span>
+    
+    <span class="k">def</span> <span class="nf">_default_slave_bunch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Bunch</span><span class="p">({</span><span class="s">&#39;node_id&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;url&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;ip&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">:</span><span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">,</span> <span class="s">&#39;state&#39;</span><span class="p">:</span><span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span><span class="p">,</span> <span class="s">&#39;heartbeat&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;proxy&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;workers&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;tasks&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;rating&#39;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">,</span> <span class="s">&#39;handler&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+    
+    <span class="k">def</span> <span class="nf">_default_client_bunch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Bunch</span><span class="p">({</span><span class="s">&#39;node_id&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;url&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;ip&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">:</span><span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span><span class="p">,</span> <span class="s">&#39;state&#39;</span><span class="p">:</span><span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span><span class="p">,</span> <span class="s">&#39;heartbeat&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;proxy&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;handler&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+    
+<div class="viewcode-block" id="MasterNode.register_node"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.register_node">[docs]</a>    <span class="k">def</span> <span class="nf">register_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a node within our node map</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># TODO: CHECK ALL CLIENT DATA!</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="c"># This is a node that is registering again so reuse it</span>
+                        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_slave_bunch</span><span class="p">()</span>
+                    
+                    <span class="c"># Basic node values</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">node_type</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_node_proxy</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">pending</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">heartbeat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    
+                    <span class="c"># Add slave data                   </span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;workers&#39;</span><span class="p">]</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c"># Rating goes from [0, ..) 0 is the best rating and so asuitable candidate</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">rating</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">tcp_proxy</span> <span class="o">=</span> <span class="bp">None</span>
+                    
+                    <span class="c"># Make sure the mirror updates properly</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+                    
+                    <span class="c"># Send back the generated id</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_port</span><span class="p">}</span>
+            <span class="k">elif</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="c"># This is a node that is registering again so reuse it</span>
+                        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_client_bunch</span><span class="p">()</span>
+                    
+                    <span class="c"># Basic node values</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">node_type</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_node_proxy</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">pending</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">heartbeat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    
+                    <span class="c"># Add client data</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">tcp_proxy</span> <span class="o">=</span> <span class="bp">None</span>
+                    
+                    <span class="c"># Make sure the mirror updates properly</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+                    
+                    <span class="c"># Send back the generated id</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_port</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unkown node&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="c"># Make sure to cleanup node from node map!</span>
+            <span class="k">if</span> <span class="n">node_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unregister_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">node_type</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.unregister_node"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.unregister_node">[docs]</a>    <span class="k">def</span> <span class="nf">unregister_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unregister a node within our node map</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="c"># Make sure we let the mirror update</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                    <span class="c"># if we had a socket close it now!</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="c"># Get rid of any registered task system</span>
+                    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">:</span>
+                            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+                    <span class="c"># Make sure we let the mirror update</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">registry_mirror_dirty</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_registry_dirty</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unkown node&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.register_node_tcp"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.register_node_tcp">[docs]</a>    <span class="k">def</span> <span class="nf">register_node_tcp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Slave has just registered itself throug the compute channel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                    <span class="c"># The handler is shared between many client sockets!</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="n">handler</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">worker</span>
+                    <span class="c">#self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">tcp_proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_tcp_client_proxy_zmq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span>
+                    <span class="c"># Let the slave know that the handshake worked</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                    <span class="c"># The handler is shared between many client sockets!</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="n">handler</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">worker</span>
+                    <span class="c">#self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">tcp_proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_tcp_client_proxy_zmq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmq_server</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span>
+                    <span class="c"># Safe some data within the handler itself</span>
+                    <span class="n">handler</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+                    <span class="n">handler</span><span class="o">.</span><span class="n">node_type</span> <span class="o">=</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span>
+                    <span class="c"># Let the client know that the handshake worked</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unkown node&quot;</span><span class="p">)</span>
+                    
+            
+        </div>
+<div class="viewcode-block" id="MasterNode.notify_shutdown"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.notify_shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">notify_shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Notify a global shutdown to all nodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">proxy</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">master_disconnected</span><span class="p">()</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">proxy</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">master_disconnected</span><span class="p">()</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.heartbeat"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.heartbeat">[docs]</a>    <span class="k">def</span> <span class="nf">heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We just received a nice beat from a node, update it&#39;s last heartbeat</span>
+<span class="sd">        timestamp to perevent timeouts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">slave</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">heartbeat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">node_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span>
+                    <span class="c">#self.log.info(&quot;Node %s just ticked&quot; % (node_id))</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">NodeType</span><span class="o">.</span><span class="n">client</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">heartbeat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">inactive</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">NodeState</span><span class="o">.</span><span class="n">active</span>
+                    <span class="c">#self.log.info(&quot;Node %s just ticked&quot; % (node_id))</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unkown node&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.rpc_call_failed"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.rpc_call_failed">[docs]</a>    <span class="k">def</span> <span class="nf">rpc_call_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an RPC call failed for an unexpected reason</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Method </span><span class="si">%s</span><span class="s"> failed because of </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">reason</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.rpc_call_success"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.rpc_call_success">[docs]</a>    <span class="k">def</span> <span class="nf">rpc_call_success</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an RPC call succeded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Method </span><span class="si">%s</span><span class="s"> succeded with </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.push_tasksystem"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.push_tasksystem">[docs]</a>    <span class="k">def</span> <span class="nf">push_tasksystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">tasksystem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We received a task system from a client. Get the first list of tasks and save out the</span>
+<span class="sd">        system itself for later access</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c"># Easier access</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">request</span>
+        
+        <span class="c"># Now get the</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+            <span class="c"># No re-registering!</span>
+            <span class="n">system_id</span> <span class="o">=</span> <span class="n">tasksystem</span><span class="o">.</span><span class="n">system_id</span>
+            <span class="k">if</span> <span class="n">system_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            
+            <span class="c"># Safe out the registry</span>
+            <span class="n">system_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_tasksystem</span><span class="p">()</span>
+            <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">tasksystem</span>
+            <span class="n">system_entry</span><span class="o">.</span><span class="n">client_id</span> <span class="o">=</span> <span class="n">node_id</span>
+            <span class="n">system_entry</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="n">system_id</span>
+            
+            <span class="c"># Now gather task and push them to the system</span>
+            <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+            <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">init_system</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">start_system</span><span class="p">(</span><span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.push_task"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.push_task">[docs]</a>    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We received a task from a client, add it to the system to be processed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">Task</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="MasterNode.task_finished"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.masternode.MasterNode.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when a task has finished its computation, the result object contains the task, </span>
+<span class="sd">        the result or an error and additional information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># if the task does not specify a ITaskSystem id its a single executed task which is not controller by</span>
+        <span class="c"># a dedicated autonomouse system on the master</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">system_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">client_id</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">client_id</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">client_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">client_id</span><span class="p">]</span><span class="o">.</span><span class="n">tcp_proxy</span><span class="o">.</span><span class="n">task_finished</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># If we do have a system id let it process it instead</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_lock</span><span class="o">.</span><span class="n">writelock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">system_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">:</span>
+                    <span class="n">system_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">system_id</span><span class="p">]</span>
+                    <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+                    
+                    <span class="c"># Inform scheduler of the task</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">task_scheduler</span><span class="o">.</span><span class="n">task_finished</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+                    
+                    <span class="c"># Check for end</span>
+                    <span class="k">if</span> <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="c"># Gather results</span>
+                            <span class="n">final_results</span> <span class="o">=</span> <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">gather_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                            
+                            <span class="c"># Send to client proxy the results</span>
+                            <span class="n">client_id</span> <span class="o">=</span> <span class="n">system_entry</span><span class="o">.</span><span class="n">client_id</span>
+                            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry_lock</span><span class="o">.</span><span class="n">readlock</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">client_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">:</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">client_registry</span><span class="p">[</span><span class="n">client_id</span><span class="p">]</span><span class="o">.</span><span class="n">tcp_proxy</span><span class="o">.</span><span class="n">work_finished</span><span class="p">(</span><span class="n">final_results</span><span class="p">,</span> <span class="n">system_entry</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">system_id</span><span class="p">)</span>
+                        <span class="k">finally</span><span class="p">:</span>
+                            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasksystem_registry</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">system_id</span><span class="p">]</span>
+                                </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

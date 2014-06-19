@@ -1,0 +1,820 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.samples.dnacurve package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-framework-samples-dnacurve-package">
+<h1>concurrent.framework.samples.dnacurve package<a class="headerlink" href="#concurrent-framework-samples-dnacurve-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.framework.samples.dnacurve.app">
+<span id="concurrent-framework-samples-dnacurve-app-module"></span><h2>concurrent.framework.samples.dnacurve.app module<a class="headerlink" href="#module-concurrent.framework.samples.dnacurve.app" title="Permalink to this headline">¶</a></h2>
+<p>Sample application demostrating the implementation of a DNA Curve Analysis.
+The implemnetation has been based on work from Christoph Gohlke (<a class="reference external" href="http://www.lfd.uci.edu/~gohlke/">http://www.lfd.uci.edu/~gohlke/</a>)</p>
+<p>NOTE: The implementation is not finsihed and not working but demostrates the capabilities!</p>
+<p>File: dnacurve.app.py</p>
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.dnacurve.app.DNACurveNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
+<p>DNA Curve Analysis application</p>
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applications main entry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system">
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the base class when we are connected to a MasterNode and we are 
+able to send computation tasks over</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed">
+<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>We failed to push a ITaskSystem on the computation framework!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response">
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished">
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the work has been done, the results is what our ITaskSystem
+sent back to us. Check resukt for more info</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up">
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed and its results are about to be sent back. This is used
+to optimize our network and to cleanup the tasks input data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask.finished">
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the task is finished. Called on the MasterNode within the main thread once
+the node has recovered the result data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTaskSystem</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
+<p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center">
+<tt class="descname">center</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center atomic coordinates at origin.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post">
+<tt class="descname">coordinates_post</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.coordinates_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate coordinates and normal vectors from sequence and model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature">
+<tt class="descname">curvature</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate normalized curvature and bend angles.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result">
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
+are to be send to the originator. Returns a tuple like (result, Error)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks">
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>From the analysis of the sequential version of the algorithm we conclude that each analysis of
+each sequence takes on average 0.006 seconds. We will split the workload so that we expect to
+send as much sequences to each worker so that the worker is busy for 1 second. This makes a
+total of 166 sequences for each task, the last tasks will vary in seuqences though.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system">
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the system</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete">
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
+gets performed every time a tasks finishes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name">
+<tt class="descname">name</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.p_coord">
+<tt class="descname">p_coord</tt><em class="property"> = (8.91, -5.2, 2.08)</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.p_coord" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient">
+<tt class="descname">reorient</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.reorient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorient coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.app.Model">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>N-mer DNA-bending model.</p>
+<p>Transformation parameters and matrices for all oligonucleotides of
+certain length.</p>
+<dl class="docutils">
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Human readable label.</dd>
+<dt>order <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Order of model, i.e. length of oligonucleotides.
+Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
+<dt>rise <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Displacement along the Z axis.</dd>
+<dt>twist <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Z axis for all oligonucleotides.</dd>
+<dt>roll <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Y axis for all oligonucleotides.</dd>
+<dt>tilt <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Z axis for all oligonucleotides.</dd>
+<dt>matrices <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Homogeneous transformation matrices for all oligonucleotides.</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;AAWedge&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;Nucleosome&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">**</span><span class="n">Model</span><span class="o">.</span><span class="n">STRAIGHT</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">Model</span><span class="o">.</span><span class="n">CALLADINE</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;My Model&quot;</span><span class="p">,</span> <span class="n">rise</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&quot;My Model&quot;</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">rise</span> <span class="o">==</span> <span class="mf">4.0</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Test&quot;</span><span class="p">,</span> <span class="n">rise</span><span class="o">=</span><span class="mf">3.38</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">oligo</span><span class="o">=</span><span class="s">&quot;AA AC AG AT CA GG CG GA GC TA&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+<span class="gp">... </span>          <span class="n">twist</span><span class="o">=</span><span class="p">(</span><span class="mf">34.29</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;_test.dat&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">twist</span> <span class="o">==</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;_test.dat&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">twist</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.AAWEDGE">
+<tt class="descname">AAWEDGE</tt><em class="property"> = {'twist': (35.62, 34.4, 27.7, 31.5, 34.5, 33.67, 29.8, 36.9, 40.0, 36.0), 'oligo': 'AA     AC    AG    AT    CA    GG     CG    GA    GC    TA', 'name': 'AA Wedge', 'tilt': (2.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (-8.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.AAWEDGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.CALLADINE">
+<tt class="descname">CALLADINE</tt><em class="property"> = {'twist': (35.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Calladine &amp; Drew', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 6.6)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.CALLADINE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.DESANTIS">
+<tt class="descname">DESANTIS</tt><em class="property"> = {'twist': (35.9, 34.6, 35.6, 35.0, 34.5, 33.0, 33.7, 35.8, 33.3, 34.6), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Cacchione &amp; De Santis', 'tilt': (-0.5, -2.7, -1.6, 0.0, 0.4, -0.6, 0.0, -1.7, 0.0, 0.0), 'rise': 3.38, 'roll': (-5.4, -2.4, 1.0, -7.3, 6.7, 1.3, 4.6, 2.0, -3.7, 8.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.DESANTIS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.NUCLEOSOME">
+<tt class="descname">NUCLEOSOME</tt><em class="property"> = {'twist': (34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3), 'oligo': '\n                AAA  ATA   AGA   ACA  TAA  TTA  TGA  TCA\n                GAA  GTA   GGA   GCA  CAA  CTA  CGA  CCA\n                AAT  ATT   AGT   ACT  TAT  TTT  TGT  TCT\n                GAT  GTT   GGT   GCT  CAT  CTT  CGT  CCT\n                AAG  ATG   AGG   ACG  TAG  TTG  TGG  TCG\n                GAG  GTG   GGG   GCG  CAG  CTG  CGG  CCG\n                AAC  ATC   AGC   ACC  TAC  TTC  TGC  TCC\n                GAC  GTC   GGC   GCC  CAC  CTC  CGC  CCC', 'name': 'Nucleosome Positioning', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 2.8, 3.3, 5.2, 2.0, 2.0, 5.4, 5.4, 3.0, 3.7, 3.8, 5.4, 3.3, 2.2, 8.3, 5.4, 0.7, 0.7, 5.8, 5.8, 2.8, 0.0, 5.2, 3.3, 5.3, 3.7, 5.4, 7.5, 6.7, 5.2, 5.4, 5.4, 5.2, 6.7, 5.4, 5.4, 2.2, 3.3, 5.4, 8.3, 5.4, 6.5, 6.0, 7.5, 4.2, 4.2, 4.7, 4.7, 3.7, 5.3, 7.5, 5.4, 3.7, 3.0, 6.0, 3.8, 5.4, 5.4, 10.0, 10.0, 6.5, 5.4, 7.5, 6.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.NUCLEOSOME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.REVERSED">
+<tt class="descname">REVERSED</tt><em class="property"> = {'twist': (35.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Reversed Calladine &amp; Drew', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (3.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.3)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.REVERSED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.STRAIGHT">
+<tt class="descname">STRAIGHT</tt><em class="property"> = {'twist': (34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285), 'oligo': 'AA AC AG AT CA GG CG GA GC TA', 'name': 'Straight', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.STRAIGHT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.TRIFONOV">
+<tt class="descname">TRIFONOV</tt><em class="property"> = {'twist': (35.62, 34.4, 27.7, 31.5, 34.5, 33.67, 29.8, 36.9, 40.0, 36.0), 'oligo': 'AA     AC    AG    AT    CA    GG     CG    GA    GC    TA', 'name': 'Bolshoi &amp; Trifonov', 'tilt': (3.2, -0.7, -0.3, 0.0, 3.1, -1.8, 0.0, -4.6, 0.0, 0.0), 'rise': 3.38, 'roll': (-6.5, -0.9, 8.4, 2.6, 1.6, 1.2, 6.7, -2.7, -5.0, 0.9)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.TRIFONOV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.Model.save">
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save model to file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>DNA nucleotide sequence.</p>
+<dl class="docutils">
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Human readable label.</dd>
+<dt>comment <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Single line description of sequence.</dd>
+<dt>string <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Sequence string containing only ATCG.</dd>
+</dl>
+<p>FASTA files must contain <tt class="docutils literal"><span class="pre">&gt;name&lt;space&gt;comment&lt;newline&gt;sequence</span></tt>.
+SEQ files must contain <tt class="docutils literal"><span class="pre">name&lt;newline&gt;comment&lt;newline&gt;sequence</span></tt>.
+Nucleotides other than ATCG are ignored.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;0AxT-C:G a`t~c&amp;g      &quot;</span><span class="p">)[:]</span>
+<span class="go">&#39;ATCGATCG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Test&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">3</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="bp">None</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;_test.seq&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;_test.seq&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.KINETOPLAST">
+<tt class="descname">KINETOPLAST</tt><em class="property"> = '\n        GATCTAGACT AGACGCTATC GATAAAGTTT AAACAGTACA ACTATCGTGC TACTCACCTG\n        TTGCCAAACA TTGCAAAAAT GCAAAATTGG GCTTGTGGAC GCGGAGAGAA TTCCCAAAAA\n        TGTCAAAAAA TAGGCAAAAA ATGCCAAAAA TCCCAAACTT TTTAGGTCCC TCAGGTAGGG\n        GCGTTCTCCG AAAACCGAAA AATGCATGCA GAAACCCCGT TCAAAAATCG GCCAAAATCG\n        CCATTTTTTC AATTTTCGTG TGAAACTAGG GGTTGGTGTA AAATAGGGGT GGGGCTCCCC\n        GGGGTAATTC TGGAAATTCG GGCCCTCAGG CTAGACCGGT CAAAATTAGG CCTCCTGACC\n        CGTATATTTT TGGATTTCTA AATTTTGTGG CTTTAGATGT GGGAGATTTG GATC'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.KINETOPLAST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.OUT_OF_PHASE_AAAAAA">
+<tt class="descname">OUT_OF_PHASE_AAAAAA</tt><em class="property"> = 'CGCGCGCAAAAAACG'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.OUT_OF_PHASE_AAAAAA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.PHASED_AAAAAA">
+<tt class="descname">PHASED_AAAAAA</tt><em class="property"> = 'CGAAAAAACG'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.PHASED_AAAAAA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.PHASED_GGGCCC">
+<tt class="descname">PHASED_GGGCCC</tt><em class="property"> = 'GAGGGCCCTA'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.PHASED_GGGCCC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.format">
+<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return string of sequence formatted in blocks and lines.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.save">
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save sequence to file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.app.Sequence.string">
+<tt class="descname">string</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sequence as string.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.chunks">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">chunks</tt><big>(</big><em>sequence</em>, <em>size=10</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sequence in chunks of size.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">chunks</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">[&#39;ATCGATCGAT&#39;, &#39;CGATCG&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.complementary">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">complementary</tt><big>(</big><em>sequence</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#complementary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.complementary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return complementary sequence.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">complementary</span><span class="p">(</span><span class="s">&#39;AT CG&#39;</span><span class="p">)</span>
+<span class="go">&#39;CGAT&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.dinuc_window">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinuc_window</tt><big>(</big><em>sequence</em>, <em>size</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#dinuc_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinuc_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return window of nucleotides around each dinucleotide in sequence.</p>
+<p>Return None if window overlaps border.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">dinuc_window</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[&#39;AT&#39;, &#39;TC&#39;, &#39;CG&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">dinuc_window</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[&#39;ATC&#39;, &#39;TCG&#39;, None]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">dinuc_window</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[None, &#39;ATCG&#39;, None]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.dinucleotide_matrix">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinucleotide_matrix</tt><big>(</big><em>rise</em>, <em>twist</em>, <em>roll</em>, <em>tilt</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#dinucleotide_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinucleotide_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return transformation matrix to move from one nucleotide to next.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.norm">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">norm</tt><big>(</big><em>vector</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return length of vector, i.e. its euclidean norm.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.oligonucleotides">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">oligonucleotides</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#oligonucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.oligonucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all oligonucleotide sequences of length.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">oligonucleotides</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">&#39;AA AG AC AT GA GG GC GT CA CG CC CT TA TG TC TT&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.overlapping_chunks">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">overlapping_chunks</tt><big>(</big><em>sequence</em>, <em>size</em>, <em>overlap</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#overlapping_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.overlapping_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return iterator over overlapping chunks of sequence.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">overlapping_chunks</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(0, &#39;ATCGATCG&#39;), (4, &#39;ATCGATCG&#39;), (8, &#39;ATCGATCG&#39;)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.superimpose_matrix">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">superimpose_matrix</tt><big>(</big><em>v0</em>, <em>v1</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#superimpose_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.superimpose_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return matrix to transform given vector set to second vector set.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="concurrent.framework.samples.dnacurve.app.unique_oligos">
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">unique_oligos</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#unique_oligos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.unique_oligos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all unique oligonucleotide sequences of length.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unique_oligos</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">&#39;AA AG AC AT GA GG GC CA CG TA&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.samples.dnacurve.dnacurve">
+<span id="concurrent-framework-samples-dnacurve-dnacurve-module"></span><h2>concurrent.framework.samples.dnacurve.dnacurve module<a class="headerlink" href="#module-concurrent.framework.samples.dnacurve.dnacurve" title="Permalink to this headline">¶</a></h2>
+<p>DNA Curvature Analysis.</p>
+<p>Calculate the global 3D structure of a B-DNA molecule from its nucleotide
+sequence according to the dinucleotide wedge model. Analyze local bending
+angles and macroscopic curvature at each nucleotide.</p>
+<p>For command line usage run <tt class="docutils literal"><span class="pre">python</span> <span class="pre">dnacurve.py</span> <span class="pre">--help</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body"><a class="reference external" href="http://www.lfd.uci.edu/~gohlke/">Christoph Gohlke</a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Version:</th><td class="field-body">2013.11.21</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.python.org">CPython 2.7 or 3.3</a></li>
+<li><a class="reference external" href="http://www.numpy.org">Numpy 1.7</a></li>
+<li><a class="reference external" href="http://www.matplotlib.org">Matplotlib 1.3</a></li>
+</ul>
+</div>
+<div class="section" id="revisions">
+<h3>Revisions<a class="headerlink" href="#revisions" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>2013.11.21</dt>
+<dd>Overlapping chunks iterator.</dd>
+<dt>2013.11.17</dt>
+<dd>Limit maximum sequence length to 510 nucleotides.
+Read simple Fasta sequence files.
+Save positive coordinates to PDB files.
+Fix sequence display for matplotlib 1.3.</dd>
+</dl>
+</div>
+<div class="section" id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h3>
+<p>The API is not stable yet and is expected to change between revisions.</p>
+<p>The algorithms, plots, and PDB format are not meant to be used with very
+long sequences. By default sequences are truncated to 510 nucleotides,
+which can be overridden by the user.</p>
+<p>To render PDB files as ribbons in PyMOL enable the Ribbon-&gt;Trace Atoms setting.</p>
+</div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Bending and curvature calculations in B-DNA.
+Goodsell DS, Dickerson RE. Nucleic Acids Res 22, 5497-503, 1994.
+See also <a class="reference external" href="http://mgl.scripps.edu/people/goodsell/research/bend/">http://mgl.scripps.edu/people/goodsell/research/bend/</a></li>
+<li>Curved DNA without A-A: experimental estimation of all 16 DNA wedge angles.
+Bolshoy A et al. Proc Natl Acad Sci USA 88, 2312-6, 1991.</li>
+<li>A comparison of six DNA bending models.
+Tan RK and Harvey SC. J Biomol Struct Dyn 5, 497-512, 1987.</li>
+<li>Curved DNA: design, synthesis, and circularization.
+Ulanovsky L et al. Proc Natl Acad Sci USA 83, 862-6, 1986.</li>
+<li>The ten helical twist angles of B-DNA.
+Kabsch W, Sander C, and Trifonov EN. Nucleic Acids Res 10, 1097-1104, 1982.</li>
+</ol>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dnacurve</span> <span class="kn">import</span> <span class="n">CurvedDNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">CurvedDNA</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">5</span><span class="p">,</span> <span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Example&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">curvature</span><span class="p">[:,</span> <span class="mi">18</span><span class="p">:</span><span class="mi">22</span><span class="p">]</span>
+<span class="go">array([[ 0.58061616,  0.58163338,  0.58277938,  0.583783  ],</span>
+<span class="go">       [ 0.08029914,  0.11292516,  0.07675816,  0.03166286],</span>
+<span class="go">       [ 0.57923902,  0.57580064,  0.57367815,  0.57349872]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;_test.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">save_pdb</span><span class="p">(</span><span class="s">&quot;_test.pdb&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s">&quot;_test.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">160</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">CurvedDNA</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Calculate, plot or save helix coordinates, local bending and curvature.</p>
+<dl class="docutils">
+<dt>model <span class="classifier-delimiter">:</span> <span class="classifier">Model</span></dt>
+<dd>The curvature model.</dd>
+<dt>sequence <span class="classifier-delimiter">:</span> <span class="classifier">Sequence</span></dt>
+<dd>The DNA sequence to analyze.</dd>
+<dt>coordinates <span class="classifier-delimiter">:</span> <span class="classifier">3D ndarray</span></dt>
+<dd>Homogeneous coordinates at each nucleotide of:
+Index 0) helix axis,
+Index 1) phosphate of 5&#8217;-3&#8217; strand,
+Index 2) phosphate of antiparallel strand,
+Index 3) basepair normal vector,
+Index 4) smoothed basepair normal vector.</dd>
+<dt>curvature <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span></dt>
+<dd>Values at each nucleotide, normalized relative to curvature in
+nucleosome:
+Index 0) curvature,
+Index 1) local bend angle,
+Index 2) curvature angle.</dd>
+<dt>windows <span class="classifier-delimiter">:</span> <span class="classifier">sequence of int</span></dt>
+<dd>Window sizes for calculating curvature, local bend angle, and
+curvature angle.</dd>
+<dt>scales <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span></dt>
+<dd>Scaling factors used to normalize curvature array.</dd>
+</dl>
+<p>Atomic coordinates are centered at origin and oriented such that:
+(1) helix-axis endpoints lie on x-axis and
+(2) maximum deviation of DNA- from x-axis is along the z-axis.
+Coordinates in PDB files are shifted to the positive domain.</p>
+<p>The <strong>curvature</strong> at nucleotide N is one over the radius of a
+circle passing through helix axis coordinates N-window, N, and
+N+window, which are separated by one respectively two helix turns.
+The three points define a triangle.  The radius is the product of
+the length of the triangle sides divided by four times the area of
+the triangle.  A window size of 10 is optimal for B-DNA.</p>
+<p>The <strong>local bend angle</strong> at nucleotide N is the angle between the
+normal vectors of base pairs N-window and N+window.  The window size
+should be one or two.</p>
+<p>The <strong>curvature angle</strong> at nucleotide N is the angle between the
+smoothed normal vectors of basepair N-window and N+window.
+The window size should be in the order of 15.</p>
+<p>The curvature and bend values are normalized relative to the
+DNA curvature in a nucleosome (0.0234).</p>
+<p>See module examples.</p>
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.name">
+<tt class="descname">name</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.p_coord">
+<tt class="descname">p_coord</tt><em class="property"> = (8.91, -5.2, 2.08)</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.p_coord" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.plot">
+<tt class="descname">plot</tt><big>(</big><em>arg=True</em>, <em>dpi=96</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot results using matplotlib.pyplot.</p>
+<dl class="docutils">
+<dt>arg <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
+<dd>False: don&#8217;t plot.
+True: interactive plot.
+String: path name to save figure.</dd>
+<dt>dpi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Resolution of plot in dots per inch.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_csv">
+<tt class="descname">save_csv</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save coordinates and curvature values to CSV file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_pdb">
+<tt class="descname">save_pdb</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save atomic coordinates to PDB file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>N-mer DNA-bending model.</p>
+<p>Transformation parameters and matrices for all oligonucleotides of
+certain length.</p>
+<dl class="docutils">
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Human readable label.</dd>
+<dt>order <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Order of model, i.e. length of oligonucleotides.
+Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
+<dt>rise <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Displacement along the Z axis.</dd>
+<dt>twist <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Z axis for all oligonucleotides.</dd>
+<dt>roll <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Y axis for all oligonucleotides.</dd>
+<dt>tilt <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Rotation angle in deg about the Z axis for all oligonucleotides.</dd>
+<dt>matrices <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Homogeneous transformation matrices for all oligonucleotides.</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;AAWedge&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;Nucleosome&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">**</span><span class="n">Model</span><span class="o">.</span><span class="n">STRAIGHT</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">Model</span><span class="o">.</span><span class="n">CALLADINE</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;My Model&quot;</span><span class="p">,</span> <span class="n">rise</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&quot;My Model&quot;</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">rise</span> <span class="o">==</span> <span class="mf">4.0</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Test&quot;</span><span class="p">,</span> <span class="n">rise</span><span class="o">=</span><span class="mf">3.38</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">oligo</span><span class="o">=</span><span class="s">&quot;AA AC AG AT CA GG CG GA GC TA&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+<span class="gp">... </span>          <span class="n">twist</span><span class="o">=</span><span class="p">(</span><span class="mf">34.29</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;_test.dat&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">twist</span> <span class="o">==</span> <span class="n">Model</span><span class="p">(</span><span class="s">&quot;_test.dat&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">twist</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.AAWEDGE">
+<tt class="descname">AAWEDGE</tt><em class="property"> = {'twist': (35.62, 34.4, 27.7, 31.5, 34.5, 33.67, 29.8, 36.9, 40.0, 36.0), 'oligo': 'AA     AC    AG    AT    CA    GG     CG    GA    GC    TA', 'name': 'AA Wedge', 'tilt': (2.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (-8.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.AAWEDGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.CALLADINE">
+<tt class="descname">CALLADINE</tt><em class="property"> = {'twist': (35.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Calladine &amp; Drew', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 6.6)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.CALLADINE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.DESANTIS">
+<tt class="descname">DESANTIS</tt><em class="property"> = {'twist': (35.9, 34.6, 35.6, 35.0, 34.5, 33.0, 33.7, 35.8, 33.3, 34.6), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Cacchione &amp; De Santis', 'tilt': (-0.5, -2.7, -1.6, 0.0, 0.4, -0.6, 0.0, -1.7, 0.0, 0.0), 'rise': 3.38, 'roll': (-5.4, -2.4, 1.0, -7.3, 6.7, 1.3, 4.6, 2.0, -3.7, 8.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.DESANTIS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.NUCLEOSOME">
+<tt class="descname">NUCLEOSOME</tt><em class="property"> = {'twist': (34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3, 34.3), 'oligo': '\n                AAA  ATA   AGA   ACA  TAA  TTA  TGA  TCA\n                GAA  GTA   GGA   GCA  CAA  CTA  CGA  CCA\n                AAT  ATT   AGT   ACT  TAT  TTT  TGT  TCT\n                GAT  GTT   GGT   GCT  CAT  CTT  CGT  CCT\n                AAG  ATG   AGG   ACG  TAG  TTG  TGG  TCG\n                GAG  GTG   GGG   GCG  CAG  CTG  CGG  CCG\n                AAC  ATC   AGC   ACC  TAC  TTC  TGC  TCC\n                GAC  GTC   GGC   GCC  CAC  CTC  CGC  CCC', 'name': 'Nucleosome Positioning', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 2.8, 3.3, 5.2, 2.0, 2.0, 5.4, 5.4, 3.0, 3.7, 3.8, 5.4, 3.3, 2.2, 8.3, 5.4, 0.7, 0.7, 5.8, 5.8, 2.8, 0.0, 5.2, 3.3, 5.3, 3.7, 5.4, 7.5, 6.7, 5.2, 5.4, 5.4, 5.2, 6.7, 5.4, 5.4, 2.2, 3.3, 5.4, 8.3, 5.4, 6.5, 6.0, 7.5, 4.2, 4.2, 4.7, 4.7, 3.7, 5.3, 7.5, 5.4, 3.7, 3.0, 6.0, 3.8, 5.4, 5.4, 10.0, 10.0, 6.5, 5.4, 7.5, 6.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.NUCLEOSOME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.REVERSED">
+<tt class="descname">REVERSED</tt><em class="property"> = {'twist': (35.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0, 34.0), 'oligo': 'AA    AC    AG    AT    CA    GG    CG    GA    GC    TA', 'name': 'Reversed Calladine &amp; Drew', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (3.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.3)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.REVERSED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.STRAIGHT">
+<tt class="descname">STRAIGHT</tt><em class="property"> = {'twist': (34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285, 34.285714285714285), 'oligo': 'AA AC AG AT CA GG CG GA GC TA', 'name': 'Straight', 'tilt': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), 'rise': 3.38, 'roll': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.STRAIGHT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.TRIFONOV">
+<tt class="descname">TRIFONOV</tt><em class="property"> = {'twist': (35.62, 34.4, 27.7, 31.5, 34.5, 33.67, 29.8, 36.9, 40.0, 36.0), 'oligo': 'AA     AC    AG    AT    CA    GG     CG    GA    GC    TA', 'name': 'Bolshoi &amp; Trifonov', 'tilt': (3.2, -0.7, -0.3, 0.0, 3.1, -1.8, 0.0, -4.6, 0.0, 0.0), 'rise': 3.38, 'roll': (-6.5, -0.9, 8.4, 2.6, 1.6, 1.2, 6.7, -2.7, -5.0, 0.9)}</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.TRIFONOV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.save">
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save model to file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>DNA nucleotide sequence.</p>
+<dl class="docutils">
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Human readable label.</dd>
+<dt>comment <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Single line description of sequence.</dd>
+<dt>string <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Sequence string containing only ATCG.</dd>
+</dl>
+<p>FASTA files must contain <tt class="docutils literal"><span class="pre">&gt;name&lt;space&gt;comment&lt;newline&gt;sequence</span></tt>.
+SEQ files must contain <tt class="docutils literal"><span class="pre">name&lt;newline&gt;comment&lt;newline&gt;sequence</span></tt>.
+Nucleotides other than ATCG are ignored.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;0AxT-C:G a`t~c&amp;g      &quot;</span><span class="p">)[:]</span>
+<span class="go">&#39;ATCGATCG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Test&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">3</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="bp">None</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;_test.seq&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">==</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&quot;_test.seq&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.KINETOPLAST">
+<tt class="descname">KINETOPLAST</tt><em class="property"> = '\n        GATCTAGACT AGACGCTATC GATAAAGTTT AAACAGTACA ACTATCGTGC TACTCACCTG\n        TTGCCAAACA TTGCAAAAAT GCAAAATTGG GCTTGTGGAC GCGGAGAGAA TTCCCAAAAA\n        TGTCAAAAAA TAGGCAAAAA ATGCCAAAAA TCCCAAACTT TTTAGGTCCC TCAGGTAGGG\n        GCGTTCTCCG AAAACCGAAA AATGCATGCA GAAACCCCGT TCAAAAATCG GCCAAAATCG\n        CCATTTTTTC AATTTTCGTG TGAAACTAGG GGTTGGTGTA AAATAGGGGT GGGGCTCCCC\n        GGGGTAATTC TGGAAATTCG GGCCCTCAGG CTAGACCGGT CAAAATTAGG CCTCCTGACC\n        CGTATATTTT TGGATTTCTA AATTTTGTGG CTTTAGATGT GGGAGATTTG GATC'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.KINETOPLAST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.OUT_OF_PHASE_AAAAAA">
+<tt class="descname">OUT_OF_PHASE_AAAAAA</tt><em class="property"> = 'CGCGCGCAAAAAACG'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.OUT_OF_PHASE_AAAAAA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.PHASED_AAAAAA">
+<tt class="descname">PHASED_AAAAAA</tt><em class="property"> = 'CGAAAAAACG'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.PHASED_AAAAAA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.PHASED_GGGCCC">
+<tt class="descname">PHASED_GGGCCC</tt><em class="property"> = 'GAGGGCCCTA'</em><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.PHASED_GGGCCC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.format">
+<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return string of sequence formatted in blocks and lines.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.save">
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save sequence to file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.string">
+<tt class="descname">string</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sequence as string.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-concurrent.framework.samples.dnacurve.dnacurve_test">
+<span id="concurrent-framework-samples-dnacurve-dnacurve-test-module"></span><h2>concurrent.framework.samples.dnacurve.dnacurve_test module<a class="headerlink" href="#module-concurrent.framework.samples.dnacurve.dnacurve_test" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.framework.samples.dnacurve.setup">
+<span id="concurrent-framework-samples-dnacurve-setup-module"></span><h2>concurrent.framework.samples.dnacurve.setup module<a class="headerlink" href="#module-concurrent.framework.samples.dnacurve.setup" title="Permalink to this headline">¶</a></h2>
+<p>Sample application using Concurrent to perform a DNA curve analysis</p>
+</div>
+<div class="section" id="module-concurrent.framework.samples.dnacurve">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.framework.samples.dnacurve" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.framework.samples.dnacurve package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.dnacurve.app">concurrent.framework.samples.dnacurve.app module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.dnacurve.dnacurve">concurrent.framework.samples.dnacurve.dnacurve module</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#revisions">Revisions</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.dnacurve.dnacurve_test">concurrent.framework.samples.dnacurve.dnacurve_test module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.dnacurve.setup">concurrent.framework.samples.dnacurve.setup module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.samples.dnacurve">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.framework.samples.dnacurve.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

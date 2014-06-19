@@ -1,0 +1,458 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.core.util.date &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.core.util.date</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Time related methods, also includes time zone handling some misc methods</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">tzinfo</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.exceptions.baseerror</span> <span class="kn">import</span> <span class="n">BaseError</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.texttransforms</span> <span class="kn">import</span> <span class="n">to_unicode</span>
+
+<span class="c"># Date/time utilities</span>
+
+<span class="c"># -- conversion</span>
+
+<div class="viewcode-block" id="to_datetime"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.to_datetime">[docs]</a><span class="k">def</span> <span class="nf">to_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tzone</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert `t` into a `datetime` object, using the following rules:</span>
+<span class="sd">    </span>
+<span class="sd">     - If `t` is already a `datetime` object, it is simply returned.</span>
+<span class="sd">     - If `t` is None, the current time will be used.</span>
+<span class="sd">     - If `t` is a number, it is interpreted as a timestamp.</span>
+<span class="sd">     </span>
+<span class="sd">    If no `tzone` is given, the local timezone will be used.</span>
+
+<span class="sd">    Any other input will trigger a `TypeError`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">tzone</span> <span class="ow">or</span> <span class="n">tzonelocal</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">t</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="nb">long</span><span class="p">,</span><span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tzinfo</span> <span class="ow">or</span> <span class="n">tzonelocal</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;expecting datetime, int, long, float, or None; got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="to_timestamp"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.to_timestamp">[docs]</a><span class="k">def</span> <span class="nf">to_timestamp</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the corresponding POSIX timestamp&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">dt</span> <span class="o">-</span> <span class="n">_epoc</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="mi">86400</span> <span class="o">+</span> <span class="n">diff</span><span class="o">.</span><span class="n">seconds</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="c"># -- formatting</span>
+</div>
+<div class="viewcode-block" id="cool_timedelta"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.cool_timedelta">[docs]</a><span class="k">def</span> <span class="nf">cool_timedelta</span><span class="p">(</span><span class="n">time1</span><span class="p">,</span> <span class="n">time2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate time delta between two `datetime` objects.</span>
+<span class="sd">    (the result is somewhat imprecise, only use for prettyprinting).</span>
+
+<span class="sd">    If either `time1` or `time2` is None, the current time will be used</span>
+<span class="sd">    instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time1</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">time1</span><span class="p">)</span>
+    <span class="n">time2</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">time2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time1</span> <span class="o">&gt;</span> <span class="n">time2</span><span class="p">:</span>
+        <span class="n">time2</span><span class="p">,</span> <span class="n">time1</span> <span class="o">=</span> <span class="n">time1</span><span class="p">,</span> <span class="n">time2</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">((</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">365</span><span class="p">,</span> <span class="s">&#39;year&#39;</span><span class="p">,</span>   <span class="s">&#39;years&#39;</span><span class="p">),</span>
+             <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">30</span><span class="p">,</span>  <span class="s">&#39;month&#39;</span><span class="p">,</span>  <span class="s">&#39;months&#39;</span><span class="p">),</span>
+             <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span><span class="p">,</span>   <span class="s">&#39;week&#39;</span><span class="p">,</span>   <span class="s">&#39;weeks&#39;</span><span class="p">),</span>
+             <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>       <span class="s">&#39;day&#39;</span><span class="p">,</span>    <span class="s">&#39;days&#39;</span><span class="p">),</span>
+             <span class="p">(</span><span class="mi">3600</span><span class="p">,</span>            <span class="s">&#39;hour&#39;</span><span class="p">,</span>   <span class="s">&#39;hours&#39;</span><span class="p">),</span>
+             <span class="p">(</span><span class="mi">60</span><span class="p">,</span>              <span class="s">&#39;minute&#39;</span><span class="p">,</span> <span class="s">&#39;minutes&#39;</span><span class="p">))</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span>
+    <span class="n">age_s</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="mi">86400</span> <span class="o">+</span> <span class="n">diff</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resolution</span> <span class="ow">and</span> <span class="n">age_s</span> <span class="o">&lt;</span> <span class="n">resolution</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">age_s</span> <span class="o">&lt;=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mf">1.9</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s"> second</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">age_s</span><span class="p">,</span> <span class="n">age_s</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s">&#39;s&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">unit_plural</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">age_s</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="mf">1.9</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+            <span class="k">return</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">unit</span> <span class="ow">or</span> <span class="n">unit_plural</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    </div>
+<div class="viewcode-block" id="format_datetime"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.format_datetime">[docs]</a><span class="k">def</span> <span class="nf">format_datetime</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%x</span><span class="s"> </span><span class="si">%X</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format the `datetime` object `t` into an `unicode` string</span>
+
+<span class="sd">    If `t` is None, the current time will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    The formatting will be done using the given `format`, which consist</span>
+<span class="sd">    of conventional `strftime` keys. In addition the format can be &#39;iso8601&#39;</span>
+<span class="sd">    to specify the international date format.</span>
+
+<span class="sd">    `tzinfo` will default to the local timezone if left to `None`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tz</span> <span class="o">=</span> <span class="n">tzinfo</span> <span class="ow">or</span> <span class="n">tzonelocal</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tzinfo</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">tz</span><span class="p">)</span>
+    <span class="n">normalize_Z</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;iso8601&#39;</span><span class="p">):</span>
+        <span class="n">date_only</span> <span class="o">=</span> <span class="n">time_only</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="s">&#39;date&#39;</span> <span class="ow">in</span> <span class="n">format</span><span class="p">:</span>
+            <span class="n">date_only</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="s">&#39;time&#39;</span> <span class="ow">in</span> <span class="n">format</span><span class="p">:</span>
+            <span class="n">time_only</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">date_only</span><span class="p">:</span>
+            <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span>
+        <span class="k">elif</span> <span class="n">time_only</span><span class="p">:</span>
+            <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;%H:%M:%S&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">date_only</span><span class="p">:</span>
+            <span class="n">format</span> <span class="o">+=</span> <span class="s">&#39;%z&#39;</span>
+            <span class="n">normalize_Z</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">format</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalize_Z</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;+0000&#39;</span><span class="p">,</span> <span class="s">&#39;Z&#39;</span><span class="p">)</span>
+    <span class="n">encoding</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">()</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s">&#39;win32&#39;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">getlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_TIME</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">encoding</span>
+        <span class="c"># Python 2.3 on windows doesn&#39;t know about &#39;XYZ&#39; alias for &#39;cpXYZ&#39;</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="format_date"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.format_date">[docs]</a><span class="k">def</span> <span class="nf">format_date</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%x</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience method for formatting the date part of a `datetime` object.</span>
+<span class="sd">    See `format_datetime` for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;iso8601&#39;</span><span class="p">:</span>
+        <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;iso8601date&#39;</span>
+    <span class="k">return</span> <span class="n">format_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">format</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">tzinfo</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="format_time"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.format_time">[docs]</a><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%X</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience method for formatting the time part of a `datetime` object.</span>
+<span class="sd">    See `format_datetime` for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;iso8601&#39;</span><span class="p">:</span>
+        <span class="n">format</span> <span class="o">=</span> <span class="s">&#39;iso8601time&#39;</span>
+    <span class="k">return</span> <span class="n">format_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">format</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">tzinfo</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="get_date_format_hint"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.get_date_format_hint">[docs]</a><span class="k">def</span> <span class="nf">get_date_format_hint</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Present the default format used by `format_date` in a human readable</span>
+<span class="sd">    form.</span>
+<span class="sd">    This is a format that will be recognized by `parse_date` when reading a</span>
+<span class="sd">    date.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1999</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">tmpl</span> <span class="o">=</span> <span class="n">format_date</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;1999&#39;</span><span class="p">,</span> <span class="s">&#39;YYYY&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;99&#39;</span><span class="p">,</span> <span class="s">&#39;YY&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> \
+               <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;10&#39;</span><span class="p">,</span> <span class="s">&#39;MM&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;29&#39;</span><span class="p">,</span> <span class="s">&#39;DD&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="get_datetime_format_hint"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.get_datetime_format_hint">[docs]</a><span class="k">def</span> <span class="nf">get_datetime_format_hint</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Present the default format used by `format_datetime` in a human readable</span>
+<span class="sd">    form.</span>
+<span class="sd">    This is a format that will be recognized by `parse_date` when reading a</span>
+<span class="sd">    date.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1999</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">58</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">tmpl</span> <span class="o">=</span> <span class="n">format_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;1999&#39;</span><span class="p">,</span> <span class="s">&#39;YYYY&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;99&#39;</span><span class="p">,</span> <span class="s">&#39;YY&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> \
+               <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;10&#39;</span><span class="p">,</span> <span class="s">&#39;MM&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;29&#39;</span><span class="p">,</span> <span class="s">&#39;DD&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> \
+               <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;23&#39;</span><span class="p">,</span> <span class="s">&#39;hh&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;11&#39;</span><span class="p">,</span> <span class="s">&#39;hh&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> \
+               <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;59&#39;</span><span class="p">,</span> <span class="s">&#39;mm&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;58&#39;</span><span class="p">,</span> <span class="s">&#39;ss&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="http_date"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.http_date">[docs]</a><span class="k">def</span> <span class="nf">http_date</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format `datetime` object `t` as a rfc822 timestamp&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">weekdays</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;Mon&#39;</span><span class="p">,</span> <span class="s">&#39;Tue&#39;</span><span class="p">,</span> <span class="s">&#39;Wed&#39;</span><span class="p">,</span> <span class="s">&#39;Thu&#39;</span><span class="p">,</span> <span class="s">&#39;Fri&#39;</span><span class="p">,</span> <span class="s">&#39;Sat&#39;</span><span class="p">,</span> <span class="s">&#39;Sun&#39;</span><span class="p">)</span>
+    <span class="n">months</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;Jan&#39;</span><span class="p">,</span> <span class="s">&#39;Feb&#39;</span><span class="p">,</span> <span class="s">&#39;Mar&#39;</span><span class="p">,</span> <span class="s">&#39;Apr&#39;</span><span class="p">,</span> <span class="s">&#39;May&#39;</span><span class="p">,</span> <span class="s">&#39;Jun&#39;</span><span class="p">,</span> <span class="s">&#39;Jul&#39;</span><span class="p">,</span> <span class="s">&#39;Aug&#39;</span><span class="p">,</span> <span class="s">&#39;Sep&#39;</span><span class="p">,</span>
+              <span class="s">&#39;Oct&#39;</span><span class="p">,</span> <span class="s">&#39;Nov&#39;</span><span class="p">,</span> <span class="s">&#39;Dec&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">, </span><span class="si">%02d</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%04d</span><span class="s"> </span><span class="si">%02d</span><span class="s">:</span><span class="si">%02d</span><span class="s">:</span><span class="si">%02d</span><span class="s"> GMT&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">weekdays</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">weekday</span><span class="p">()],</span> <span class="n">t</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">months</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
+
+
+<span class="c"># -- parsing</span>
+</div>
+<span class="n">_ISO_8601_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\d\d\d\d)(?:-?(\d\d)(?:-?(\d\d))?)?&#39;</span>   <span class="c"># date</span>
+                          <span class="s">r&#39;(?:T(\d\d)(?::?(\d\d)(?::?(\d\d))?)?)?&#39;</span> <span class="c"># time</span>
+                          <span class="s">r&#39;(Z?(?:([-+])?(\d\d):?(\d\d)?)?)?$&#39;</span>      <span class="c"># timezone</span>
+                          <span class="p">)</span>
+
+<div class="viewcode-block" id="parse_date"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.parse_date">[docs]</a><span class="k">def</span> <span class="nf">parse_date</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">tzinfo</span> <span class="o">=</span> <span class="n">tzinfo</span> <span class="ow">or</span> <span class="n">tzonelocal</span>
+    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s">&#39;now&#39;</span><span class="p">:</span> <span class="c"># TODO: today, yesterday, etc.</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">tm</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="c"># normalize ISO time</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_ISO_8601_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+            <span class="n">years</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">months</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;01&#39;</span>
+            <span class="n">days</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;01&#39;</span>
+            <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="ow">or</span> <span class="s">&#39;00&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">g</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]]</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">tzsign</span><span class="p">,</span> <span class="n">tzhours</span><span class="p">,</span> <span class="n">tzminutes</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">z</span><span class="p">:</span>
+                <span class="n">tz</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tzhours</span> <span class="ow">or</span> <span class="s">&#39;0&#39;</span><span class="p">),</span>
+                               <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tzminutes</span> <span class="ow">or</span> <span class="s">&#39;0&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">seconds</span> <span class="o">/</span> <span class="mi">60</span>
+                <span class="k">if</span> <span class="n">tz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">tzinfo</span> <span class="o">=</span> <span class="n">utc</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tzinfo</span> <span class="o">=</span> <span class="n">FixedOffset</span><span class="p">(</span><span class="n">tzsign</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span> <span class="ow">and</span> <span class="o">-</span><span class="n">tz</span> <span class="ow">or</span> <span class="n">tz</span><span class="p">,</span>
+                                         <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                                         <span class="p">(</span><span class="n">tzsign</span><span class="p">,</span> <span class="n">tzhours</span><span class="p">,</span> <span class="n">tzminutes</span><span class="p">))</span>
+            <span class="n">tm</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> &#39;</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">%</span> <span class="p">(</span><span class="n">years</span><span class="p">,</span> <span class="n">months</span><span class="p">,</span> <span class="n">days</span><span class="p">,</span>
+                                            <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">),</span>
+                               <span class="s">&#39;%Y %m </span><span class="si">%d</span><span class="s"> %H %M %S &#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">format</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%x</span><span class="s"> </span><span class="si">%X</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%x</span><span class="s">, </span><span class="si">%X</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%X</span><span class="s"> </span><span class="si">%x</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%X</span><span class="s">, </span><span class="si">%x</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%x</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%c</span><span class="s">&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;%b </span><span class="si">%d</span><span class="s">, %Y&#39;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tm</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+    <span class="k">if</span> <span class="n">tm</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">hint</span> <span class="o">=</span> <span class="n">get_date_format_hint</span><span class="p">()</span>        
+        <span class="k">raise</span> <span class="n">BaseError</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot; is an invalid date, or the date format &#39;</span>
+                        <span class="s">&#39;is not known. Try &quot;</span><span class="si">%s</span><span class="s">&quot; instead.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">hint</span><span class="p">),</span>
+                        <span class="s">&#39;Invalid Date&#39;</span><span class="p">)</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">tm</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tzinfo</span><span class="p">)))</span>
+    <span class="c"># Make sure we can convert it to a timestamp and back - fromtimestamp()</span>
+    <span class="c"># may raise ValueError if larger than platform C localtime() or gmtime()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">to_datetime</span><span class="p">(</span><span class="n">to_timestamp</span><span class="p">(</span><span class="n">dt</span><span class="p">),</span> <span class="n">tzinfo</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BaseError</span><span class="p">(</span><span class="s">&#39;The date &quot;</span><span class="si">%s</span><span class="s">&quot; is outside valid range. &#39;</span>
+                        <span class="s">&#39;Try a date closer to present time.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">,),</span>
+                        <span class="s">&#39;Invalid Date&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt</span>
+
+
+<span class="c"># -- timezone utilities</span>
+</div>
+<div class="viewcode-block" id="FixedOffset"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.FixedOffset">[docs]</a><span class="k">class</span> <span class="nc">FixedOffset</span><span class="p">(</span><span class="n">tzinfo</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fixed offset in minutes east from UTC.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;FixedOffset &quot;</span><span class="si">%s</span><span class="s">&quot; </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zone</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FixedOffset.utcoffset"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.FixedOffset.utcoffset">[docs]</a>    <span class="k">def</span> <span class="nf">utcoffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
+</div>
+<div class="viewcode-block" id="FixedOffset.tzname"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.FixedOffset.tzname">[docs]</a>    <span class="k">def</span> <span class="nf">tzname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone</span>
+</div>
+<div class="viewcode-block" id="FixedOffset.dst"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.FixedOffset.dst">[docs]</a>    <span class="k">def</span> <span class="nf">dst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_zero</span>
+
+</div></div>
+<span class="n">STDOFFSET</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=-</span><span class="n">time</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">daylight</span><span class="p">:</span>
+    <span class="n">DSTOFFSET</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=-</span><span class="n">time</span><span class="o">.</span><span class="n">altzone</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">DSTOFFSET</span> <span class="o">=</span> <span class="n">STDOFFSET</span>
+
+<span class="n">DSTDIFF</span> <span class="o">=</span> <span class="n">DSTOFFSET</span> <span class="o">-</span> <span class="n">STDOFFSET</span>
+
+
+<div class="viewcode-block" id="LocalTimezone"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.LocalTimezone">[docs]</a><span class="k">class</span> <span class="nc">LocalTimezone</span><span class="p">(</span><span class="n">tzinfo</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A &#39;local&#39; time zone implementation&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LocalTimezone.utcoffset"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.LocalTimezone.utcoffset">[docs]</a>    <span class="k">def</span> <span class="nf">utcoffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isdst</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">DSTOFFSET</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">STDOFFSET</span>
+</div>
+<div class="viewcode-block" id="LocalTimezone.dst"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.LocalTimezone.dst">[docs]</a>    <span class="k">def</span> <span class="nf">dst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isdst</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">DSTDIFF</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_zero</span>
+</div>
+<div class="viewcode-block" id="LocalTimezone.tzname"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.LocalTimezone.tzname">[docs]</a>    <span class="k">def</span> <span class="nf">tzname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">tzname</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_isdst</span><span class="p">(</span><span class="n">dt</span><span class="p">)]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_isdst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="n">tt</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+              <span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">second</span><span class="p">,</span>
+              <span class="n">dt</span><span class="o">.</span><span class="n">weekday</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">tt</span><span class="p">)</span>
+            <span class="n">tt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">(</span><span class="n">stamp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tt</span><span class="o">.</span><span class="n">tm_isdst</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<span class="n">utc</span> <span class="o">=</span> <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;UTC&#39;</span><span class="p">)</span>
+<span class="n">utcmin</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+<span class="n">utcmax</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+<span class="n">_epoc</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1970</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+<span class="n">_zero</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">tzonelocal</span> <span class="o">=</span> <span class="n">LocalTimezone</span><span class="p">()</span>
+
+<span class="c"># Use a makeshift timezone implementation if pytz is not available.</span>
+<span class="c"># This implementation only supports fixed offset time zones.</span>
+<span class="c">#</span>
+<span class="n">_timezones</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;UTC&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">720</span><span class="p">,</span> <span class="s">&#39;GMT -12:00&#39;</span><span class="p">),</span> <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">660</span><span class="p">,</span> <span class="s">&#39;GMT -11:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">600</span><span class="p">,</span> <span class="s">&#39;GMT -10:00&#39;</span><span class="p">),</span> <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">540</span><span class="p">,</span> <span class="s">&#39;GMT -9:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">480</span><span class="p">,</span> <span class="s">&#39;GMT -8:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">420</span><span class="p">,</span> <span class="s">&#39;GMT -7:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">360</span><span class="p">,</span> <span class="s">&#39;GMT -6:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="s">&#39;GMT -5:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">240</span><span class="p">,</span> <span class="s">&#39;GMT -4:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="s">&#39;GMT -3:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">120</span><span class="p">,</span> <span class="s">&#39;GMT -2:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="s">&#39;GMT -1:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;GMT&#39;</span><span class="p">),</span>           <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="s">&#39;GMT +1:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="s">&#39;GMT +2:00&#39;</span><span class="p">),</span>   <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="s">&#39;GMT +3:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="s">&#39;GMT +4:00&#39;</span><span class="p">),</span>   <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="s">&#39;GMT +5:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">360</span><span class="p">,</span> <span class="s">&#39;GMT +6:00&#39;</span><span class="p">),</span>   <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">420</span><span class="p">,</span> <span class="s">&#39;GMT +7:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="s">&#39;GMT +8:00&#39;</span><span class="p">),</span>   <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">540</span><span class="p">,</span> <span class="s">&#39;GMT +9:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="s">&#39;GMT +10:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">660</span><span class="p">,</span> <span class="s">&#39;GMT +11:00&#39;</span><span class="p">),</span>
+    <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">720</span><span class="p">,</span> <span class="s">&#39;GMT +12:00&#39;</span><span class="p">),</span>  <span class="n">FixedOffset</span><span class="p">(</span><span class="mi">780</span><span class="p">,</span> <span class="s">&#39;GMT +13:00&#39;</span><span class="p">)]</span>
+<span class="n">_tzmap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">z</span><span class="o">.</span><span class="n">zone</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">_timezones</span><span class="p">])</span>
+
+<span class="n">all_timezones</span> <span class="o">=</span> <span class="p">[</span><span class="n">z</span><span class="o">.</span><span class="n">zone</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">_timezones</span><span class="p">]</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pytz</span>
+
+    <span class="n">_tzoffsetmap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">tz</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">(</span><span class="bp">None</span><span class="p">),</span> <span class="n">tz</span><span class="p">)</span> <span class="k">for</span> <span class="n">tz</span> <span class="ow">in</span> <span class="n">_timezones</span>
+                         <span class="k">if</span> <span class="n">tz</span><span class="o">.</span><span class="n">zone</span> <span class="o">!=</span> <span class="s">&#39;UTC&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">timezone</span><span class="p">(</span><span class="n">tzname</span><span class="p">):</span>
+        <span class="n">tz</span> <span class="o">=</span> <span class="n">get_timezone</span><span class="p">(</span><span class="n">tzname</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tz</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">tzname</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tz</span>
+
+    <span class="k">def</span> <span class="nf">get_timezone</span><span class="p">(</span><span class="n">tzname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch timezone instance by name or return `None`&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># if given unicode parameter, pytz.timezone fails with:</span>
+            <span class="c"># &quot;type() argument 1 must be string, not unicode&quot;</span>
+            <span class="n">tz</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">to_unicode</span><span class="p">(</span><span class="n">tzname</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+            <span class="n">tz</span> <span class="o">=</span> <span class="n">_tzmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tzname</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tz</span> <span class="ow">and</span> <span class="n">tzname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;Etc/&#39;</span><span class="p">):</span>
+            <span class="n">tz</span> <span class="o">=</span> <span class="n">_tzoffsetmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tz</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tz</span>
+
+    <span class="n">_pytz_zones</span> <span class="o">=</span> <span class="p">[</span><span class="n">tzname</span> <span class="k">for</span> <span class="n">tzname</span> <span class="ow">in</span> <span class="n">pytz</span><span class="o">.</span><span class="n">common_timezones</span>
+                   <span class="k">if</span> <span class="ow">not</span> <span class="n">tzname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;Etc/&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                      <span class="ow">not</span> <span class="n">tzname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;GMT&#39;</span><span class="p">)]</span>
+    <span class="c"># insert just the GMT timezones into the pytz zones at the right location</span>
+    <span class="c"># the pytz zones already include UTC so skip it</span>
+    <span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect</span>
+    <span class="n">_gmt_index</span> <span class="o">=</span> <span class="n">bisect</span><span class="p">(</span><span class="n">_pytz_zones</span><span class="p">,</span> <span class="s">&#39;GMT&#39;</span><span class="p">)</span>
+    <span class="n">all_timezones</span> <span class="o">=</span> <span class="n">_pytz_zones</span><span class="p">[:</span><span class="n">_gmt_index</span><span class="p">]</span> <span class="o">+</span> <span class="n">all_timezones</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> \
+                    <span class="n">_pytz_zones</span><span class="p">[</span><span class="n">_gmt_index</span><span class="p">:]</span>
+ 
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+
+<div class="viewcode-block" id="timezone"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.timezone">[docs]</a>    <span class="k">def</span> <span class="nf">timezone</span><span class="p">(</span><span class="n">tzname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch timezone instance by name or raise `KeyError`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_tzmap</span><span class="p">[</span><span class="n">tzname</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="get_timezone"><a class="viewcode-back" href="../../../../concurrent.core.util.html#concurrent.core.util.date.get_timezone">[docs]</a>    <span class="k">def</span> <span class="nf">get_timezone</span><span class="p">(</span><span class="n">tzname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch timezone instance by name or return `None`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_tzmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tzname</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

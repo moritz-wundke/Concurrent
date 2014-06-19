@@ -1,0 +1,766 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.nodes.basenodes &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for concurrent.framework.nodes.basenodes</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing our base node enteties</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">IntItem</span><span class="p">,</span> <span class="n">ExtensionPointItem</span><span class="p">,</span> <span class="n">ConfigItem</span><span class="p">,</span> <span class="n">FloatItem</span><span class="p">,</span> <span class="n">BoolItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.simplejsonrpc</span> <span class="kn">import</span> <span class="n">SimpleJSONRPCService</span><span class="p">,</span> <span class="n">jsonremote</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.gzipper</span> <span class="kn">import</span> <span class="n">Gzipper</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.tcpserver</span> <span class="kn">import</span> <span class="n">TCPClient</span><span class="p">,</span> <span class="n">TCPServerProxyZMQ</span><span class="p">,</span> <span class="n">TCPClientProxyZMQ</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.transport.tcpsocket</span> <span class="kn">import</span> <span class="n">TCPSocket</span><span class="p">,</span> <span class="n">send_to_zmq_multi</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskManager</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.async.threads</span> <span class="kn">import</span> <span class="n">InterruptibleThread</span><span class="p">,</span> <span class="n">ReadWriteLock</span><span class="p">,</span> <span class="n">RWLockCache</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">APP_RET_CODE_SUCCESS</span><span class="p">,</span> <span class="n">IPickler</span><span class="p">,</span> <span class="n">NodeType</span><span class="p">,</span> <span class="n">NodeState</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.stats</span> <span class="kn">import</span> <span class="n">Stats</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.util.cryptohelper</span> <span class="kn">import</span> <span class="n">CryptoHelper</span>
+<span class="kn">import</span> <span class="nn">concurrent.core.transport.pyjsonrpc</span> <span class="kn">as</span> <span class="nn">pyjsonrpc</span>
+
+<span class="kn">from</span> <span class="nn">bunch</span> <span class="kn">import</span> <span class="n">Bunch</span>
+
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;BaseNode&#39;</span><span class="p">,</span> <span class="s">&#39;ComputeNode&#39;</span><span class="p">,</span> <span class="s">&#39;NodeType&#39;</span><span class="p">,</span> <span class="s">&#39;NodeState&#39;</span><span class="p">,</span> <span class="s">&#39;FailedToRegisterWithMaster&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="FailedToRegisterWithMaster"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.FailedToRegisterWithMaster">[docs]</a><span class="k">class</span> <span class="nc">FailedToRegisterWithMaster</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception raised when a node failed to register itself with the master node</span>
+<span class="sd">    onto the compute channel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    </div>
+<span class="k">class</span> <span class="nc">NodeApp</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Web app for our node</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="o">*</span><span class="n">middleware</span><span class="p">):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgifunc</span><span class="p">(</span><span class="o">*</span><span class="n">middleware</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">httpserver</span><span class="o">.</span><span class="n">runsimple</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;0.0.0.0&#39;</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">NodeProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make proxy calls async using a ThreadPool: http://www.chrisarndt.de/projects/threadpool/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ProxyObject</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">ok_cb</span><span class="p">,</span> <span class="n">ko_cb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">=</span><span class="n">ProxyObject</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ok_cb</span> <span class="o">=</span> <span class="n">ok_cb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ko_cb</span> <span class="o">=</span> <span class="n">ko_cb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+    
+    <span class="k">class</span> <span class="nc">_Method</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">proxy_obj</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">ok_cb</span><span class="p">,</span> <span class="n">ko_cb</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">=</span><span class="n">proxy_obj</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ok_cb</span> <span class="o">=</span> <span class="n">ok_cb</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ko_cb</span> <span class="o">=</span> <span class="n">ko_cb</span>
+
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;NodeProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ok_cb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;NodeProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ko_cb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;NodeProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ok_cb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;NodeProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ko_cb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+                
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="n">ko_cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ko_cb</span><span class="p">,</span> <span class="n">ok_cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok_cb</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">dump_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;NodeProxy&#39;</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">TCPProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TCP socket proxy using our JSON RPC protocol. The TCP proxy does not handle</span>
+<span class="sd">    the answer from the given call, the answers are beeing received within the sockets</span>
+<span class="sd">    own answer thread.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ProxyObject</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">=</span><span class="n">ProxyObject</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+    
+    <span class="k">class</span> <span class="nc">_Method</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">proxy_obj</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">=</span><span class="n">proxy_obj</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c"># Connect and close are very special</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;close&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;connect&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">send_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;TCPProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># Connect and close are very special</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;close&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;connect&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">send_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;TCPProxy&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+                    
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="c"># Connect and close are very special</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">dump_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;TCPProxy&#39;</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">TCPProxyZMQ</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ZMQ client TCP socket proxy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">=</span><span class="n">socket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="o">=</span><span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+    
+    <span class="k">class</span> <span class="nc">_Method</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">!=</span> <span class="s">&quot;close&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">!=</span> <span class="s">&quot;connect&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">send_to_zmq_multi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;TCPProxyZMQ&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s">&quot;close&quot;</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s">&quot;connect&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">send_to_zmq_multi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;TCPProxyZMQ&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+                    
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="c"># Connect and close are very special</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">dump_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;TCPProxy&#39;</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">api_thread</span><span class="p">(</span><span class="n">InterruptibleThread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thread holding our JSON API server</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">urls</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">use_gzip</span><span class="p">):</span>
+        <span class="n">InterruptibleThread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">urls</span> <span class="o">=</span> <span class="n">urls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">NodeApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">urls</span><span class="p">,</span> <span class="nb">globals</span><span class="p">())</span>
+        <span class="c">#self.app.internalerror = web.debugerror</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_gzip</span> <span class="o">=</span> <span class="n">use_gzip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gzipper</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Now launch our web app</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_gzip</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">Gzipper</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;API Server Stopped&quot;</span><span class="p">)</span>
+        <span class="c"># Not a good idea though! stopping the server is enough!</span>
+        <span class="c">#self.stop_and_wait()</span>
+
+<span class="k">class</span> <span class="nc">GlobalHook</span><span class="p">(</span><span class="n">Bunch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is our global hook, used to save a reference to our global node</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="n">global_hook</span> <span class="o">=</span> <span class="bp">None</span>
+
+<span class="k">class</span> <span class="nc">index_get</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    API index URL stub</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="k">return</span> <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">ping_get</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    API index URL stub</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="k">return</span> <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">status_get</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    API index URL stub</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="k">return</span> <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">stats_get</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    API index URL stub</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="k">return</span> <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">APIHandlerV1</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="k">if</span> <span class="s">&#39;CONTENT_LENGTH&#39;</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">:</span>
+            <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;api1-content-length&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">global_hook</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+
+<div class="viewcode-block" id="BaseNode"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode">[docs]</a><span class="k">class</span> <span class="nc">BaseNode</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base node, all nodes will be atleast of this type.</span>
+<span class="sd">    Responsible for hosting and exposing a simple API</span>
+<span class="sd">    apart from listening on a TCP port for socket interactions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">port</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">,</span> <span class="mi">8080</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Port of the API interface with this node&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">use_gzip</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;use_gzip&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Check if we should gzip all interactions (recommended)&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">pickler</span> <span class="o">=</span> <span class="n">ExtensionPointItem</span><span class="p">(</span><span class="s">&#39;Node&#39;</span><span class="p">,</span> <span class="s">&#39;pickler&#39;</span><span class="p">,</span> <span class="n">IPickler</span><span class="p">,</span> <span class="s">&#39;Pickler&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Pickler class used by the whole framework&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">proxy_api</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;proxy_api&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;API version used for any client JSON RPC calls&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">proxy_username</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;proxy_username&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Username used when performing API client calls&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">proxy_password</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;proxy_password&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Password used when performing API client calls&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">heartbeat_timer</span> <span class="o">=</span> <span class="n">FloatItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;heartbeat_timer&#39;</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Timer used to send periodically heartbeats to the master&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">stats_dump_timer</span> <span class="o">=</span> <span class="n">FloatItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;stats_dump_timer&#39;</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Timer used to dump stats into the log. -1 will never dump stats.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">secret</span> <span class="o">=</span> <span class="n">ConfigItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;crypot_secret&#39;</span><span class="p">,</span> <span class="s">&#39;JhTv535Vg385V&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Default salt used on decrypting encrypting a pickle&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># salt size in bytes</span>
+    <span class="n">salt_size</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;crypot_salt_size&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Size of the salt used in the encryption process&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># number of iterations in the key generation</span>
+    <span class="n">num_iterations</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;crypot_num_iterations&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Number of iterations used in the key generation&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c"># the size multiple required for AES</span>
+    <span class="n">aes_padding</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;crypot_aes_padding&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Padding used for AES encryption&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">urls</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="c"># Get and basic API handling (not versioned!)</span>
+        <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="s">&#39;index_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/ping/&#39;</span><span class="p">,</span> <span class="s">&#39;ping_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/ping&#39;</span><span class="p">,</span> <span class="s">&#39;pint_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/status/&#39;</span><span class="p">,</span> <span class="s">&#39;status_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/status&#39;</span><span class="p">,</span> <span class="s">&#39;status_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/stats/&#39;</span><span class="p">,</span> <span class="s">&#39;stats_get&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/stats&#39;</span><span class="p">,</span> <span class="s">&#39;stats_get&#39;</span>
+        <span class="c"># Post API handling of version 1</span>
+        <span class="p">,</span> <span class="s">&#39;/api/1/&#39;</span><span class="p">,</span> <span class="s">&#39;APIHandlerV1&#39;</span>
+        <span class="p">,</span> <span class="s">&#39;/api/1&#39;</span><span class="p">,</span>  <span class="s">&#39;APIHandlerV1&#39;</span>
+    <span class="p">)</span>
+    
+<div class="viewcode-block" id="BaseNode.app_init"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize application just before running it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_cache</span> <span class="o">=</span> <span class="n">RWLockCache</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="BaseNode.app_main"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.app_main">[docs]</a>    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launch a concurrent application</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c"># Generate rest API</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_api</span><span class="p">()</span>
+        
+        <span class="c"># Now run our API listener</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Hosting application on port </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+        
+        <span class="c"># Get a ref to our stats helper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">getInstance</span><span class="p">()</span>
+        
+        <span class="c"># Create cryto helper used for network communciation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crypto_helper</span> <span class="o">=</span> <span class="n">CryptoHelper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">salt_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aes_padding</span><span class="p">)</span>
+        
+        <span class="c"># Make sure the URL proxy knows us</span>
+        <span class="k">global</span> <span class="n">global_hook</span>
+        <span class="n">global_hook</span> <span class="o">=</span> <span class="n">GlobalHook</span><span class="p">({</span><span class="s">&#39;node&#39;</span><span class="p">:</span><span class="bp">self</span><span class="p">})</span>
+        
+        <span class="c">#api should only be there for the master node and used for node registration and heartbeats. Each node will have a socket</span>
+        <span class="c">#while slave nodes will have a local server too. There servers are no web servers because they are too expensive!</span>
+        
+        <span class="c">#refactor server thingy tomorrow and add client which will be connected with the server through a normal socket!</span>
+        
+        <span class="c">#The master server will act as only that, a controller and will distribute work using a better performing mechanism: UDP?</span>
+        
+        <span class="c">#Use asycn calls for heartbeat for example</span>
+        
+        <span class="c">#Create the server the same way the guys from PP do! (See ppserver) Try using a multithreaded pool to handle connections instead of threads!</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_thread</span> <span class="o">=</span> <span class="n">api_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">urls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_gzip</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_timer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_delta_time</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_timer</span>
+        
+        <span class="c"># Bool flag used to control the main loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="c"># Give us some time until its up</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">APP_RET_CODE_SUCCESS</span>
+        </div>
+<div class="viewcode-block" id="BaseNode.stop_api_thread"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.stop_api_thread">[docs]</a>    <span class="k">def</span> <span class="nf">stop_api_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.main_loop"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.main_loop">[docs]</a>    <span class="k">def</span> <span class="nf">main_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Register with master before anything</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_master</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_with_master</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># Calculate delta time for this frame</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">delta_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">on_update</span><span class="p">(</span><span class="n">delta_time</span><span class="p">)</span>
+                
+                <span class="c"># Safe last time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_delta_time</span> <span class="o">=</span> <span class="n">delta_time</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_master</span><span class="p">():</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">unregister_from_master</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Exiting main loop&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Mainloop exception: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Main loop exited!&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.shutdown_main_loop"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.shutdown_main_loop">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown_main_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_received</span> <span class="o">=</span> <span class="bp">True</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.on_update"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.on_update">[docs]</a>    <span class="k">def</span> <span class="nf">on_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_time</span><span class="p">):</span>
+        <span class="c"># Only dump is requested</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_timer</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_threshold</span> <span class="o">-=</span> <span class="n">delta_time</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dump_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dump_timer</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.generate_api"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.generate_api">[docs]</a>    <span class="k">def</span> <span class="nf">generate_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># API service handler for version 1 (only version for now)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span> <span class="o">=</span> <span class="n">SimpleJSONRPCService</span><span class="p">(</span><span class="n">api_version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;pong&quot;</span>
+        
+        <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+        
+        <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">api</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="o">.</span><span class="n">api</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.ping"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.ping">[docs]</a>    <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;pong&quot;</span>
+        </div>
+<div class="viewcode-block" id="BaseNode.index"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;OK&quot;</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.status"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.status">[docs]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span>
+                  <span class="s">&#39;node&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+                  <span class="p">,</span> <span class="s">&#39;systeminfo&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">compmgr</span><span class="o">.</span><span class="n">systeminfo</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">status</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.get_stats"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.get_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dump_all</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.create_node_proxy"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.create_node_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">create_node_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new json proxy instance used by the node when acting as a client role</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">NodeProxy</span><span class="p">(</span><span class="n">pyjsonrpc</span><span class="o">.</span><span class="n">HttpClient</span><span class="p">(</span> <span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;http://</span><span class="si">%s</span><span class="s">/api/</span><span class="si">%d</span><span class="s">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">url</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_api</span><span class="p">),</span> 
+                              <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_username</span><span class="p">,</span> 
+                              <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_password</span> <span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> 
+                              <span class="bp">self</span><span class="o">.</span><span class="n">rpc_call_success</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpc_call_failed</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.create_tcp_proxy"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">create_tcp_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a JSON TCP socket proxy instance to a server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#tcp_client = TCPClient(self.log, host, port, self)</span>
+        <span class="c">#return TCPProxy(tcp_client, self.log), tcp_client</span>
+        <span class="n">tcp_client</span> <span class="o">=</span> <span class="n">TCPServerProxyZMQ</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TCPProxy</span><span class="p">(</span><span class="n">tcp_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">),</span> <span class="n">tcp_client</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.create_tcp_client_proxy"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">create_tcp_client_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a JSON TCP socket proxy instance to a client</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TCPProxyZMQ</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="BaseNode.create_tcp_client_proxy_zmq"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy_zmq">[docs]</a>    <span class="k">def</span> <span class="nf">create_tcp_client_proxy_zmq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">identity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a JSON TCP socket proxy instance to a client</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TCPProxy</span><span class="p">(</span><span class="n">TCPClientProxyZMQ</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        
+    <span class="c"># TODO: Make every node steam large amount of data over the normal socket: http://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data</span>
+    <span class="c">#  Control channel is over the API channel and real-time interactions over the TCP socket (see transport module)</span>
+</div></div>
+<span class="k">class</span> <span class="nc">result_thread</span><span class="p">(</span><span class="n">InterruptibleThread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thread waiting for results from the workers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="n">InterruptibleThread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span> <span class="o">=</span> <span class="n">result_queue</span>
+        
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># A None task is used to shut us down</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+            <span class="c"># If there was an error to send the result back queue it again</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">error</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;result_thread exiting&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;result_thread stopped&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">BaseNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple node is a noce that has a master node. It handles the masters proxy and keeps it alive using</span>
+<span class="sd">    heartbeats</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize application just before running it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_init</span><span class="p">()</span>
+        
+        <span class="c"># We create our own node_id, this will be unique everywhere!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">app_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launch a concurrent application</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">app_main</span><span class="p">()</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_master</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">on_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_time</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">on_update</span><span class="p">(</span><span class="n">delta_time</span><span class="p">)</span>
+        
+        <span class="c"># Hanlde heartbeat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_threshold</span> <span class="o">-=</span> <span class="n">delta_time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_master</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_heartbeat</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heartbeat_timer</span>
+    
+    <span class="k">def</span> <span class="nf">generate_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">generate_api</span><span class="p">()</span>
+        
+        <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">master_disconnected</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_disconnected</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">master_disconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gracefully</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when a master is disconnected (gracefully) or we had no response from the master itself (ungracefull)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented master_disconnected!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">get_master_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the URL where our master node is hosted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented get_master_url!&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_master_address</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the adress and port in (host,port) fashion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented get_master_address!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">setup_master</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Nodes that state to have a master should now create the master proxy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_node_proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_master_url</span><span class="p">())</span>
+    
+    <span class="k">def</span> <span class="nf">register_with_master</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The node will register itself with the expected master node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented register_node!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">unregister_from_master</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The node will unregister itself with the expected master node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented unregister_node!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">send_heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send heartbeat to master in case we have one</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented send_heartbeat!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">rpc_call_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an RPC call failed for an unexpected reason</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented rpc_call_failed!&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">rpc_call_success</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an RPC call succeded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Node has not implemented rpc_call_success!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    
+<div class="viewcode-block" id="ComputeNode"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode">[docs]</a><span class="k">class</span> <span class="nc">ComputeNode</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compute node is a base node that does computation. It features a set of worker</span>
+<span class="sd">    processes that except jobs from, usually a MasterNode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">task_manager</span> <span class="o">=</span> <span class="n">ExtensionPointItem</span><span class="p">(</span><span class="s">&#39;computenode&#39;</span><span class="p">,</span> <span class="s">&#39;task_manager&#39;</span><span class="p">,</span> <span class="n">ITaskManager</span><span class="p">,</span> <span class="s">&#39;GenericTaskManager&#39;</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Task manager used by this compute node&quot;&quot;&quot;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="ComputeNode.setup_compute_node"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.setup_compute_node">[docs]</a>    <span class="k">def</span> <span class="nf">setup_compute_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launch the compute service from this node</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Initializing ComputeNode&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_master_address</span><span class="p">());</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">start</span><span class="p">();</span>
+        
+        <span class="c"># Start results collector thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span> <span class="o">=</span> <span class="n">result_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">get_results_queue</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_finished</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="ComputeNode.stop_compute_node"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.stop_compute_node">[docs]</a>    <span class="k">def</span> <span class="nf">stop_compute_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">collector_thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="ComputeNode.task_finished"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when a task has finished its computation, the result object contains the task, </span>
+<span class="sd">        the result or an error and additional information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s">&quot;Node must implement the on_result callback function&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="ComputeNode.get_num_workers"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.get_num_workers">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of workers the compute node has spawned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">get_num_workers</span><span class="p">()</span>
+    </div>
+<div class="viewcode-block" id="ComputeNode.generate_api"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.generate_api">[docs]</a>    <span class="k">def</span> <span class="nf">generate_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all rpc methods the node requires</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComputeNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">generate_api</span><span class="p">()</span>
+        <span class="nd">@jsonremote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_service_v1</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&#39;Push a task onto the computation node&#39;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;push_task&#39;</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">newTask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pickler</span><span class="o">.</span><span class="n">unpickle_s</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+            <span class="n">ellapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&#39;push_task_unpickle_time&#39;</span><span class="p">,</span><span class="n">ellapsed</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">newTask</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="ComputeNode.push_task"><a class="viewcode-back" href="../../../../concurrent.framework.nodes.html#concurrent.framework.nodes.basenodes.ComputeNode.push_task">[docs]</a>    <span class="k">def</span> <span class="nf">push_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push a task onto the computation framework</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_manager</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

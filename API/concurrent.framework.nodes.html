@@ -1,0 +1,926 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>concurrent.framework.nodes package &mdash; Concurrent 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concurrent-framework-nodes-package">
+<h1>concurrent.framework.nodes package<a class="headerlink" href="#concurrent-framework-nodes-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-concurrent.framework.nodes.applicationnode">
+<span id="concurrent-framework-nodes-applicationnode-module"></span><h2>concurrent.framework.nodes.applicationnode module<a class="headerlink" href="#module-concurrent.framework.nodes.applicationnode" title="Permalink to this headline">¶</a></h2>
+<p>Module containing a client node. Client nodes are the work requestor</p>
+<dl class="class">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.applicationnode.</tt><tt class="descname">ApplicationNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.nodes.applicationnode.ApplicationNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.basenodes.Node</span></tt></p>
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch a concurrent application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.conditional_register_with_master">
+<tt class="descname">conditional_register_with_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.conditional_register_with_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.conditional_register_with_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to register with master after an unexpected connection failure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.generate_client_api">
+<tt class="descname">generate_client_api</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.generate_client_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.generate_client_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the client API of our compute channel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.get_master_address">
+<tt class="descname">get_master_address</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.get_master_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.get_master_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the adress and port in (host,port) fashion</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.get_master_url">
+<tt class="descname">get_master_url</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.get_master_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.get_master_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL where our master node is hosted</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.get_task_system">
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from the base class when we are connected to a MasterNode and we are 
+able to send computation tasks over</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.has_master">
+<tt class="descname">has_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.has_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.has_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the node has a master or not. Master node has no master itself</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.master_disconnected">
+<tt class="descname">master_disconnected</tt><big>(</big><em>gracefully</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.master_disconnected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.master_disconnected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a master is disconnected (gracefully) or we had no response from the master itself (ungracefull)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.master_url">
+<tt class="descname">master_url</tt><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.master_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>This slave master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a task to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_task_failed">
+<tt class="descname">push_task_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_task_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_task_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>We failed to add a Task to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_task_response">
+<tt class="descname">push_task_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_task_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_task_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just add a Task to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks">
+<tt class="descname">push_tasks</tt><big>(</big><em>tasks</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a set of tasks to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks_failed">
+<tt class="descname">push_tasks_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_tasks_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>We failed to add a set of Tasks to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks_response">
+<tt class="descname">push_tasks_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_tasks_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasks_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just add a set of Tasks to the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasksystem_failed">
+<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>We failed to push a ITaskSystem on the computation framework!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasksystem_response">
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.register_client_failed">
+<tt class="descname">register_client_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.register_client_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.register_client_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we failed to register ouselfs to a master node. Raises an exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.register_client_response">
+<tt class="descname">register_client_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.register_client_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.register_client_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we finsihed to register ouselfs to a master node. Raises an exception if the master
+rejected us.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.register_with_master">
+<tt class="descname">register_with_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.register_with_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.register_with_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node will register itself with the expected master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.rpc_call_failed">
+<tt class="descname">rpc_call_failed</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>reason</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.rpc_call_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.rpc_call_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call failed for an unexpected reason</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.rpc_call_success">
+<tt class="descname">rpc_call_success</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.rpc_call_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.rpc_call_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call succeded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.send_heartbeat">
+<tt class="descname">send_heartbeat</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.send_heartbeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.send_heartbeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send heartbeat to master in case we have one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.start_processing">
+<tt class="descname">start_processing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.start_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.start_processing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the app is not using a ITaskSystem and will instead just add tasks and
+will take care of the task flow itself</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.stop_app_node">
+<tt class="descname">stop_app_node</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.stop_app_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.stop_app_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a task has been done</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.unregister_from_master">
+<tt class="descname">unregister_from_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.unregister_from_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.unregister_from_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node will unregister itself with the expected master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.applicationnode.ApplicationNode.work_finished">
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/applicationnode.html#ApplicationNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.applicationnode.ApplicationNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the work has been done, the results is what our ITaskSystem
+sent back to us. Check resukt for more info</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.nodes.basenodes">
+<span id="concurrent-framework-nodes-basenodes-module"></span><h2>concurrent.framework.nodes.basenodes module<a class="headerlink" href="#module-concurrent.framework.nodes.basenodes" title="Permalink to this headline">¶</a></h2>
+<p>Module containing our base node enteties</p>
+<dl class="class">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.basenodes.</tt><tt class="descname">BaseNode</tt><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base node, all nodes will be atleast of this type.
+Responsible for hosting and exposing a simple API
+apart from listening on a TCP port for socket interactions.</p>
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.aes_padding">
+<tt class="descname">aes_padding</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.aes_padding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Padding used for AES encryption</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch a concurrent application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.create_node_proxy">
+<tt class="descname">create_node_proxy</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.create_node_proxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.create_node_proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new json proxy instance used by the node when acting as a client role</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy">
+<tt class="descname">create_tcp_client_proxy</tt><big>(</big><em>sock</em>, <em>request</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.create_tcp_client_proxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a JSON TCP socket proxy instance to a client</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy_zmq">
+<tt class="descname">create_tcp_client_proxy_zmq</tt><big>(</big><em>context</em>, <em>identity</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.create_tcp_client_proxy_zmq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_client_proxy_zmq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a JSON TCP socket proxy instance to a client</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.create_tcp_proxy">
+<tt class="descname">create_tcp_proxy</tt><big>(</big><em>host</em>, <em>port</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.create_tcp_proxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.create_tcp_proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a JSON TCP socket proxy instance to a server</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.generate_api">
+<tt class="descname">generate_api</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.generate_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.generate_api" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.get_stats">
+<tt class="descname">get_stats</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.get_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.get_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.heartbeat_timer">
+<tt class="descname">heartbeat_timer</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.heartbeat_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timer used to send periodically heartbeats to the master</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.index">
+<tt class="descname">index</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.main_loop">
+<tt class="descname">main_loop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.main_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.main_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.num_iterations">
+<tt class="descname">num_iterations</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.num_iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of iterations used in the key generation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.on_update">
+<tt class="descname">on_update</tt><big>(</big><em>delta_time</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.on_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.on_update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.pickler">
+<tt class="descname">pickler</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.pickler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pickler class used by the whole framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.ping">
+<tt class="descname">ping</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.ping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.ping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.port">
+<tt class="descname">port</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port of the API interface with this node</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.proxy_api">
+<tt class="descname">proxy_api</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.proxy_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>API version used for any client JSON RPC calls</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.proxy_password">
+<tt class="descname">proxy_password</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.proxy_password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Password used when performing API client calls</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.proxy_username">
+<tt class="descname">proxy_username</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.proxy_username" title="Permalink to this definition">¶</a></dt>
+<dd><p>Username used when performing API client calls</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.salt_size">
+<tt class="descname">salt_size</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.salt_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the salt used in the encryption process</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.secret">
+<tt class="descname">secret</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.secret" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default salt used on decrypting encrypting a pickle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.shutdown_main_loop">
+<tt class="descname">shutdown_main_loop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.shutdown_main_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.shutdown_main_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.stats_dump_timer">
+<tt class="descname">stats_dump_timer</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.stats_dump_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timer used to dump stats into the log. -1 will never dump stats.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.status">
+<tt class="descname">status</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.stop_api_thread">
+<tt class="descname">stop_api_thread</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#BaseNode.stop_api_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.stop_api_thread" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.urls">
+<tt class="descname">urls</tt><em class="property"> = ('/', 'index_get', '/ping/', 'ping_get', '/ping', 'pint_get', '/status/', 'status_get', '/status', 'status_get', '/stats/', 'stats_get', '/stats', 'stats_get', '/api/1/', 'APIHandlerV1', '/api/1', 'APIHandlerV1')</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.urls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.BaseNode.use_gzip">
+<tt class="descname">use_gzip</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.BaseNode.use_gzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if we should gzip all interactions (recommended)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.basenodes.</tt><tt class="descname">ComputeNode</tt><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.basenodes.Node</span></tt></p>
+<p>A compute node is a base node that does computation. It features a set of worker
+processes that except jobs from, usually a MasterNode.</p>
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.generate_api">
+<tt class="descname">generate_api</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.generate_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.generate_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all rpc methods the node requires</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.get_num_workers">
+<tt class="descname">get_num_workers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.get_num_workers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.get_num_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of workers the compute node has spawned</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push a task onto the computation framework</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.setup_compute_node">
+<tt class="descname">setup_compute_node</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.setup_compute_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.setup_compute_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch the compute service from this node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.stop_compute_node">
+<tt class="descname">stop_compute_node</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.stop_compute_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.stop_compute_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#ComputeNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a task has finished its computation, the result object contains the task, 
+the result or an error and additional information</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.ComputeNode.task_manager">
+<tt class="descname">task_manager</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.ComputeNode.task_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task manager used by this compute node</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.nodes.basenodes.NodeType">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.basenodes.</tt><tt class="descname">NodeType</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Node types that life in the framework</p>
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeType.client">
+<tt class="descname">client</tt><em class="property"> = 2</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeType.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeType.invalid">
+<tt class="descname">invalid</tt><em class="property"> = -1</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeType.invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeType.master">
+<tt class="descname">master</tt><em class="property"> = 0</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeType.master" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeType.slave">
+<tt class="descname">slave</tt><em class="property"> = 1</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeType.slave" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="concurrent.framework.nodes.basenodes.NodeState">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.basenodes.</tt><tt class="descname">NodeState</tt><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Node state within the framework</p>
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeState.active">
+<tt class="descname">active</tt><em class="property"> = 1</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState.active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeState.inactive">
+<tt class="descname">inactive</tt><em class="property"> = 2</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState.inactive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeState.inactive_forced">
+<tt class="descname">inactive_forced</tt><em class="property"> = 3</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState.inactive_forced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeState.invalid">
+<tt class="descname">invalid</tt><em class="property"> = -1</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState.invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.basenodes.NodeState.pending">
+<tt class="descname">pending</tt><em class="property"> = 0</em><a class="headerlink" href="#concurrent.framework.nodes.basenodes.NodeState.pending" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="concurrent.framework.nodes.basenodes.FailedToRegisterWithMaster">
+<em class="property">exception </em><tt class="descclassname">concurrent.framework.nodes.basenodes.</tt><tt class="descname">FailedToRegisterWithMaster</tt><a class="reference internal" href="_modules/concurrent/framework/nodes/basenodes.html#FailedToRegisterWithMaster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.basenodes.FailedToRegisterWithMaster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></a></p>
+<p>Exception raised when a node failed to register itself with the master node
+onto the compute channel.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.nodes.masternode">
+<span id="concurrent-framework-nodes-masternode-module"></span><h2>concurrent.framework.nodes.masternode module<a class="headerlink" href="#module-concurrent.framework.nodes.masternode" title="Permalink to this headline">¶</a></h2>
+<p>Module containing the framework master node implementation</p>
+<dl class="class">
+<dt id="concurrent.framework.nodes.masternode.MasterNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.masternode.</tt><tt class="descname">MasterNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.nodes.masternode.MasterNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a>, <a class="reference internal" href="#concurrent.framework.nodes.basenodes.BaseNode" title="concurrent.framework.nodes.basenodes.BaseNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.basenodes.BaseNode</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch a concurrent application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.clean_node_map">
+<tt class="descname">clean_node_map</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.clean_node_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.clean_node_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean node map for any empty node values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.generate_api">
+<tt class="descname">generate_api</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.generate_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.generate_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all rpc methods the node requires</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_client">
+<tt class="descname">get_client</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a node representation given an url</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_client_id">
+<tt class="descname">get_client_id</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_client_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_client_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a client id given an url</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_client_id_no_lock">
+<tt class="descname">get_client_id_no_lock</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_client_id_no_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_client_id_no_lock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_node">
+<tt class="descname">get_node</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a node representation given an url</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_node_id">
+<tt class="descname">get_node_id</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_node_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_node_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a node id given an url</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.get_node_id_no_lock">
+<tt class="descname">get_node_id_no_lock</tt><big>(</big><em>url</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.get_node_id_no_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.get_node_id_no_lock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.handle_echo">
+<tt class="descname">handle_echo</tt><big>(</big><em>sock</em>, <em>address</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.handle_echo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.handle_echo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.has_master">
+<tt class="descname">has_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.has_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.has_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the node has a master or not. Master node has no master itself</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.heartbeat">
+<tt class="descname">heartbeat</tt><big>(</big><em>node_id</em>, <em>node_type</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.heartbeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.heartbeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>We just received a nice beat from a node, update it&#8217;s last heartbeat
+timestamp to perevent timeouts</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.inactivity_time_multiplier">
+<tt class="descname">inactivity_time_multiplier</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.inactivity_time_multiplier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inactivty multiplier multiplies the heartbeat time to ensure inactivity is always several heartbeats</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.is_standalone">
+<tt class="descname">is_standalone</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.is_standalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Master node is also a slave and a standalone application</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.master_port">
+<tt class="descname">master_port</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.master_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port used by the master node for high-performance communication and dedicated persistent connections</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.notify_shutdown">
+<tt class="descname">notify_shutdown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.notify_shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.notify_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notify a global shutdown to all nodes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.on_update">
+<tt class="descname">on_update</tt><big>(</big><em>delta_time</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.on_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.on_update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.push_task">
+<tt class="descname">push_task</tt><big>(</big><em>request</em>, <em>task</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.push_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.push_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>We received a task from a client, add it to the system to be processed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.push_tasksystem">
+<tt class="descname">push_tasksystem</tt><big>(</big><em>request</em>, <em>tasksystem</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.push_tasksystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.push_tasksystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>We received a task system from a client. Get the first list of tasks and save out the
+system itself for later access</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.register_node">
+<tt class="descname">register_node</tt><big>(</big><em>node_id</em>, <em>ip</em>, <em>port</em>, <em>data</em>, <em>node_type</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.register_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.register_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a node within our node map</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.register_node_tcp">
+<tt class="descname">register_node_tcp</tt><big>(</big><em>handler</em>, <em>request</em>, <em>node_id</em>, <em>node_type</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.register_node_tcp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.register_node_tcp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slave has just registered itself throug the compute channel</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.registry_cleanup_timer">
+<tt class="descname">registry_cleanup_timer</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.registry_cleanup_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timer used to cleanup the node registry</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.registry_mirror_timer">
+<tt class="descname">registry_mirror_timer</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.registry_mirror_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timer used to update node registry mirror</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.rpc_call_failed">
+<tt class="descname">rpc_call_failed</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>reason</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.rpc_call_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.rpc_call_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call failed for an unexpected reason</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.rpc_call_success">
+<tt class="descname">rpc_call_success</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.rpc_call_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.rpc_call_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call succeded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.set_registry_dirty">
+<tt class="descname">set_registry_dirty</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.set_registry_dirty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.set_registry_dirty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the registry dirty, this will force an update of the task scheduler</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.status">
+<tt class="descname">status</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.stop_master_thread">
+<tt class="descname">stop_master_thread</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.stop_master_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.stop_master_thread" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a task has finished its computation, the result object contains the task, 
+the result or an error and additional information</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.task_scheduler">
+<tt class="descname">task_scheduler</tt><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.task_scheduler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task scheduler used by the master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.unregister_node">
+<tt class="descname">unregister_node</tt><big>(</big><em>node_id</em>, <em>node_type</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.unregister_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.unregister_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregister a node within our node map</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.update_inactive_nodes">
+<tt class="descname">update_inactive_nodes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.update_inactive_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.update_inactive_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we check for inactive nodes, those that have not send any heartbeat for a while</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.update_registry_mirror">
+<tt class="descname">update_registry_mirror</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.update_registry_mirror"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.update_registry_mirror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the registry mirror with a copy of the registry. Used to expose a copy dict to the public.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.masternode.MasterNode.update_scheduler">
+<tt class="descname">update_scheduler</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/masternode.html#MasterNode.update_scheduler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.masternode.MasterNode.update_scheduler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update task scheduler with the current list of slaves</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.nodes.slavenode">
+<span id="concurrent-framework-nodes-slavenode-module"></span><h2>concurrent.framework.nodes.slavenode module<a class="headerlink" href="#module-concurrent.framework.nodes.slavenode" title="Permalink to this headline">¶</a></h2>
+<p>Module containing a slave node. Slaves are computation nodes</p>
+<dl class="class">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.nodes.slavenode.</tt><tt class="descname">SlaveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.nodes.slavenode.SlaveNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a>, <a class="reference internal" href="#concurrent.framework.nodes.basenodes.ComputeNode" title="concurrent.framework.nodes.basenodes.ComputeNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.basenodes.ComputeNode</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.app_init">
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.app_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize application just before running it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.app_main">
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.app_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch a concurrent application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.conditional_register_with_master">
+<tt class="descname">conditional_register_with_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.conditional_register_with_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.conditional_register_with_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to register with master after an unexpected connection failure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.generate_client_api">
+<tt class="descname">generate_client_api</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.generate_client_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.generate_client_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the client API of our compute channel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.get_master_address">
+<tt class="descname">get_master_address</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.get_master_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.get_master_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the adress and port in (host,port) fashion</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.get_master_url">
+<tt class="descname">get_master_url</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.get_master_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.get_master_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL where our master node is hosted</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.has_master">
+<tt class="descname">has_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.has_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.has_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the node has a master or not. Master node has no master itself</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.master_disconnected">
+<tt class="descname">master_disconnected</tt><big>(</big><em>gracefully</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.master_disconnected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.master_disconnected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a master is disconnected (gracefully) or we had no response from the master itself (ungracefull)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.master_url">
+<tt class="descname">master_url</tt><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.master_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>This slave master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.register_slave_failed">
+<tt class="descname">register_slave_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.register_slave_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.register_slave_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we failed to register ouselfs to a master node. Raises an exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.register_slave_response">
+<tt class="descname">register_slave_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.register_slave_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.register_slave_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when we finsihed to register ouselfs to a master node. Raises an exception if the master
+rejected us.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.register_with_master">
+<tt class="descname">register_with_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.register_with_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.register_with_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node will register itself with the expected master node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.rpc_call_failed">
+<tt class="descname">rpc_call_failed</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>reason</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.rpc_call_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.rpc_call_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call failed for an unexpected reason</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.rpc_call_success">
+<tt class="descname">rpc_call_success</tt><big>(</big><em>proxy</em>, <em>method</em>, <em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.rpc_call_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.rpc_call_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when an RPC call succeded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.send_heartbeat">
+<tt class="descname">send_heartbeat</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.send_heartbeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.send_heartbeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send heartbeat to master in case we have one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.stop_compute_node">
+<tt class="descname">stop_compute_node</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.stop_compute_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.stop_compute_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.task_finished">
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a task has finished its computation, the result object contains the task, 
+the result or an error and additional information</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.nodes.slavenode.SlaveNode.unregister_from_master">
+<tt class="descname">unregister_from_master</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/nodes/slavenode.html#SlaveNode.unregister_from_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.nodes.slavenode.SlaveNode.unregister_from_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node will unregister itself with the expected master node</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-concurrent.framework.nodes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-concurrent.framework.nodes" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">concurrent.framework.nodes package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.nodes.applicationnode">concurrent.framework.nodes.applicationnode module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.nodes.basenodes">concurrent.framework.nodes.basenodes module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.nodes.masternode">concurrent.framework.nodes.masternode module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.nodes.slavenode">concurrent.framework.nodes.slavenode module</a></li>
+<li><a class="reference internal" href="#module-concurrent.framework.nodes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/concurrent.framework.nodes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Wundke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
