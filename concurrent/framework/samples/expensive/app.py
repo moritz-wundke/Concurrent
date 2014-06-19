@@ -153,6 +153,7 @@ class ExpensiveSimpleNode(ApplicationNode):
             expected_time = self.time_per_task * self.num_tasks
             self.log.info("Plain python expected time: {}".format(expected_time))
             self.log.info("Concurrent improvememnet: {}%".format((expected_time/end_time)*100.0))
+            self.shutdown_main_loop()
             
     
     def push_task_response(self, result):
