@@ -322,7 +322,7 @@ class DNACurveTaskSystem(ITaskSystem):
 class DNACurveTask(Task):
     
     def __init__(self, name, system_id, **kwargs):
-        Task.__init__(self, name, system_id, **kwargs)
+        Task.__init__(self, name, system_id)
         self.start = kwargs['start']
         self.workload = kwargs['workload']
         
@@ -345,6 +345,14 @@ class DNACurveTask(Task):
         """
         #print("Task [{}] finished with: {}".format(self.name, result))
         pass
+    
+    def clean_up(self):
+        """
+        Called once a task has been performed and its results are about to be sent back. This is used
+        to optimize our network and to cleanup the tasks input data
+        """
+        self.workload = None
+        self.start = None
 
 class Model(object):
     """N-mer DNA-bending model.

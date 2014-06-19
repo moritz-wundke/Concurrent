@@ -664,7 +664,7 @@ class MasterNode(Component, BaseNode):
             client_id = task.client_id
             with self.client_registry_lock.readlock:
                 if client_id in self.client_registry:
-                    self.client_registry[client_id].tcp_proxy.task_finished(task, result, error)
+                    self.client_registry[client_id].tcp_proxy.task_finished(task.task_id, result, error)
         else:
             # If we do have a system id let it process it instead
             with self.tasksystem_lock.writelock:
@@ -685,7 +685,7 @@ class MasterNode(Component, BaseNode):
                             client_id = system_entry.client_id
                             with self.client_registry_lock.readlock:
                                 if client_id in self.client_registry:
-                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, system_entry.system)
+                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, system_entry.system.system_id)
                         finally:
                             del self.tasksystem_registry[task.system_id]
                                 

@@ -51,7 +51,8 @@ class MandlebrotNode(ApplicationNode):
         """
         self.start_time = time.time()
         self.image = np.zeros((1024, 1536), dtype = np.uint8)
-        return MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.image, 20, 1)
+        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.image, 20, 1)
+        return self.system
     
     def work_finished(self, result, task_system):
         """
@@ -62,7 +63,7 @@ class MandlebrotNode(ApplicationNode):
         self.shutdown_main_loop()
         # Reassamble result to be processed further
         try:
-            task_system.do_post_run(result)
+            self.system.do_post_run(result)
         except:
             traceback.print_exc()
     
@@ -354,13 +355,10 @@ def do_mandel(x, y, max_iters):
 
     return max_iters
 
-def dd():
-    return defaultdict(int)
-    
 class MandlebrotTask(Task):
     
     def __init__(self, name, system_id, client_id, **kwargs):
-        Task.__init__(self, name, system_id, client_id, **kwargs)
+        Task.__init__(self, name, system_id, client_id)
         self.workload = kwargs['workload']
         self.iters = kwargs['iters']
         
@@ -381,3 +379,11 @@ class MandlebrotTask(Task):
         the node has recovered the result data.
         """
         pass
+    
+    def clean_up(self):
+        """
+        Called once a task has been performed and its results are about to be sent back. This is used
+        to optimize our network and to cleanup the tasks input data
+        """
+        self.workload = None
+        self.iters = None

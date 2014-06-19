@@ -42,12 +42,11 @@ class Task(object):
     """
     A simple tasks that just executes a function in a fire and forget way
     """
-    def __init__(self, name, system_id, client_id, **kwargs):
+    def __init__(self, name, system_id, client_id):
         """
         Initialize the task itself
         """
         self._name = name
-        self._kwargs = kwargs
         self._id = str(uuid.uuid1())
         
         # The system ID is the ID of the system that owns the task. We use this
@@ -77,6 +76,13 @@ class Task(object):
         Executer a task
         """
         raise NotImplementedError("Subclasses should implement this!")
+    
+    def clean_up(self):
+        """
+        Called once a task has been performed and its results are about to be sent back. This is used
+        to optimize our network and to cleanup the tasks input data
+        """
+        pass
     
     def finished(self, result, error):
         """
@@ -140,6 +146,7 @@ class TaskProcess(multiprocessing.Process):
                 finally:
                     #self.result_queue.put(Bunch({'task':next_task,'result':result,'error':error}))
                     #print("sending back")
+                    next_task.clean_up()
                     self.socket.send_to('task_finished', next_task, result, error)
             except KeyboardInterrupt:
                 self.log("Keyboard interrupt received, exiting!")

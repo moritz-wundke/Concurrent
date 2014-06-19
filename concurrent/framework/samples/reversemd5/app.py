@@ -136,7 +136,7 @@ class MD5HashReverseTaskSystem(ITaskSystem):
 class MD5ReverseTask(Task):
     
     def __init__(self, name, system_id, **kwargs):
-        Task.__init__(self, name, system_id, **kwargs)
+        Task.__init__(self, name, system_id)
         #print("Created task: %s" % str(self.task_id))
         
         self.target_hash = kwargs['target_hash']
@@ -159,3 +159,12 @@ class MD5ReverseTask(Task):
         """
         #print("Task [{}] finished with: {}".format(self.name, result))
         pass
+    
+    def clean_up(self):
+        """
+        Called once a task has been performed and its results are about to be sent back. This is used
+        to optimize our network and to cleanup the tasks input data
+        """
+        self.target_hash = None
+        self.start = None
+        self.end = None
