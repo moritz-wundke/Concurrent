@@ -3,48 +3,62 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
 
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
 
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
     <title>Concurrent by moritz-wundke</title>
   </head>
 
   <body>
+    <a id="forkme_banner" href="https://github.com/moritz-wundke/Concurrent">View on GitHub</a>
+    <div class="shell">
 
-    <header>
-      <div class="container">
-        <h1>Concurrent</h1>
-        <h2>A python concurrent framework based on a trac (by Edgewall) like component architecture</h2>
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Concurrent</h1>
+            <h2>A python concurrent framework based on a trac (by Edgewall) like component architecture</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
 
-        <section id="downloads">
-          <a href="https://github.com/moritz-wundke/Concurrent/zipball/master" class="btn">Download as .zip</a>
-          <a href="https://github.com/moritz-wundke/Concurrent/tarball/master" class="btn">Download as .tar.gz</a>
-          <a href="https://github.com/moritz-wundke/Concurrent" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
-        </section>
-      </div>
-    </header>
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/moritz-wundke/Concurrent/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/moritz-wundke/Concurrent/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
 
-    <div class="container">
+
+      <span class="banner-fix"></span>
+
+
       <section id="main_content">
         <h1>
 <a name="concurrent" class="anchor" href="#concurrent"><span class="octicon octicon-link"></span></a>Concurrent</h1>
 
-<p>A python concurrent framework based on a trac [by Edgewall] like component architecture</p>
+<p>Distributed task system based on ZeroMQ and a trac [by Edgewall] like component architecture</p>
 
 <h1>
 <a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h1>
 
-<h2>
-<a name="scientific-modules" class="anchor" href="#scientific-modules"><span class="octicon octicon-link"></span></a>Scientific modules</h2>
+<p>Concurrent aims to be a different type of task distribution system compared to what MPI like system do. It adds a simple but powerful application abstraction layer to distribute the logic of an entire application onto a swarm of clusters holding similarities with volunteer computing systems.</p>
 
-<ul>
-<li>numpy</li>
-<li>matplotlib</li>
-<li>scipy</li>
-<li>pandas</li>
-</ul><h1>
+<p>Traditional task distributed systems will just perform simple tasks onto the distributed system and wait for results. Concurrent goes one step further by letting the tasks and the application decide what to do. The programming paradigm is then totally async without any waits for results and based on notifications once a computation has been performed.</p>
+
+<h1>
 <a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h1>
 
 <h1>
@@ -75,6 +89,19 @@ python setup.py install
 <li>setuptools</li>
 </ul>
       </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/moritz-wundke">moritz-wundke</a> can be found on <a href="https://github.com/moritz-wundke/Concurrent">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
     </div>
 
     
