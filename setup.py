@@ -104,6 +104,7 @@ concurrent.framework.nodes.applicationnode = concurrent.framework.nodes.applicat
 concurrent.framework.samples.dnacurve.app = concurrent.framework.samples.dnacurve.app
 concurrent.framework.samples.reversemd5.app = concurrent.framework.samples.reversemd5.app
 concurrent.framework.samples.mandlebrot.app = concurrent.framework.samples.mandlebrot.app
+concurrent.framework.samples.expensive.app = concurrent.framework.samples.expensive.app
 """
 def setup_package():
     

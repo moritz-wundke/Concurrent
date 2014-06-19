@@ -10,21 +10,14 @@ from concurrent.core.application.api import IApp
 from concurrent.core.components.component import implements
 from concurrent.core.async.task import Task
 from concurrent.core.async.api import ITaskSystem
-from concurrent.core.util.utils import is_digit, tprint
-from concurrent.core.util.stats import time_push, time_pop
 from concurrent.core.config.config import BoolItem
 
 import numpy as np
 from pylab import imshow, show
-from timeit import default_timer as timer
-from collections import defaultdict
-
-import os
 
 import time
 import traceback
 
-MAXLEN = 510  # maximum length of sequence
 
 class MandlebrotNode(ApplicationNode):
     """

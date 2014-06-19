@@ -640,6 +640,7 @@ class MasterNode(Component, BaseNode):
             system_entry.system_id = system_id
             
             # Now gather task and push them to the system
+            system_entry.system.log = self.log
             system_entry.system.init_system(self)
             self.task_scheduler.start_system(system_entry.system)
         return True
