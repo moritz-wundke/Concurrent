@@ -6,8 +6,8 @@ Module containing our base node enteties
 from concurrent.core.config.config import IntItem, ExtensionPointItem, ConfigItem, FloatItem, BoolItem
 from concurrent.core.transport.simplejsonrpc import SimpleJSONRPCService, jsonremote
 from concurrent.core.transport.gzipper import Gzipper
-from concurrent.core.transport.tcpserver import TCPClient
-from concurrent.core.transport.tcpsocket import TCPSocket
+from concurrent.core.transport.tcpserver import TCPClient, TCPServerProxyZMQ, TCPClientProxyZMQ
+from concurrent.core.transport.tcpsocket import TCPSocket, send_to_zmq_multi
 from concurrent.core.async.api import ITaskManager
 from concurrent.core.async.threads import InterruptibleThread, ReadWriteLock, RWLockCache
 from concurrent.core.application.api import APP_RET_CODE_SUCCESS, IPickler, NodeType, NodeState
@@ -17,6 +17,7 @@ import concurrent.core.transport.pyjsonrpc as pyjsonrpc
 
 from bunch import Bunch
 
+import uuid
 import sys
 import web
 import time
@@ -144,7 +145,51 @@ class TCPProxy(object):
     
     def dump_stats(self):
         self.log.debug(self.stats.dump('TCPProxy'))
+
+class TCPProxyZMQ(object):
+    """
+    ZMQ client TCP socket proxy
+    """
+    def __init__(self, socket, identity, log):
+        self.socket=socket
+        self.identity=identity
+        self.log = log
+        self.stats = Stats.getInstance()
     
+    class _Method(object):
+
+        def __init__(self, owner, method, log):
+            self.owner = owner
+            self.method = method
+            self.log = log
+
+        def __call__(self, *args, **kwargs):
+            if self.method != "close" and self.method != "connect":
+                try:
+                    start_time = time.time()
+                    send_to_zmq_multi(self.owner.socket, self.owner.identity, self.method, *args, **kwargs)
+                except Exception as e:
+                    raise e
+                finally:
+                    self.owner.stats.add_avg('TCPProxyZMQ', time.time() - start_time)
+        
+    def __call__(self, method, *args, **kwargs):
+        if method != "close" and method != "connect":
+            try:
+                start_time = time.time()
+                send_to_zmq_multi(self.socket, self.identity, self.method, *args, **kwargs)
+            except Exception as e:
+                raise e
+            finally:
+                self.owner.stats.add_avg('TCPProxyZMQ', time.time() - start_time)
+                    
+    def __getattr__(self, method):
+        # Connect and close are very special
+        return self._Method(self, method = method, log = self.log)
+    
+    def dump_stats(self):
+        self.log.debug(self.stats.dump('TCPProxy'))
+
 class api_thread(InterruptibleThread):
     """
     Thread holding our JSON API server
@@ -423,14 +468,22 @@ class BaseNode(object):
         """
         Create a JSON TCP socket proxy instance to a server
         """
-        tcp_client = TCPClient(self.log, host, port, self)
+        #tcp_client = TCPClient(self.log, host, port, self)
+        #return TCPProxy(tcp_client, self.log), tcp_client
+        tcp_client = TCPServerProxyZMQ(self.node_id_str, host, port, self.log)
         return TCPProxy(tcp_client, self.log), tcp_client
     
-    def create_tcp_client_proxy(self, sock):
+    def create_tcp_client_proxy(self, sock, request):
         """
         Create a JSON TCP socket proxy instance to a client
         """
-        return TCPProxy(TCPSocket('', 0, self, socket1=sock), self.log)
+        return TCPProxyZMQ(sock, request, self.log)
+    
+    def create_tcp_client_proxy_zmq(self, context, identity):
+        """
+        Create a JSON TCP socket proxy instance to a client
+        """
+        return TCPProxy(TCPClientProxyZMQ(context, identity, self.log), self.log)
         
     # TODO: Make every node steam large amount of data over the normal socket: http://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
     #  Control channel is over the API channel and real-time interactions over the TCP socket (see transport module)
@@ -471,6 +524,16 @@ class Node(BaseNode):
     heartbeats
     """
     
+    def app_init(self):
+        """
+        Initialize application just before running it
+        """
+        super(Node, self).app_init()
+        
+        # We create our own node_id, this will be unique everywhere!
+        self.node_id = uuid.uuid1()
+        self.node_id_str = str(self.node_id)
+    
     def app_main(self):
         """
         Launch a concurrent application
@@ -505,6 +568,12 @@ class Node(BaseNode):
         Get the URL where our master node is hosted
         """
         raise NotImplementedError("Node has not implemented get_master_url!")
+
+    def get_master_address(self):
+        """
+        Get the adress and port in (host,port) fashion
+        """
+        raise NotImplementedError("Node has not implemented get_master_address!")
     
     def setup_master(self):
         """
@@ -554,9 +623,9 @@ class ComputeNode(Node):
     def setup_compute_node(self):
         """
         Launch the compute service from this node
-        """
+        """        
         self.log.info("Initializing ComputeNode")
-        self.task_manager.init();
+        self.task_manager.init(self.node_id_str, self.get_master_address());
         self.task_manager.start();
         
         # Start results collector thread

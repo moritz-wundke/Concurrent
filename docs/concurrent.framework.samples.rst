@@ -7,8 +7,8 @@ Subpackages
 .. toctree::
 
     concurrent.framework.samples.dnacurve
+    concurrent.framework.samples.expensive
     concurrent.framework.samples.mandlebrot
-    concurrent.framework.samples.mapreduce
     concurrent.framework.samples.reversemd5
 
 Module contents

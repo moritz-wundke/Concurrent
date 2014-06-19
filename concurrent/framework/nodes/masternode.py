@@ -64,7 +64,7 @@ class MasterNode(Component, BaseNode):
     registry_cleanup_timer = FloatItem('masternode', 'registry_cleanup_timer', 60.0,
         """Timer used to cleanup the node registry""")
     
-    task_scheduler= ExtensionPointItem('masternode', 'task_manager', ITaskScheduler, 'GenericTaskScheduler',
+    task_scheduler= ExtensionPointItem('masternode', 'task_scheduler', ITaskScheduler, 'GenericTaskScheduler',
         """Task scheduler used by the master node""")
     
     master_port = IntItem('node', 'master_port', 8081,
@@ -77,12 +77,12 @@ class MasterNode(Component, BaseNode):
         super(MasterNode, self).app_init()
         
         # Start our TCPServer,
-        self.server = TCPServer("localhost", self.master_port, self)
-        self.server_thread = threading.Thread(name="tcp_server", target=self.server.serve_forever)
-        self.server_thread.daemon = True
+        #self.server = TCPServer("localhost", self.master_port, self)
+        #self.server_thread = threading.Thread(name="tcp_server", target=self.server.serve_forever)
+        #self.server_thread.daemon = True
         
         # Setup our ZeroMQ asyn server
-        #self.zmq_server = TCPServerZMQ(self.master_port, self.log, 5)
+        self.zmq_server = TCPServerZMQ(self.master_port, self.log, 5)
         
         # The node registry holds updated into about slaves/clients and its processing
         # we week track of number of tasks submitted to each slave, how they perform
@@ -132,15 +132,15 @@ class MasterNode(Component, BaseNode):
             return result
 
         # Start the main server thread
-        self.server_thread.start()
-        #self.zmq_server.start()
+        #self.server_thread.start()
+        self.zmq_server.start()
             
         # Enter mail loop
         self.main_loop()
         
         # Stop all threads processes
         #self.server.shutdown()
-        #self.zmq_server.stop()
+        self.zmq_server.stop()
         self.notify_shutdown()
         self.stop_api_thread()
         #self.stop_master_thread()
@@ -174,8 +174,8 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('register_slave')
                 return self.register_node(node_id, web.ctx['ip'], port, data, NodeType.slave)
             
-            #@tcpremote(self.zmq_server, name='register_slave')
-            @tcpremote(self.server, name='register_slave')
+            @tcpremote(self.zmq_server, name='register_slave')
+            #@tcpremote(self.server, name='register_slave')
             def register_slave_tcp(handler, request, node_id):
                 self.stats.add_avg('register_slave_tcp')
                 return self.register_node_tcp(handler, request, node_id, NodeType.slave)
@@ -185,8 +185,8 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('register_client')
                 return self.register_node(node_id, web.ctx['ip'], port, data, NodeType.client)
             
-            #@tcpremote(self.zmq_server, name='register_client')
-            @tcpremote(self.server, name='register_client')
+            @tcpremote(self.zmq_server, name='register_client')
+            #@tcpremote(self.server, name='register_client')
             def register_client_tcp(handler, request, node_id):
                 self.stats.add_avg('register_client_tcp')
                 return self.register_node_tcp(handler, request, node_id, NodeType.client)
@@ -211,38 +211,62 @@ class MasterNode(Component, BaseNode):
                 self.stats.add_avg('heartbeat_client')
                 return self.heartbeat(node_id, NodeType.client)
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def task_finished(handler, request, task, result, error):
                 self.stats.add_avg('task_finished')
-                start = time.time()
-                new_task = self.pickler.unpickle_s(task)
-                ellapsed = time.time() - start
-                self.stats.add_avg('task_finished_unpickle_time',ellapsed)
-                self.task_finished(new_task, result, error)
+                self.task_finished(task, result, error)
                 # This is an end method for the interaction
                 raise NoResponseRequired()
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def push_task_response(handler, request, result):
                 # TODO: Handle failure when result is False!
                 pass
             
-            #@tcpremote(self.zmq_server)
-            @tcpremote(self.server)
+            @tcpremote(self.zmq_server)
+            #@tcpremote(self.server)
             def push_task_failed(handler, request, result):
                 # TODO: Handle failure when pushing tasks failed!
                 pass
 
-        #@tcpremote(self.zmq_server)
-        @tcpremote(self.server)
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
         def push_tasksystem(handler, request, tasksystem):
             """
             Push a application onto the computation framework
             """
             self.stats.add_avg('push_tasksystem')
-            return self.push_tasksystem(handler, self.pickler.unpickle_s(tasksystem))
+            return self.push_tasksystem(request, tasksystem)
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def push_task(handler, request, task):
+            """
+            Push a task onto the computation framework
+            """
+            self.stats.add_avg('push_task')
+            return self.push_task(request, task)
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def push_tasks(handler, request, tasks):
+            """
+            Push a set of tasks onto the computation framework
+            """
+            self.stats.add_avg('push_tasks')
+            if isinstance(tasks, list):
+                for task in tasks:
+                    if not self.push_task(request, task):
+                        return False
+            return True
+        
+        @tcpremote(self.zmq_server)
+        #@tcpremote(self.server)
+        def test_method(handler, request):
+            print("test_method from {}".format(request))
+            raise NoResponseRequired()
     
     def _generate_status_dict(self, node):
         return {'type':node.type,'state':node.state}
@@ -476,9 +500,6 @@ class MasterNode(Component, BaseNode):
         if NodeType.slave == node_type:
             with self.registry_lock.writelock:
                 if node_id in self.node_registry:
-                    # if we had a socket close it now!
-                    if self.node_registry[node_id].handler:
-                        self.node_registry[node_id].handler.close()
                     self.node_registry[node_id] = None
                     # Make sure we let the mirror update
                     self.registry_mirror_dirty = True
@@ -489,8 +510,6 @@ class MasterNode(Component, BaseNode):
             with self.client_registry_lock.writelock:
                 if node_id in self.client_registry:
                     # if we had a socket close it now!
-                    if self.client_registry[node_id].handler:
-                        self.client_registry[node_id].handler.close()
                     self.client_registry[node_id] = None
                     # Get rid of any registered task system
                     with self.tasksystem_lock.writelock:
@@ -511,22 +530,23 @@ class MasterNode(Component, BaseNode):
         if NodeType.slave == node_type:
             with self.registry_lock.writelock:
                 if node_id in self.node_registry:
+                    # The handler is shared between many client sockets!
                     self.node_registry[node_id].handler = handler
-                    self.node_registry[node_id].socket = request
-                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(request)
+                    self.node_registry[node_id].socket = handler.worker
+                    #self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    self.node_registry[node_id].tcp_proxy = self.create_tcp_client_proxy_zmq(self.zmq_server.context, request)
                     self.node_registry[node_id].state = NodeState.active
-                    # Safe some data within the handler itself
-                    handler.node_id = node_id
-                    handler.node_type = NodeType.slave
                     # Let the slave know that the handshake worked
                     return True
                 return False
         elif NodeType.client == node_type:
             with self.client_registry_lock.writelock:
                 if node_id in self.client_registry:
+                    # The handler is shared between many client sockets!
                     self.client_registry[node_id].handler = handler
-                    self.client_registry[node_id].socket = request
-                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(request)
+                    self.client_registry[node_id].socket = handler.worker
+                    #self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy(handler.worker, request)
+                    self.client_registry[node_id].tcp_proxy = self.create_tcp_client_proxy_zmq(self.zmq_server.context, request)
                     self.client_registry[node_id].state = NodeState.active
                     # Safe some data within the handler itself
                     handler.node_id = node_id
@@ -597,17 +617,14 @@ class MasterNode(Component, BaseNode):
         self.log.info("Method %s succeded with %s" % (method, result))
         return result
     
-    def push_tasksystem(self, handler, tasksystem):
+    def push_tasksystem(self, request, tasksystem):
         """
         We received a task system from a client. Get the first list of tasks and save out the
         system itself for later access
         """
-        # We require a valid and registered handler used by a client for the job
-        if handler.node_id == None or handler.node_type == None or handler.node_type != NodeType.client:
-            return False
         
         # Easier access
-        node_id = handler.node_id
+        node_id = request
         
         # Now get the
         with self.tasksystem_lock.writelock:
@@ -623,27 +640,44 @@ class MasterNode(Component, BaseNode):
             system_entry.system_id = system_id
             
             # Now gather task and push them to the system
+            system_entry.system.log = self.log
             system_entry.system.init_system(self)
             self.task_scheduler.start_system(system_entry.system)
         return True
+    
+    def push_task(self, request, task):
+        """
+        We received a task from a client, add it to the system to be processed
+        """
+        if isinstance(task, Task):
+            self.task_scheduler.push_task(task)
+            return True
+        return False
     
     def task_finished(self, task, result, error):
         """
         Called when a task has finished its computation, the result object contains the task, 
         the result or an error and additional information
-        """        
-        # Now pass the same result to the ITaskSystem that will handle the task
-        with self.tasksystem_lock.readlock:
-            if task.system_id in self.tasksystem_registry:
-                system_entry = self.tasksystem_registry[task.system_id]
-                system_entry.system.task_finished(self, task, result, error)
-                
-                # Inform scheduler of the task
-                self.task_scheduler.task_finished(task, result, error)
-                
-                # Check for end
-                if system_entry.system.is_complete(self):
-                    with self.tasksystem_lock.writelock:
+        """
+        # if the task does not specify a ITaskSystem id its a single executed task which is not controller by
+        # a dedicated autonomouse system on the master
+        if task.system_id is None:
+            client_id = task.client_id
+            with self.client_registry_lock.readlock:
+                if client_id in self.client_registry:
+                    self.client_registry[client_id].tcp_proxy.task_finished(task.task_id, result, error)
+        else:
+            # If we do have a system id let it process it instead
+            with self.tasksystem_lock.writelock:
+                if task.system_id in self.tasksystem_registry:
+                    system_entry = self.tasksystem_registry[task.system_id]
+                    system_entry.system.task_finished(self, task, result, error)
+                    
+                    # Inform scheduler of the task
+                    self.task_scheduler.task_finished(task, result, error)
+                    
+                    # Check for end
+                    if system_entry.system.is_complete(self):
                         try:
                             # Gather results
                             final_results = system_entry.system.gather_result(self)
@@ -652,7 +686,7 @@ class MasterNode(Component, BaseNode):
                             client_id = system_entry.client_id
                             with self.client_registry_lock.readlock:
                                 if client_id in self.client_registry:
-                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, self.pickler.pickle_s(system_entry.system))
+                                    self.client_registry[client_id].tcp_proxy.work_finished(final_results, system_entry.system.system_id)
                         finally:
                             del self.tasksystem_registry[task.system_id]
                                 

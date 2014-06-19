@@ -43,9 +43,7 @@ def generateExtensions(extName, extension='.pyx'):
     # get the list of extensions
     extNames = scandir(extName, [], extension)
     # and build up the set of Extension objects
-    extensions = [makeExtension(name, extension) for name in extNames]
-    print(extensions)
-    return extensions
+    return [makeExtension(name, extension) for name in extNames]
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -86,7 +84,7 @@ REQUIEREMENTS = [
         # Do we really need this one? This is more a client side module...
         # sudo apt-get build-dep python-matplotlib
         # Windows requires GnuWin32 libs first
-        #, 'matplotlib>=1.3.1'
+        , 'matplotlib>=1.3.1' # Used for the samples
     ]
  
 
@@ -105,6 +103,8 @@ concurrent.framework.nodes.masternode = concurrent.framework.nodes.masternode
 concurrent.framework.nodes.applicationnode = concurrent.framework.nodes.applicationnode
 concurrent.framework.samples.dnacurve.app = concurrent.framework.samples.dnacurve.app
 concurrent.framework.samples.reversemd5.app = concurrent.framework.samples.reversemd5.app
+concurrent.framework.samples.mandlebrot.app = concurrent.framework.samples.mandlebrot.app
+concurrent.framework.samples.expensive.app = concurrent.framework.samples.expensive.app
 """
 def setup_package():
     
@@ -124,7 +124,7 @@ def setup_package():
           name = 'Concurrent'
         , version = '0.0.1'
         , description = 'Concurrent Application Framework'
-        , long_description=open('README.txt').read()
+        , long_description=open('README.md').read()
         , author = 'Moritz Wundke'
         , author_email = 'b.thax.dcg@gmail.com'
         , maintainer = 'Moritz Wundke'

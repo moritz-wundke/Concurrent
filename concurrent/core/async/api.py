@@ -13,9 +13,9 @@ class ITaskManager(Interface):
     Interface used to define what a task manager is for us
     """
 
-    def init():
+    def init(identity, address):
         """
-        Initialize the manager
+        Initialize the manager using the provided master server data.
         """
     
     def get_num_workers():
