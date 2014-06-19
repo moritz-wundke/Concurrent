@@ -8,8 +8,8 @@
     
     <title>concurrent.core.transport.pyjsonrpc package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -53,11 +53,11 @@
 <span id="concurrent-core-transport-pyjsonrpc-http-module"></span><h2>concurrent.core.transport.pyjsonrpc.http module<a class="headerlink" href="#module-concurrent.core.transport.pyjsonrpc.http" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpClient">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">HttpClient</tt><big>(</big><em>url</em>, <em>username=None</em>, <em>password=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpClient" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">HttpClient</tt><big>(</big><em>url</em>, <em>username=None</em>, <em>password=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpClient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpClient.call">
-<tt class="descname">call</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpClient.call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpClient.call" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">call</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpClient.call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpClient.call" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates the JSON-RPC request string, calls the HTTP server, converts
 JSON-RPC response string to python and returns the result.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -81,19 +81,19 @@ Or a list with RPC-Request-Dictionaries. Syntax:</p>
 
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">HttpRequestHandler</tt><big>(</big><em>request</em>, <em>client_address</em>, <em>server</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">HttpRequestHandler</tt><big>(</big><em>request</em>, <em>client_address</em>, <em>server</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/basehttpserver.html#BaseHTTPServer.BaseHTTPRequestHandler" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">BaseHTTPServer.BaseHTTPRequestHandler</span></tt></a>, <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc" title="concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc</span></tt></a></p>
 <p>HttpRequestHandler for JSON-RPC-Requests</p>
 <p>Info: <a class="reference external" href="http://www.simple-is-better.org/json-rpc/transport_http.html">http://www.simple-is-better.org/json-rpc/transport_http.html</a></p>
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_GET">
-<tt class="descname">do_GET</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.do_GET"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_GET" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_GET</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.do_GET"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_GET" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handles HTTP-GET-Request</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_POST">
-<tt class="descname">do_POST</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.do_POST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_POST" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_POST</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.do_POST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.do_POST" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handles HTTP-POST-Request</p>
 </dd></dl>
 
@@ -104,19 +104,19 @@ Or a list with RPC-Request-Dictionaries. Syntax:</p>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_length">
-<tt class="descname">set_content_length</tt><big>(</big><em>length</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_content_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_length" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set_content_length</tt><big>(</big><em>length</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_content_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set content-length-header</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_type_json">
-<tt class="descname">set_content_type_json</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_content_type_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_type_json" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set_content_type_json</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_content_type_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_content_type_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set content-type to &#8220;application/json&#8221;</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_no_cache">
-<tt class="descname">set_no_cache</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_no_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_no_cache" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set_no_cache</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#HttpRequestHandler.set_no_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.HttpRequestHandler.set_no_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disable caching</p>
 </dd></dl>
 
@@ -124,21 +124,21 @@ Or a list with RPC-Request-Dictionaries. Syntax:</p>
 
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.http.ThreadingHttpServer">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">ThreadingHttpServer</tt><big>(</big><em>server_address</em>, <em>RequestHandlerClass</em>, <em>bind_and_activate=True</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#ThreadingHttpServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.ThreadingHttpServer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">ThreadingHttpServer</tt><big>(</big><em>server_address</em>, <em>RequestHandlerClass</em>, <em>bind_and_activate=True</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#ThreadingHttpServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.ThreadingHttpServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">SocketServer.ThreadingMixIn</span></tt>, <a class="reference external" href="http://docs.python.org/library/basehttpserver.html#BaseHTTPServer.HTTPServer" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">BaseHTTPServer.HTTPServer</span></tt></a></p>
 <p>Threading HTTP Server</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.http.handle_cgi_request">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">handle_cgi_request</tt><big>(</big><em>methods=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#handle_cgi_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.handle_cgi_request" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">handle_cgi_request</tt><big>(</big><em>methods=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#handle_cgi_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.handle_cgi_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the JSON-RPC request from CGI environment and returns the
 result to STDOUT</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.http.http_request">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">http_request</tt><big>(</big><em>url</em>, <em>json_string</em>, <em>username=None</em>, <em>password=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/http.html#http_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.http_request" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.http.</tt><tt class="descname">http_request</tt><big>(</big><em>url</em>, <em>json_string</em>, <em>username=None</em>, <em>password=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/http.html#http_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.http.http_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch data from webserver (POST request)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -159,7 +159,7 @@ result to STDOUT</p>
 <span id="concurrent-core-transport-pyjsonrpc-rpcerror-module"></span><h2>concurrent.core.transport.pyjsonrpc.rpcerror module<a class="headerlink" href="#module-concurrent.core.transport.pyjsonrpc.rpcerror" title="Permalink to this headline">¶</a></h2>
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InternalError">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InternalError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InternalError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InternalError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InternalError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InternalError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InternalError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InternalError.code">
@@ -175,7 +175,7 @@ result to STDOUT</p>
 
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InvalidParams">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InvalidParams</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InvalidParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InvalidParams" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InvalidParams</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InvalidParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InvalidParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InvalidParams.code">
@@ -191,7 +191,7 @@ result to STDOUT</p>
 
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InvalidRequest">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InvalidRequest</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InvalidRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InvalidRequest" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">InvalidRequest</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#InvalidRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.InvalidRequest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.InvalidRequest.code">
@@ -207,7 +207,7 @@ result to STDOUT</p>
 
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">JsonRpcError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#JsonRpcError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">JsonRpcError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#JsonRpcError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.RuntimeError" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.RuntimeError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError.code">
@@ -228,7 +228,7 @@ result to STDOUT</p>
 
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.MethodNotFound">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">MethodNotFound</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#MethodNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.MethodNotFound" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">MethodNotFound</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#MethodNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.MethodNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.MethodNotFound.code">
@@ -244,7 +244,7 @@ result to STDOUT</p>
 
 <dl class="exception">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.ParseError">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">ParseError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#ParseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.ParseError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcerror.</tt><tt class="descname">ParseError</tt><big>(</big><em>message=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcerror.html#ParseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcerror.ParseError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError" title="concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.transport.pyjsonrpc.rpcerror.JsonRpcError</span></tt></a></p>
 <dl class="attribute">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcerror.ParseError.code">
@@ -266,12 +266,12 @@ result to STDOUT</p>
 <span id="concurrent-core-transport-pyjsonrpc-rpclib-module"></span><h2>concurrent.core.transport.pyjsonrpc.rpclib module<a class="headerlink" href="#module-concurrent.core.transport.pyjsonrpc.rpclib" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpclib.</tt><tt class="descname">JsonRpc</tt><big>(</big><em>methods=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpclib.</tt><tt class="descname">JsonRpc</tt><big>(</big><em>methods=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>JSON-RPC</p>
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.call">
-<tt class="descname">call</tt><big>(</big><em>json_request</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc.call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.call" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">call</tt><big>(</big><em>json_request</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc.call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.call" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses the <em>json_request</em>, calls the function(s)
 and returns the <em>json_response</em>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -288,7 +288,7 @@ and returns the <em>json_response</em>.</p>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.system_describe">
-<tt class="descname">system_describe</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc.system_describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.system_describe" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">system_describe</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpclib.html#JsonRpc.system_describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpclib.JsonRpc.system_describe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a system description</p>
 <p>See: <a class="reference external" href="http://web.archive.org/web/20100718181845/http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ServiceDescription">http://web.archive.org/web/20100718181845/http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ServiceDescription</a></p>
 </dd></dl>
@@ -300,12 +300,12 @@ and returns the <em>json_response</em>.</p>
 <span id="concurrent-core-transport-pyjsonrpc-rpcrequest-module"></span><h2>concurrent.core.transport.pyjsonrpc.rpcrequest module<a class="headerlink" href="#module-concurrent.core.transport.pyjsonrpc.rpcrequest" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcrequest.Request">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">Request</tt><big>(</big><em>jsonrpc=None</em>, <em>method=None</em>, <em>id=None</em>, <em>params=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.Request" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">Request</tt><big>(</big><em>jsonrpc=None</em>, <em>method=None</em>, <em>id=None</em>, <em>params=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.Request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">bunch.Bunch</span></tt></p>
 <p>JSON-RPC-Request</p>
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcrequest.Request.get_splitted_params">
-<tt class="descname">get_splitted_params</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#Request.get_splitted_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.Request.get_splitted_params" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_splitted_params</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#Request.get_splitted_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.Request.get_splitted_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split positional and named params</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -321,7 +321,7 @@ and returns the <em>json_response</em>.</p>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_dict">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">create_request_dict</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#create_request_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_dict" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">create_request_dict</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#create_request_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a JSON-RPC-Dictionary for a method</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -340,7 +340,7 @@ and returns the <em>json_response</em>.</p>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_json">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">create_request_json</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#create_request_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_json" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">create_request_json</tt><big>(</big><em>method</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#create_request_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.create_request_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a JSON-RPC-String for a method</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -359,7 +359,7 @@ and returns the <em>json_response</em>.</p>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcrequest.parse_request_json">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">parse_request_json</tt><big>(</big><em>json_string</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#parse_request_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.parse_request_json" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcrequest.</tt><tt class="descname">parse_request_json</tt><big>(</big><em>json_string</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcrequest.html#parse_request_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcrequest.parse_request_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns RPC-request as dictionary or as list with requests</p>
 </dd></dl>
 
@@ -368,24 +368,24 @@ and returns the <em>json_response</em>.</p>
 <span id="concurrent-core-transport-pyjsonrpc-rpcresponse-module"></span><h2>concurrent.core.transport.pyjsonrpc.rpcresponse module<a class="headerlink" href="#module-concurrent.core.transport.pyjsonrpc.rpcresponse" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcresponse.Response">
-<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcresponse.</tt><tt class="descname">Response</tt><big>(</big><em>jsonrpc=None</em>, <em>id=None</em>, <em>result=None</em>, <em>error=None</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcresponse.</tt><tt class="descname">Response</tt><big>(</big><em>jsonrpc=None</em>, <em>id=None</em>, <em>result=None</em>, <em>error=None</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">bunch.Bunch</span></tt></p>
 <p>Represents a JSON-RPC-response.</p>
 <dl class="class">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcresponse.Response.Error">
-<em class="property">class </em><tt class="descname">Error</tt><big>(</big><em>code</em>, <em>message</em>, <em>data</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.Error" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descname">Error</tt><big>(</big><em>code</em>, <em>message</em>, <em>data</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.Error" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">bunch.Bunch</span></tt></p>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcresponse.Response.from_dict">
-<em class="property">classmethod </em><tt class="descclassname">Response.</tt><tt class="descname">from_dict</tt><big>(</big><em>response_dict</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.from_dict" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descclassname">Response.</tt><tt class="descname">from_dict</tt><big>(</big><em>response_dict</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.from_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a Response-object, created from dictionary</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcresponse.Response.to_dict">
-<tt class="descclassname">Response.</tt><tt class="descname">to_dict</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.to_dict" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">Response.</tt><tt class="descname">to_dict</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#Response.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.Response.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the response object as dictionary.</p>
 </dd></dl>
 
@@ -393,7 +393,7 @@ and returns the <em>json_response</em>.</p>
 
 <dl class="function">
 <dt id="concurrent.core.transport.pyjsonrpc.rpcresponse.parse_response_json">
-<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcresponse.</tt><tt class="descname">parse_response_json</tt><big>(</big><em>json_string</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#parse_response_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.parse_response_json" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.transport.pyjsonrpc.rpcresponse.</tt><tt class="descname">parse_response_json</tt><big>(</big><em>json_string</em><big>)</big><a class="reference internal" href="modules/concurrent/core/transport/pyjsonrpc/rpcresponse.html#parse_response_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.transport.pyjsonrpc.rpcresponse.parse_response_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a RPC-Response or a list with RPC-Responses</p>
 </dd></dl>
 
@@ -426,7 +426,7 @@ and returns the <em>json_response</em>.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.core.transport.pyjsonrpc.txt"
+    <li><a href="sources/concurrent.core.transport.pyjsonrpc.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

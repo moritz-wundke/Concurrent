@@ -8,8 +8,8 @@
     
     <title>concurrent.framework.samples.dnacurve package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -57,43 +57,43 @@ The implemnetation has been based on work from Christoph Gohlke (<a class="refer
 <p>File: dnacurve.app.py</p>
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.dnacurve.app.DNACurveNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.dnacurve.app.DNACurveNode'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
 <p>DNA Curve Analysis application</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init">
-<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main">
-<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applications main entry</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system">
-<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed">
-<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to push a ITaskSystem on the computation framework!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response">
-<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished">
-<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the work has been done, the results is what our ITaskSystem
 sent back to us. Check resukt for more info</p>
 </dd></dl>
@@ -102,18 +102,18 @@ sent back to us. Check resukt for more info</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up">
-<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.clean_up" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed and its results are about to be sent back. This is used
 to optimize our network and to cleanup the tasks input data</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTask.finished">
-<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTask.finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the task is finished. Called on the MasterNode within the main thread once
 the node has recovered the result data.</p>
 </dd></dl>
@@ -122,37 +122,37 @@ the node has recovered the result data.</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTaskSystem</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">DNACurveTaskSystem</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
 <p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center">
-<tt class="descname">center</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">center</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.center" title="Permalink to this definition">¶</a></dt>
 <dd><p>Center atomic coordinates at origin.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post">
-<tt class="descname">coordinates_post</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.coordinates_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">coordinates_post</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.coordinates_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.coordinates_post" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate coordinates and normal vectors from sequence and model.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature">
-<tt class="descname">curvature</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">curvature</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.curvature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate normalized curvature and bend angles.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result">
-<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
 are to be send to the originator. Returns a tuple like (result, Error)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks">
-<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
 <dd><p>From the analysis of the sequential version of the algorithm we conclude that each analysis of
 each sequence takes on average 0.006 seconds. We will split the workload so that we expect to
 send as much sequences to each worker so that the worker is busy for 1 second. This makes a
@@ -161,20 +161,20 @@ total of 166 sequences for each task, the last tasks will vary in seuqences thou
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system">
-<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the system</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete">
-<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
 gets performed every time a tasks finishes.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name">
-<tt class="descname">name</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">name</tt><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -184,13 +184,13 @@ gets performed every time a tasks finishes.</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient">
-<tt class="descname">reorient</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.reorient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">reorient</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.reorient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.reorient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reorient coordinates.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished">
-<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#DNACurveTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed</p>
 </dd></dl>
 
@@ -198,7 +198,7 @@ gets performed every time a tasks finishes.</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.app.Model">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>N-mer DNA-bending model.</p>
 <p>Transformation parameters and matrices for all oligonucleotides of
@@ -271,7 +271,7 @@ Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.Model.save">
-<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.save" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Model.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save model to file.</p>
 </dd></dl>
 
@@ -279,7 +279,7 @@ Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.app.Sequence">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>DNA nucleotide sequence.</p>
 <dl class="docutils">
@@ -327,19 +327,19 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.Sequence.format">
-<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.format" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return string of sequence formatted in blocks and lines.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.app.Sequence.save">
-<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.save" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save sequence to file.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="concurrent.framework.samples.dnacurve.app.Sequence.string">
-<tt class="descname">string</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.string" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">string</tt><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.Sequence.string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return sequence as string.</p>
 </dd></dl>
 
@@ -347,7 +347,7 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.chunks">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">chunks</tt><big>(</big><em>sequence</em>, <em>size=10</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.chunks" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">chunks</tt><big>(</big><em>sequence</em>, <em>size=10</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.chunks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return sequence in chunks of size.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">chunks</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="go">[&#39;ATCGATCGAT&#39;, &#39;CGATCG&#39;]</span>
@@ -357,7 +357,7 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.complementary">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">complementary</tt><big>(</big><em>sequence</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#complementary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.complementary" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">complementary</tt><big>(</big><em>sequence</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#complementary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.complementary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return complementary sequence.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">complementary</span><span class="p">(</span><span class="s">&#39;AT CG&#39;</span><span class="p">)</span>
 <span class="go">&#39;CGAT&#39;</span>
@@ -367,7 +367,7 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.dinuc_window">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinuc_window</tt><big>(</big><em>sequence</em>, <em>size</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#dinuc_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinuc_window" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinuc_window</tt><big>(</big><em>sequence</em>, <em>size</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#dinuc_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinuc_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return window of nucleotides around each dinucleotide in sequence.</p>
 <p>Return None if window overlaps border.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">dinuc_window</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -382,19 +382,19 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.dinucleotide_matrix">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinucleotide_matrix</tt><big>(</big><em>rise</em>, <em>twist</em>, <em>roll</em>, <em>tilt</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#dinucleotide_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinucleotide_matrix" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">dinucleotide_matrix</tt><big>(</big><em>rise</em>, <em>twist</em>, <em>roll</em>, <em>tilt</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#dinucleotide_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.dinucleotide_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return transformation matrix to move from one nucleotide to next.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.norm">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">norm</tt><big>(</big><em>vector</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.norm" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">norm</tt><big>(</big><em>vector</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return length of vector, i.e. its euclidean norm.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.oligonucleotides">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">oligonucleotides</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#oligonucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.oligonucleotides" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">oligonucleotides</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#oligonucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.oligonucleotides" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate all oligonucleotide sequences of length.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">oligonucleotides</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="go">&#39;AA AG AC AT GA GG GC GT CA CG CC CT TA TG TC TT&#39;</span>
@@ -404,7 +404,7 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.overlapping_chunks">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">overlapping_chunks</tt><big>(</big><em>sequence</em>, <em>size</em>, <em>overlap</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#overlapping_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.overlapping_chunks" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">overlapping_chunks</tt><big>(</big><em>sequence</em>, <em>size</em>, <em>overlap</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#overlapping_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.overlapping_chunks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return iterator over overlapping chunks of sequence.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">overlapping_chunks</span><span class="p">(</span><span class="s">&#39;ATCG&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="go">[(0, &#39;ATCGATCG&#39;), (4, &#39;ATCGATCG&#39;), (8, &#39;ATCGATCG&#39;)]</span>
@@ -414,13 +414,13 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.superimpose_matrix">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">superimpose_matrix</tt><big>(</big><em>v0</em>, <em>v1</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#superimpose_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.superimpose_matrix" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">superimpose_matrix</tt><big>(</big><em>v0</em>, <em>v1</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#superimpose_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.superimpose_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return matrix to transform given vector set to second vector set.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.dnacurve.app.unique_oligos">
-<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">unique_oligos</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/app.html#unique_oligos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.unique_oligos" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.dnacurve.app.</tt><tt class="descname">unique_oligos</tt><big>(</big><em>length</em>, <em>nucleotides='AGCT'</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/app.html#unique_oligos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.app.unique_oligos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate all unique oligonucleotide sequences of length.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unique_oligos</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="go">&#39;AA AG AC AT GA GG GC CA CG TA&#39;</span>
@@ -505,7 +505,7 @@ Kabsch W, Sander C, and Trifonov EN. Nucleic Acids Res 10, 1097-1104, 1982.</li>
 </div>
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">CurvedDNA</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">CurvedDNA</tt><big>(</big><em>sequence</em>, <em>model='trifonov'</em>, <em>name='Untitled'</em>, <em>curvature_window=10</em>, <em>bend_window=2</em>, <em>curve_window=15</em>, <em>maxlen=510</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Calculate, plot or save helix coordinates, local bending and curvature.</p>
 <dl class="docutils">
@@ -553,7 +553,7 @@ DNA curvature in a nucleosome (0.0234).</p>
 <p>See module examples.</p>
 <dl class="attribute">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.name">
-<tt class="descname">name</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.name" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">name</tt><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -563,7 +563,7 @@ DNA curvature in a nucleosome (0.0234).</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.plot">
-<tt class="descname">plot</tt><big>(</big><em>arg=True</em>, <em>dpi=96</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.plot" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">plot</tt><big>(</big><em>arg=True</em>, <em>dpi=96</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot results using matplotlib.pyplot.</p>
 <dl class="docutils">
 <dt>arg <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
@@ -577,13 +577,13 @@ String: path name to save figure.</dd>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_csv">
-<tt class="descname">save_csv</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_csv" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save_csv</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save coordinates and curvature values to CSV file.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_pdb">
-<tt class="descname">save_pdb</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_pdb" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save_pdb</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#CurvedDNA.save_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.CurvedDNA.save_pdb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save atomic coordinates to PDB file.</p>
 </dd></dl>
 
@@ -591,7 +591,7 @@ String: path name to save figure.</dd>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Model">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Model</tt><big>(</big><em>model=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>N-mer DNA-bending model.</p>
 <p>Transformation parameters and matrices for all oligonucleotides of
@@ -664,7 +664,7 @@ Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Model.save">
-<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.save" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Model.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Model.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save model to file.</p>
 </dd></dl>
 
@@ -672,7 +672,7 @@ Order 2 is a dinucleotide model, order 3 a trinucleotide model etc.</dd>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.dnacurve.dnacurve.</tt><tt class="descname">Sequence</tt><big>(</big><em>arg</em>, <em>name='Untitled'</em>, <em>comment=''</em>, <em>maxlen=1048576</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>DNA nucleotide sequence.</p>
 <dl class="docutils">
@@ -720,19 +720,19 @@ Nucleotides other than ATCG are ignored.</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.format">
-<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.format" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">format</tt><big>(</big><em>block=10</em>, <em>line=6</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return string of sequence formatted in blocks and lines.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.save">
-<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.save" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save sequence to file.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="concurrent.framework.samples.dnacurve.dnacurve.Sequence.string">
-<tt class="descname">string</tt><a class="reference internal" href="_modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.string" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">string</tt><a class="reference internal" href="modules/concurrent/framework/samples/dnacurve/dnacurve.html#Sequence.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.dnacurve.dnacurve.Sequence.string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return sequence as string.</p>
 </dd></dl>
 
@@ -780,7 +780,7 @@ Nucleotides other than ATCG are ignored.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.framework.samples.dnacurve.txt"
+    <li><a href="sources/concurrent.framework.samples.dnacurve.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

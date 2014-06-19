@@ -8,8 +8,8 @@
     
     <title>concurrent.core.components package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -54,11 +54,11 @@
 <p>Simple class that just handles environment persitence.</p>
 <dl class="class">
 <dt id="concurrent.core.components.baseobject.BaseObject">
-<em class="property">class </em><tt class="descclassname">concurrent.core.components.baseobject.</tt><tt class="descname">BaseObject</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/baseobject.html#BaseObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.baseobject.BaseObject" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.components.baseobject.</tt><tt class="descname">BaseObject</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="modules/concurrent/core/components/baseobject.html#BaseObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.baseobject.BaseObject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for all classes that needs to handle an environment</p>
 <dl class="attribute">
 <dt id="concurrent.core.components.baseobject.BaseObject.env">
-<tt class="descname">env</tt><a class="reference internal" href="_modules/concurrent/core/components/baseobject.html#BaseObject.env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.baseobject.BaseObject.env" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">env</tt><a class="reference internal" href="modules/concurrent/core/components/baseobject.html#BaseObject.env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.baseobject.BaseObject.env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the environment</p>
 </dd></dl>
 
@@ -72,21 +72,21 @@ The features of a plugin is defined by interfaces. Those interfaces will
 force a component to resolve queries that come from the framework.</p>
 <dl class="class">
 <dt id="concurrent.core.components.component.Component">
-<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">Component</tt><a class="reference internal" href="_modules/concurrent/core/components/component.html#Component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">Component</tt><a class="reference internal" href="modules/concurrent/core/components/component.html#Component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Base class for components.</p>
 <p>Every component can declare what extension points it provides, as well as
 what extension points of other components it extends.</p>
 <dl class="staticmethod">
 <dt id="concurrent.core.components.component.Component.implements">
-<em class="property">static </em><tt class="descname">implements</tt><big>(</big><em>*interfaces</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/component.html#Component.implements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component.implements" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><tt class="descname">implements</tt><big>(</big><em>*interfaces</em><big>)</big><a class="reference internal" href="modules/concurrent/core/components/component.html#Component.implements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component.implements" title="Permalink to this definition">¶</a></dt>
 <dd><p>Can be used in the class definiton of <cite>Component</cite> subclasses to
 declare the extension points that are extended.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.components.component.Component.is_singleton">
-<tt class="descname">is_singleton</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/component.html#Component.is_singleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component.is_singleton" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">is_singleton</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/components/component.html#Component.is_singleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Component.is_singleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the component as a singleton or not</p>
 </dd></dl>
 
@@ -94,12 +94,12 @@ declare the extension points that are extended.</p>
 
 <dl class="class">
 <dt id="concurrent.core.components.component.ExtensionPoint">
-<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">ExtensionPoint</tt><big>(</big><em>interface</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/component.html#ExtensionPoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.ExtensionPoint" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">ExtensionPoint</tt><big>(</big><em>interface</em><big>)</big><a class="reference internal" href="modules/concurrent/core/components/component.html#ExtensionPoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.ExtensionPoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">property</span></tt></p>
 <p>Marker class for extension points in components.</p>
 <dl class="method">
 <dt id="concurrent.core.components.component.ExtensionPoint.extensions">
-<tt class="descname">extensions</tt><big>(</big><em>component</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/component.html#ExtensionPoint.extensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.ExtensionPoint.extensions" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">extensions</tt><big>(</big><em>component</em><big>)</big><a class="reference internal" href="modules/concurrent/core/components/component.html#ExtensionPoint.extensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.ExtensionPoint.extensions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of components that declare to implement the extension
 point interface.</p>
 </dd></dl>
@@ -115,7 +115,7 @@ declare the extension points that are extended.</p>
 
 <dl class="class">
 <dt id="concurrent.core.components.component.Interface">
-<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">Interface</tt><a class="reference internal" href="_modules/concurrent/core/components/component.html#Interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Interface" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.components.component.</tt><tt class="descname">Interface</tt><a class="reference internal" href="modules/concurrent/core/components/component.html#Interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.component.Interface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Marker base class for extension point interfaces.</p>
 </dd></dl>
@@ -128,7 +128,7 @@ The features of a plugin is defined by interfaces. Those interfaces will
 force a component to resolve queries that come from the framework.</p>
 <dl class="function">
 <dt id="concurrent.core.components.componentloader.load_components">
-<tt class="descclassname">concurrent.core.components.componentloader.</tt><tt class="descname">load_components</tt><big>(</big><em>env</em>, <em>extra_path=None</em>, <em>loaders=(&lt;function _load_eggs at 0x00000000060DF518&gt;</em>, <em>&lt;function _load_py_files at 0x00000000060DF4A8&gt;)</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/components/componentloader.html#load_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.componentloader.load_components" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.components.componentloader.</tt><tt class="descname">load_components</tt><big>(</big><em>env</em>, <em>extra_path=None</em>, <em>loaders=(&lt;function _load_eggs at 0x00000000060DF518&gt;</em>, <em>&lt;function _load_py_files at 0x00000000060DF4A8&gt;)</em><big>)</big><a class="reference internal" href="modules/concurrent/core/components/componentloader.html#load_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.components.componentloader.load_components" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load all components found on the given search path.</p>
 </dd></dl>
 
@@ -158,7 +158,7 @@ force a component to resolve queries that come from the framework.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.core.components.txt"
+    <li><a href="sources/concurrent.core.components.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

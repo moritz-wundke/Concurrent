@@ -8,8 +8,8 @@
     
     <title>concurrent.core.config package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -55,7 +55,7 @@
 within the environment</p>
 <dl class="exception">
 <dt id="concurrent.core.config.config.BaseConfigError">
-<em class="property">exception </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">BaseConfigError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#BaseConfigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.BaseConfigError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">BaseConfigError</tt><big>(</big><em>message</em>, <em>title=None</em>, <em>show_traceback=False</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#BaseConfigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.BaseConfigError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.exceptions.html#concurrent.core.exceptions.baseerror.BaseError" title="concurrent.core.exceptions.baseerror.BaseError"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.exceptions.baseerror.BaseError</span></tt></a></p>
 <p>Base error class for config related errors</p>
 <dl class="attribute">
@@ -67,98 +67,98 @@ within the environment</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.ConfigHandle">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigHandle</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigHandle</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Config parser that represents a config handle (file or memory).</p>
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.conditional_parse">
-<tt class="descname">conditional_parse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.conditional_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.conditional_parse" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">conditional_parse</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.conditional_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.conditional_parse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will parse the filename in case some has been changed. Takes in account any config
 file this one is based on!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.defaults">
-<tt class="descname">defaults</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.defaults" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">defaults</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.defaults" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return dictionary of default values</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.get">
-<tt class="descname">get</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a config item from a section. If no value is specified return default.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.get_bool">
-<tt class="descname">get_bool</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.get_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_bool" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_bool</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.get_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_bool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an item as a bool value.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.get_int">
-<tt class="descname">get_int</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.get_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_int" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_int</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.get_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_int" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an item as an integer value.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.get_path">
-<tt class="descname">get_path</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_path" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_path</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.get_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>get an item as an absolute path</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.getlist">
-<tt class="descname">getlist</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em>, <em>sep='</em>, <em>'</em>, <em>trim_empty=True</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.getlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.getlist" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getlist</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=''</em>, <em>sep='</em>, <em>'</em>, <em>trim_empty=True</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.getlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.getlist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of an list-like item</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.has_item">
-<tt class="descname">has_item</tt><big>(</big><em>section</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.has_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.has_item" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">has_item</tt><big>(</big><em>section</em>, <em>name</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.has_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.has_item" title="Permalink to this definition">¶</a></dt>
 <dd><p>return True if the specified item exists in the section</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.is_file_valid">
-<tt class="descname">is_file_valid</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.is_file_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.is_file_valid" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">is_file_valid</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.is_file_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.is_file_valid" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns true if the current config file is valid or not</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.items">
-<tt class="descname">items</tt><big>(</big><em>section</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.items" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">items</tt><big>(</big><em>section</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of <cite>(name, value)</cite> tuples for every item in the
 specified section.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.remove">
-<tt class="descname">remove</tt><big>(</big><em>section</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.remove" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">remove</tt><big>(</big><em>section</em>, <em>name</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove an item</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.save">
-<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.save" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save current sections and items. This will make them persisten!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.sections">
-<tt class="descname">sections</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.sections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.sections" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">sections</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.sections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.sections" title="Permalink to this definition">¶</a></dt>
 <dd><p>get a list of section names from our self and any one we&#8217;re based on</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.set">
-<tt class="descname">set</tt><big>(</big><em>section</em>, <em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.set" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set</tt><big>(</big><em>section</em>, <em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a value. Needs to be saved to be persistent!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigHandle.stamp">
-<tt class="descname">stamp</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigHandle.stamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.stamp" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">stamp</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigHandle.stamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigHandle.stamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stamps the LastModified time on the file</p>
 </dd></dl>
 
@@ -166,7 +166,7 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.ConfigSection">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigSection</tt><big>(</big><em>config</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigSection</tt><big>(</big><em>config</em>, <em>name</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Objects that represents a config section</p>
 <dl class="attribute">
@@ -176,52 +176,52 @@ specified section.</p>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get">
-<tt class="descname">get</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a plain item value</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_bool">
-<tt class="descname">get_bool</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_bool" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_bool</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_bool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the value of the specified item as bool.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_float">
-<tt class="descname">get_float</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_float"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_float" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_float</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_float"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the value of the specified item as float.</p>
 <p>&#64;raise BaseConfigError: if value is not an float</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_host">
-<tt class="descname">get_host</tt><big>(</big><em>name</em>, <em>default='localhost:80'</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_host" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_host</tt><big>(</big><em>name</em>, <em>default='localhost:80'</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_host" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a host tuple in form of (host,port)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_int">
-<tt class="descname">get_int</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_int" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_int</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_int" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the value of the specified item as integer.</p>
 <p>&#64;raise BaseConfigError: if value is not an integer</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_list">
-<tt class="descname">get_list</tt><big>(</big><em>name</em>, <em>default=''</em>, <em>sep='|'</em>, <em>trim_empty=False</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_list" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_list</tt><big>(</big><em>name</em>, <em>default=''</em>, <em>sep='|'</em>, <em>trim_empty=False</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of values that are separated by default with &#8216;|&#8217;.</p>
 <p><cite>trim_empty</cite> can be used to trim empty elements.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.get_path">
-<tt class="descname">get_path</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_path" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_path</tt><big>(</big><em>name</em>, <em>default=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.get_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the relative path of the file from where the item was reed:</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.items">
-<tt class="descname">items</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.items" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">items</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return items in form of <cite>(name, value)</cite> tuples.</p>
 </dd></dl>
 
@@ -237,7 +237,7 @@ specified section.</p>
 
 <dl class="method">
 <dt id="concurrent.core.config.config.ConfigSection.set">
-<tt class="descname">set</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigSection.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.set" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigSection.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigSection.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change a config value. Needs to be saved before it will be persistent.</p>
 </dd></dl>
 
@@ -245,7 +245,7 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.ConfigItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ConfigItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ConfigItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ConfigItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ConfigItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>A config item is a (name,value) pair in a section uded by a config handle</p>
 <dl class="method">
@@ -263,7 +263,7 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.BoolItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">BoolItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#BoolItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.BoolItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">BoolItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#BoolItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.BoolItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.config.config.ConfigItem" title="concurrent.core.config.config.ConfigItem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.config.config.ConfigItem</span></tt></a></p>
 <p>Boolean item</p>
 <dl class="method">
@@ -276,7 +276,7 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.IntItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">IntItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#IntItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.IntItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">IntItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#IntItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.IntItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.config.config.ConfigItem" title="concurrent.core.config.config.ConfigItem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.config.config.ConfigItem</span></tt></a></p>
 <p>Integer item</p>
 <dl class="method">
@@ -290,7 +290,7 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.PathItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">PathItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#PathItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.PathItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">PathItem</tt><big>(</big><em>section_name</em>, <em>item_name</em>, <em>default_value=None</em>, <em>doc_string=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#PathItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.PathItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.config.config.ConfigItem" title="concurrent.core.config.config.ConfigItem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.config.config.ConfigItem</span></tt></a></p>
 <p>An item representing a aboslute path</p>
 <dl class="method">
@@ -303,19 +303,19 @@ specified section.</p>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.ListItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ListItem</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=None</em>, <em>sep='</em>, <em>'</em>, <em>keep_empty=False</em>, <em>doc=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ListItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ListItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ListItem</tt><big>(</big><em>section</em>, <em>name</em>, <em>default=None</em>, <em>sep='</em>, <em>'</em>, <em>keep_empty=False</em>, <em>doc=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ListItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ListItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.config.config.ConfigItem" title="concurrent.core.config.config.ConfigItem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.config.config.ConfigItem</span></tt></a></p>
 <p>A list</p>
 <dl class="method">
 <dt id="concurrent.core.config.config.ListItem.accessor">
-<tt class="descname">accessor</tt><big>(</big><em>section</em>, <em>name</em>, <em>default</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ListItem.accessor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ListItem.accessor" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">accessor</tt><big>(</big><em>section</em>, <em>name</em>, <em>default</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ListItem.accessor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ListItem.accessor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="concurrent.core.config.config.ExtensionPointItem">
-<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ExtensionPointItem</tt><big>(</big><em>section</em>, <em>name</em>, <em>interface</em>, <em>default=None</em>, <em>doc=''</em><big>)</big><a class="reference internal" href="_modules/concurrent/core/config/config.html#ExtensionPointItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ExtensionPointItem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.config.config.</tt><tt class="descname">ExtensionPointItem</tt><big>(</big><em>section</em>, <em>name</em>, <em>interface</em>, <em>default=None</em>, <em>doc=''</em><big>)</big><a class="reference internal" href="modules/concurrent/core/config/config.html#ExtensionPointItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.config.config.ExtensionPointItem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#concurrent.core.config.config.ConfigItem" title="concurrent.core.config.config.ConfigItem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.config.config.ConfigItem</span></tt></a></p>
 <p>Item that represents an extension point</p>
 </dd></dl>
@@ -344,7 +344,7 @@ specified section.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.core.config.txt"
+    <li><a href="sources/concurrent.core.config.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

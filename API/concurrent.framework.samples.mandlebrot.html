@@ -8,8 +8,8 @@
     
     <title>concurrent.framework.samples.mandlebrot package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -55,43 +55,43 @@
 <p>File: mandlebrot.app.py</p>
 <dl class="class">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.mandlebrot.app.MandlebrotNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.mandlebrot.app.MandlebrotNode'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
 <p>Application node distributing the computation of the mandlebrot set using an autonomous task system</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_init">
-<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_init" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_main">
-<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_main" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applications main entry</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system">
-<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_failed">
-<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to push a ITaskSystem on the computation framework!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response">
-<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.work_finished">
-<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.work_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the work has been done, the results is what our ITaskSystem
 sent back to us. Check resukt for more info</p>
 </dd></dl>
@@ -100,55 +100,55 @@ sent back to us. Check resukt for more info</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotSimpleNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotSimpleNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
 <p>Application node distributing the computation of the mandlebrot set using just tasks</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_init">
-<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_init" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_main">
-<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_main" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applications main entry</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.check_finished">
-<tt class="descname">check_finished</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.check_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.check_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">check_finished</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.check_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.check_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if we finsihed all computation or not</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system">
-<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_failed">
-<tt class="descname">push_task_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_task_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_task_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_task_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to add a Task to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_response">
-<tt class="descname">push_task_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_task_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_task_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_task_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_task_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just add a Task to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_failed">
-<tt class="descname">push_tasks_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_tasks_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasks_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_tasks_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to add a set of Tasks to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_response">
-<tt class="descname">push_tasks_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_tasks_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasks_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.push_tasks_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.push_tasks_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just add a set of Tasks to the computation framework</p>
 </dd></dl>
 
@@ -160,14 +160,14 @@ able to send computation tasks over</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.start_processing">
-<tt class="descname">start_processing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.start_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.start_processing" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">start_processing</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.start_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.start_processing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the app is not using a ITaskSystem and will instead just add tasks and
 will take care of the task flow itself</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.task_finished">
-<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.task_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a task has been done</p>
 </dd></dl>
 
@@ -175,18 +175,18 @@ will take care of the task flow itself</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTask">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTask.clean_up">
-<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.clean_up" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.clean_up" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed and its results are about to be sent back. This is used
 to optimize our network and to cleanup the tasks input data</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTask.finished">
-<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTask.finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the task is finished. Called on the MasterNode within the main thread once
 the node has recovered the result data.</p>
 </dd></dl>
@@ -195,44 +195,44 @@ the node has recovered the result data.</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTaskSystem</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>image</em>, <em>iters</em>, <em>factor</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTaskSystem</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>image</em>, <em>iters</em>, <em>factor</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
 <p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.do_post_run">
-<tt class="descname">do_post_run</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.do_post_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.do_post_run" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_post_run</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.do_post_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.do_post_run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the computation finsihed we reassamble the image here</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.gather_result">
-<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
 are to be send to the originator. Returns a tuple like (result, Error)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.generate_tasks">
-<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Devide image in width part to distribute work</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.init_system">
-<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the system</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.is_complete">
-<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
 gets performed every time a tasks finishes.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.task_finished">
-<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed</p>
 </dd></dl>
 
@@ -240,7 +240,7 @@ gets performed every time a tasks finishes.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.mandlebrot.app.do_mandel">
-<tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">do_mandel</tt><big>(</big><em>x</em>, <em>y</em>, <em>max_iters</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/app.html#do_mandel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.do_mandel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">do_mandel</tt><big>(</big><em>x</em>, <em>y</em>, <em>max_iters</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#do_mandel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.do_mandel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given the real and imaginary parts of a complex number,
 determine if it is a candidate for membership in the Mandelbrot
 set given a fixed number of iterations.</p>
@@ -251,12 +251,12 @@ set given a fixed number of iterations.</p>
 <span id="concurrent-framework-samples-mandlebrot-mandle-module"></span><h2>concurrent.framework.samples.mandlebrot.mandle module<a class="headerlink" href="#module-concurrent.framework.samples.mandlebrot.mandle" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="concurrent.framework.samples.mandlebrot.mandle.create_fractal">
-<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">create_fractal</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>image</em>, <em>iters</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/mandle.html#create_fractal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.create_fractal" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">create_fractal</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>image</em>, <em>iters</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/mandle.html#create_fractal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.create_fractal" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.mandlebrot.mandle.mandel">
-<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">mandel</tt><big>(</big><em>x</em>, <em>y</em>, <em>max_iters</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/mandle.html#mandel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.mandel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">mandel</tt><big>(</big><em>x</em>, <em>y</em>, <em>max_iters</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/mandle.html#mandel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.mandel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given the real and imaginary parts of a complex number,
 determine if it is a candidate for membership in the Mandelbrot
 set given a fixed number of iterations.</p>
@@ -264,12 +264,12 @@ set given a fixed number of iterations.</p>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.mandlebrot.mandle.time_end">
-<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">time_end</tt><big>(</big><em>tag</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/mandle.html#time_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.time_end" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">time_end</tt><big>(</big><em>tag</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/mandle.html#time_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.time_end" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="concurrent.framework.samples.mandlebrot.mandle.time_start">
-<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">time_start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/mandlebrot/mandle.html#time_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.time_start" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.framework.samples.mandlebrot.mandle.</tt><tt class="descname">time_start</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/mandle.html#time_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.mandle.time_start" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -297,7 +297,7 @@ set given a fixed number of iterations.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.framework.samples.mandlebrot.txt"
+    <li><a href="sources/concurrent.framework.samples.mandlebrot.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

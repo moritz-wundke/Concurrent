@@ -8,8 +8,8 @@
     
     <title>concurrent.framework.samples.expensive package &mdash; Concurrent 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,9 +20,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
   </head>
   <body>
@@ -55,24 +55,24 @@
 <p>File: expensive.app.py</p>
 <dl class="class">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.expensive.app.ExpensiveNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.expensive.app.ExpensiveNode'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
 <p>Application node distributing the computation of an expensive task</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.app_init">
-<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.app_init" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.app_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.app_main">
-<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.app_main" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.app_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applications main entry</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.get_task_system">
-<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
 </dd></dl>
@@ -85,13 +85,13 @@ able to send computation tasks over</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_failed">
-<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.push_tasksystem_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to push a ITaskSystem on the computation framework!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_response">
-<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
 </dd></dl>
 
@@ -103,7 +103,7 @@ able to send computation tasks over</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNode.work_finished">
-<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.work_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">work_finished</tt><big>(</big><em>result</em>, <em>task_system</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNode.work_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNode.work_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the work has been done, the results is what our ITaskSystem
 sent back to us. Check resukt for more info</p>
 </dd></dl>
@@ -112,38 +112,38 @@ sent back to us. Check resukt for more info</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveNodeTaskSystem</tt><big>(</big><em>time_per_task</em>, <em>num_tasks</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveNodeTaskSystem</tt><big>(</big><em>time_per_task</em>, <em>num_tasks</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
 <p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.gather_result">
-<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">gather_result</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.gather_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.gather_result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the system stated that it has finsihed the MasterNode will request the required results that
 are to be send to the originator. Returns the total time spend on the master.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.generate_tasks">
-<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">generate_tasks</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.generate_tasks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create task set</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.init_system">
-<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_system</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.init_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.init_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the system</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.is_complete">
-<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">is_complete</tt><big>(</big><em>master</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.is_complete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask the system if the computation has finsihed. If not we will go on and generate more tasks. This
 gets performed every time a tasks finishes.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.task_finished">
-<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">task_finished</tt><big>(</big><em>master</em>, <em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveNodeTaskSystem.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveNodeTaskSystem.task_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed</p>
 </dd></dl>
 
@@ -151,30 +151,30 @@ gets performed every time a tasks finishes.</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveSimpleNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.expensive.app.ExpensiveSimpleNode'&gt;</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveSimpleNode</tt><big>(</big><em>compmgr</em>, <em>init=None</em>, <em>cls=&lt;class 'concurrent.framework.samples.expensive.app.ExpensiveSimpleNode'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.framework.nodes.html#concurrent.framework.nodes.applicationnode.ApplicationNode" title="concurrent.framework.nodes.applicationnode.ApplicationNode"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.framework.nodes.applicationnode.ApplicationNode</span></tt></a></p>
 <p>Application node distributing the computation of the mandlebrot set using just tasks</p>
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_init">
-<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_init" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_init</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.app_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before the main entry. Used as the initialization point instead of the ctor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_main">
-<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_main" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">app_main</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.app_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.app_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applications main entry</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.check_finished">
-<tt class="descname">check_finished</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.check_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.check_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">check_finished</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.check_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.check_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if we finsihed all computation or not</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.get_task_system">
-<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.get_task_system" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
 </dd></dl>
@@ -187,25 +187,25 @@ able to send computation tasks over</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_failed">
-<tt class="descname">push_task_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_task_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_task_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_task_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to add a Task to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_response">
-<tt class="descname">push_task_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_task_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_task_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_task_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_task_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just add a Task to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_failed">
-<tt class="descname">push_tasks_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_tasks_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_failed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasks_failed</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_tasks_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>We failed to add a set of Tasks to the computation framework</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_response">
-<tt class="descname">push_tasks_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_tasks_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_tasks_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.push_tasks_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.push_tasks_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just add a set of Tasks to the computation framework</p>
 </dd></dl>
 
@@ -217,14 +217,14 @@ able to send computation tasks over</p>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.start_processing">
-<tt class="descname">start_processing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.start_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.start_processing" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">start_processing</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.start_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.start_processing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the app is not using a ITaskSystem and will instead just add tasks and
 will take care of the task flow itself</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.task_finished">
-<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.task_finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">task_finished</tt><big>(</big><em>task</em>, <em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveSimpleNode.task_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveSimpleNode.task_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a task has been done</p>
 </dd></dl>
 
@@ -238,18 +238,18 @@ will take care of the task flow itself</p>
 
 <dl class="class">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveTask">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.expensive.app.</tt><tt class="descname">ExpensiveTask</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveTask.clean_up">
-<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask.clean_up" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask.clean_up" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once a task has been performed and its results are about to be sent back. This is used
 to optimize our network and to cleanup the tasks input data</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="concurrent.framework.samples.expensive.app.ExpensiveTask.finished">
-<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask.finished" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/expensive/app.html#ExpensiveTask.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.expensive.app.ExpensiveTask.finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Once the task is finished. Called on the MasterNode within the main thread once
 the node has recovered the result data.</p>
 </dd></dl>
@@ -280,7 +280,7 @@ the node has recovered the result data.</p>
 
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concurrent.framework.samples.expensive.txt"
+    <li><a href="sources/concurrent.framework.samples.expensive.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
