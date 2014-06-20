@@ -42,6 +42,7 @@
 
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
+
 				<section>
 					<h1>Concurrent</h1>
 					<h3>Distributed task system in Python</h3>
@@ -51,31 +52,234 @@
 				</section>
 
 				<section>
-					<h2>Heads Up</h2>
-					<p>
-						Preface
-					</p>
 
-					<aside class="notes">
-						Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
-					</aside>
+					<section>
+						<h2>Introduction</h2>
+						<p>
+							Concurrent aims to be a different type of task distribution system compared to what MPI like system do. It adds a simple but powerful application abstraction layer to distribute the logic of an entire application onto a swarm of clusters holding similarities with volunteer computing systems.
+						</p>
+						<aside class="notes">
+						</aside>
+					</section>
+
+					<section>
+						<h2>Introduction cont'd</h2>
+						<p>
+							Traditional task distributed systems will just perform simple tasks onto the distributed system and wait for results. Concurrent goes one step further by letting the tasks and the application decide what to do. The programming paradigm is then totally async without any waits for results and based on notifications once a computation has been performed.
+						</p>
+						<aside class="notes">
+						</aside>
+					</section>
 				</section>
 
-				<section data-markdown>
-					<script type="text/template">
-						## Markdown support
+				<section>
+					<section>
+						<h2>Why?</h2>
+						<ul>
+							<li>Flexible</li>
+							<li>Stable</li>
+							<li>Rapid development</li>
+							<li>Python</li>
+						</ul>
+					</section>
 
-						For those of you who like that sort of thing. Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown).
+					<section>
+						<h2>Why? - Flexible</h2>
+						<ul>
+							<li>Keystone for every framework</li>
+							<li>Must be reused in many typed of projects</li>
+							<li>Easy to integrate in existing code</li>
+						</ul>
+					</section>
 
-						```
-						<section data-markdown>
-						  ## Markdown support
+					<section>
+						<h2>Why? - Stable</h2>
+						<ul>
+							<li>Fault tolerrance</li>
+							<li>Consistency</li>
+							<li>We sacrify availability</li>
+						</ul>
+						<aside class="notes">
+							Talk about the PAC theorem, we have chosen to sacrify availability
+						</aside>
+					</section>
 
-						  For those of you who like that sort of thing.
-						  Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown).
-						</section>
-						```
-					</script>
+					<section>
+						<h2>Why? - Rapid development</h2>
+						<ul>
+							<li>Fast prototyping</li>
+							<li>Python is fast to write, very fast!</li>
+							<li>Deliver soon and often principle</li>
+						</ul>
+						<aside class="notes">
+							Note on agile development
+						</aside>
+					</section>
+
+					<section>
+						<h2>Why? - Python</h2>
+						<ul>
+							<li>Huge community</li>
+							<li>Used in scientific computation</li>
+							<li>Deliver soon and often principle</li>
+							<li>Imperative and functional</li>
+							<li>Very organized</li>
+							<li>Cross-Platform</li>
+							<li>Drawback: pure python performance (more later)</li>
+						</ul>
+						<aside class="notes">
+							Note on agile development
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>The Dark Side</h2>
+						<ul>
+							<li>Pure python performance</li>
+							<ul>
+								<li>Cython</li>
+								<li>Native</li>
+							</ul>
+							<li>No real multithread</li>
+							<ul>
+								<li>The GIL issue</li>
+								<li>Releasing the GIL manually</li>
+								<li>multiprocessing (fork)</li>
+							</ul>
+							<li>Rapid development</li>
+							<li>Python</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>The Dark Side - Perf</h2>
+						<ul>
+							<li>Python is slow, thats a fact</li>
+							<li>But we can boost it using natives</li>
+							<ul>
+								<li>Cython: Static C compiler combining both python flexibility and C performance</li>
+								<li>Native c module: Create python modules directly in C</li>
+							</ul>
+						</ul>
+					</section>
+
+					<section>
+						<h2>The Dark Side - GIL</h2>
+						<ul>
+							<li>Global Interpreter Lock: Only one line or python object access at a time per process</li>
+							<li>We can release the GIL using natives like Cython or directly in a native module</li>
+							<li>We can also use processes instead of threads, while adding the need for IPC mechanisms</li>
+							<li>Shared vs Distributed memory / Threads vs Processes</li>
+						</ul>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Concurrent</h2>
+						<ul>
+							<li>Distrubuted task execution framework which tries to solve the GIL issue</li>
+							<li>Does not use threads when executing processes</li>
+							<li>Features different ways to implement IPC calls</li>
+							<li>All nodes in the system communicate through RPC calls or using HTTP or low-level TCP</li>
+							<li>Integrated Cython for performance tweaking</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Other frame works</h2>
+						https://wiki.python.org/moin/ParallelProcessing
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Component architecture</p>
+					</section>
+
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Distributed system - Nodes</p>
+					</section>
+
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Distributed system - Task managers</p>
+					</section>
+
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Distributed system - Task schedulers</p>
+					</section>
+
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Distributed system - Transport package</p>
+					</section>
+
+					<section>
+						<h2>Concurrent - Architecture</h2>
+						
+						<p>Distributed system - Environments and environment admin</p>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Current State</h2>
+					</section>
+
+					<section>
+						<h2>Current State - Alpha features</h2>
+					</section>
+
+					<section>
+						<h2>Current State - Future of concurrent</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Conclusion</h2>
+					</section>
+
+					<section>
+						<h2>Which type of concurrent tasks are perfect for Concurrent</h2>
+					</section>
+
+					<section>
+						<h2>Amdahls Law</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Samples</h2>
+					</section>
+
+					<section>
+						<h2>MD5 Hash Reverse</h2>
+					</section>
+
+					<section>
+						<h2>Mandlebrot Set</h2>
+					</section>
+
+					<section>
+						<h2>DNA Curve Analysis</h2>
+					</section>
+
+					<section>
+						<h2>Benchmark example</h2>
+					</section>
 				</section>
 
 				<section>
@@ -126,6 +330,7 @@
 					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
 				]
 			});
+			Reveal.configure({ slideNumber: true });
 
 		</script>
 
