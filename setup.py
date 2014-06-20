@@ -4,6 +4,7 @@
 import os, sys
 from setuptools import setup, find_packages
 from distutils.extension import Extension
+import imp
 
 # scan the root directory for extension files, converting
 # them to extension names in dotted notation
@@ -119,10 +120,13 @@ def setup_package():
         cmdclass.update({'build_ext': build_ext})
     else:
         ext_modules += generateExtensions('concurrent', '.c')
-    
+
+    # Get version info
+    VERSION = imp.load_source('VERSION', 'VERSION')
+
     metadata = dict(
           name = 'Concurrent'
-        , version = '0.0.1'
+        , version = VERSION.VERSION_LONG
         , description = 'Concurrent Application Framework'
         , long_description=open('README.md').read()
         , author = 'Moritz Wundke'
