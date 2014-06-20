@@ -70,7 +70,9 @@
 
 <p>To show how to use Concurrent for your own tasks we will create a simple <em>hello world</em> application that just computes the string on the system and returns it to our application.</p>
 
-<p>For this example we will create two classes, one which actually gets executed on the distributed system <code>class SimpleTask(Task):</code> and our application which interacts with the system and controls the task flow <code>class SimpleConcurrentApp(ApplicationNode)</code>. Our task class just gets executed on an abitrary processes within the system while our application is what is getting executed on the client side creating the task, sending it to the framework and waiting for its completion.</p>
+<p>For this example we will create two classes, one which actually gets executed on the distributed system <code>class SimpleTask(Task):</code> and our application which interacts with the system and controls the task flow <code>class SimpleConcurrentApp(ApplicationNode)</code>. Our task class just gets executed on an arbitrary processes within the system while our application is what is getting executed on the client side creating the task, sending it to the framework and waiting for its completion.</p>
+
+<p>The application itself is executed from a sandbox like environment enabling us to configure its behavior and monitor the application easily.</p>
 
 <div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">concurrent.framework.nodes.applicationnode</span> <span class="kn">import</span> <span class="n">ApplicationNode</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.application.api</span> <span class="kn">import</span> <span class="n">IApp</span>
