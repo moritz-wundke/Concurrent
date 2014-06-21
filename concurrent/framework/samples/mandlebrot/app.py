@@ -10,7 +10,7 @@ from concurrent.core.application.api import IApp
 from concurrent.core.components.component import implements
 from concurrent.core.async.task import Task
 from concurrent.core.async.api import ITaskSystem
-from concurrent.core.config.config import BoolItem
+from concurrent.core.config.config import BoolItem, IntItem
 
 import numpy as np
 from pylab import imshow, show
@@ -24,6 +24,15 @@ class MandlebrotNode(ApplicationNode):
     Application node distributing the computation of the mandlebrot set using an autonomous task system
     """
     implements(IApp)
+    
+    factor = IntItem('mandlebrotsample', 'factor', 1,
+        """How many workloads does a single task get assigned, in our a workload is considered a row""")
+    
+    iters = IntItem('mandlebrotsample', 'iters', 20, """Mandlebrot iterations per pixel""")
+    
+    height = IntItem('mandlebrotsample', 'height', 1024, """Height of the mandlebrot set image""")
+    
+    width = IntItem('mandlebrotsample', 'width', 1536, """Width of the mandlebrot set image""")
     
     def app_init(self):
         """
@@ -43,8 +52,8 @@ class MandlebrotNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        self.image = np.zeros((1024, 1536), dtype = np.uint8)
-        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.image, 20, 1)
+        self.image = np.zeros((self.height, self.width), dtype = np.uint8)
+        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.image, self.iters, self.factor)
         return self.system
     
     def work_finished(self, result, task_system):
@@ -84,6 +93,15 @@ class MandlebrotSimpleNode(ApplicationNode):
     send_task_batch = BoolItem('mandlebrotsample', 'task_batch', True,
         """Should we send all tasks one by one or should we batch them into a hughe list""")
     
+    factor = IntItem('mandlebrotsample', 'factor', 1,
+        """How many workloads does a single task get assigned, in our a workload is considered a row""")
+    
+    iters = IntItem('mandlebrotsample', 'iters', 20, """Mandlebrot iterations per pixel""")
+    
+    height = IntItem('mandlebrotsample', 'height', 1024, """Height of the mandlebrot set image""")
+    
+    width = IntItem('mandlebrotsample', 'width', 1536, """Width of the mandlebrot set image""")
+    
     def app_init(self):
         """
         Called just before the main entry. Used as the initialization point instead of the ctor
@@ -112,19 +130,16 @@ class MandlebrotSimpleNode(ApplicationNode):
         self.log.info("Starting computation")
         if self.send_task_batch:
             self.log.info(" Task batching enabled")
-
-        self.image = np.zeros((1024, 1536), dtype = np.uint8)
+            
+        self.start_time = time.time()
+        self.image = np.zeros((self.height, self.width), dtype = np.uint8)
         
         # Init task related stuff
         self.min_x = -2.0
         self.max_x =  1.0
         self.min_y = -1.0
         self.max_y = 1.0
-        self.iters = 20
-        self.factor = 1
-        
-        self.height = self.image.shape[0]
-        self.width = self.image.shape[1]        
+              
         self.pixel_size_x = (self.max_x - self.min_x) / self.width
         self.pixel_size_y = (self.max_y - self.min_y) / self.height
         
@@ -160,14 +175,13 @@ class MandlebrotSimpleNode(ApplicationNode):
         # Add last task with rest of workload
         if len(workload) > 0:
             if self.send_task_batch:
-                job_list.append(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, workload = workload))
+                job_list.append(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
             else:
-                self.push_task(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, workload = workload))
+                self.push_task(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
                 self.jobs += 1
         
         if self.send_task_batch:
             self.jobs = len(job_list)
-        self.start_time = time.time()
         
         # Send batch or check for eventual end condition
         if self.send_task_batch:
@@ -302,7 +316,7 @@ class MandlebrotTaskSystem(ITaskSystem):
         
         # Add last task with rest of workload
         if len(workload) > 0:
-            job_list.append(MandlebrotTask("mandle_{}".format(x), self.system_id, None, workload = workload))
+            job_list.append(MandlebrotTask("mandle_{}".format(x), self.system_id, None, iters = self.iters, workload = workload))
             
         self.jobs = len(job_list)
         self.start_time = time.time()

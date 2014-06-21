@@ -312,17 +312,17 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
             try:
                 sockets = dict(self.poll.poll(1000))
                 if self.frontend in sockets:
-                    ident, msg = self.frontend.recv_multipart()
+                    ident, msg = self.frontend.recv_multipart(flags=zmq.NOBLOCK)
                     #tprint('Server received message from %s' % (ident))
-                    self.backend.send_multipart([ident, msg])
+                    self.backend.send_multipart([ident, msg], flags=zmq.NOBLOCK)
                 if self.backend in sockets:
-                    ident, msg = self.backend.recv_multipart()
+                    ident, msg = self.backend.recv_multipart(flags=zmq.NOBLOCK)
                     #tprint('Sending message back to %s' % (ident))
-                    self.frontend.send_multipart([ident, msg])
+                    self.frontend.send_multipart([ident, msg], flags=zmq.NOBLOCK)
                 if self.backend_client in sockets:
                     ident, msg = self.backend_client.recv_multipart()
                     #tprint('Sending message back to %s' % (ident))
-                    self.frontend.send_multipart([ident, msg])
+                    self.frontend.send_multipart([ident, msg], flags=zmq.NOBLOCK)
             except zmq.Again:
                 # Timeouy just fired, no problem!
                 pass
@@ -340,8 +340,11 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
-            except zmq.ZMQError:
-                break
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EAGAIN:
+                    pass  # no message was ready
+                else:
+                    break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!
@@ -376,7 +379,7 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
         while not self.kill_switch:
             try:
                 # Receive message and unpickle it
-                ident, msg = self.worker.recv_multipart()
+                ident, msg = self.worker.recv_multipart(flags=zmq.NOBLOCK)
                 msg = unpickle_message(msg)
                 #tprint('Worker received %s from %s' % (msg, ident))
                 
@@ -402,8 +405,11 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
-            except zmq.ZMQError:
-                break
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EAGAIN:
+                    pass  # no message was ready
+                else:
+                    break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!
@@ -472,14 +478,14 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
             try:
                 sockets = dict(self.poll.poll(1000))
                 if self.socket in sockets:
-                    msg = unpickle_message(self.socket.recv())
+                    msg = unpickle_message(self.socket.recv(flags=zmq.NOBLOCK))
                     #tprint('From server')
                     result = self.handle(self, self.identity, msg)
                     send_to_zmq(self.socket, *result)
                 if self.backend in sockets:
-                    msg = self.backend.recv()
+                    msg = self.backend.recv(flags=zmq.NOBLOCK)
                     #tprint('To Server')
-                    self.socket.send(msg)
+                    self.socket.send(msg, flags=zmq.NOBLOCK)
             except zmq.Again:
                 # Timeouy just fired, no problem!
                 pass
@@ -497,8 +503,11 @@ class TCPServerProxyZMQ(TCPSocketZMQ, threading.Thread, TCPHandler):
                 break
             except zmq.ContextTerminated:
                 break
-            except zmq.ZMQError:
-                break
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EAGAIN:
+                    pass  # no message was ready
+                else:
+                    break
             except:
                 traceback.print_exc()
                 # Not really good to just pass but saver for now!

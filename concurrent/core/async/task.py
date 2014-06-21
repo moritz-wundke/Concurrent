@@ -562,16 +562,20 @@ class ZMQTaskManager(Component, threading.Thread):
         self.socket.connect('tcp://{host}:{port}'.format(host=self.master_backend_port[0], port=self.master_backend_port[1]))
         
         # Start receiving messages
-        try:
-            while not self.kill_switch:
+        while not self.kill_switch:
+            try:
                 next_task = receive_from_zmq_zipped(self.socket)
+                #tprint("Receiving task")
                 self.push_task(next_task)
-        except zmq.ContextTerminated:
-            pass
-        except zmq.ZMQError:
-            pass
-        except:
-            traceback.print_exc()
+            except zmq.ContextTerminated:
+                break
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EAGAIN:
+                    pass  # no message was ready
+                else:
+                    break
+            except:
+                traceback.print_exc()
             
         self.socket.close()
         self.log.info("ZMQTaskManager stopped")

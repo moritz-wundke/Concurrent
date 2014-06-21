@@ -120,19 +120,19 @@ def unpickle_message(msg):
     p = zlib.decompress(msg)
     return pickle.loads(p)
 
-def send_to_zmq_zipped(socket, obj, flags=0, protocol=2):
+def send_to_zmq_zipped(socket, obj, protocol=2):
     """pickle an object, and zip the pickle before sending it"""
-    return socket.send(pickle_object(obj, protocol), flags=flags)
+    return socket.send(pickle_object(obj, protocol), flags=zmq.NOBLOCK)
 
-def send_to_zmq_zipped_multi(socket, identity, obj, flags=0, protocol=2):
+def send_to_zmq_zipped_multi(socket, identity, obj, protocol=2):
     """pickle an object, and zip the pickle before sending it"""
     p = pickle.dumps(obj, protocol)
     z = zlib.compress(p)
-    return socket.send_multipart([identity, z], flags=flags)
+    return socket.send_multipart([identity, z], flags=zmq.NOBLOCK)
 
-def receive_from_zmq_zipped(socket, flags=0):
+def receive_from_zmq_zipped(socket):
     """inverse of send_zipped_pickle"""
-    return unpickle_message(socket.recv(flags))
+    return unpickle_message(socket.recv(flags=zmq.NOBLOCK))
 
 def send_to_zmq(sock, method, *args, **kwargs):
     """
