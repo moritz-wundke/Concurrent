@@ -134,7 +134,6 @@ class TaskProcess(multiprocessing.Process):
                 result = None
                 try:
                     #start = time.time()
-                    print("Received")
                     result = next_task()
                     self.task_queue.task_done()
                     #ellapsed = time.time() - start
@@ -561,13 +560,14 @@ class ZMQTaskManager(Component, threading.Thread):
         
         # Create and connect to our scheduler socket
         self.socket = self.context.socket(zmq.PULL)
+        self.socket.setsockopt(zmq.LINGER, 0)
+        self.socket.set_hwm(0)
         self.socket.connect('tcp://{host}:{port}'.format(host=self.master_backend_port[0], port=self.master_backend_port[1]))
         
         # Start receiving messages
         while not self.kill_switch:
             try:
                 next_task = receive_from_zmq_zipped(self.socket)
-                tprint("Receiving task")
                 self.push_task(next_task)
             except zmq.ContextTerminated:
                 break
@@ -646,9 +646,11 @@ class ZMQTaskScheduler(Component, threading.Thread):
         self.frontend = self.context.socket(zmq.PULL)
         self.frontend.bind('tcp://*:{port}'.format(port=self.frontend_port))
         self.frontend.setsockopt(zmq.LINGER, 0)
+        self.frontend.set_hwm(0)
         self.backend = self.context.socket(zmq.PUSH)
         self.backend.bind('tcp://*:{port}'.format(port=self.backend_port))
         self.backend.setsockopt(zmq.LINGER, 0)
+        self.backend.set_hwm(0)
         
         # The poller is used to poll for incomming messages for both
         # the frontend (internet) and the backend (scheduling)
@@ -660,6 +662,8 @@ class ZMQTaskScheduler(Component, threading.Thread):
         self.frontend_push = self.context.socket(zmq.PUSH)
         self.frontend_push.connect('tcp://localhost:{port}'.format(port=self.frontend_port))
         self.frontend_push.setsockopt(zmq.LINGER, 0)
+        self.frontend_push.set_hwm(0)
+        
         
         # Our lock used to protect the frontend_push socket
         self.lock = threading.Lock()

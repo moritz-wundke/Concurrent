@@ -164,6 +164,8 @@ class TCPSocketZMQ(IClientSocket):
         # Create our ZMQ socket
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.DEALER)
+        self.socket.setsockopt(zmq.LINGER, 0)
+        self.socket.set_hwm(0)
         self.address = (host, port)
         
         # The sockets identity

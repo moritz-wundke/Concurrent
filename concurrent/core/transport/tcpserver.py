@@ -262,16 +262,19 @@ class TCPServerZMQ(threading.Thread, TCPHandler):
         self.frontend = self.context.socket(zmq.ROUTER)
         self.frontend.bind('tcp://*:{port}'.format(port=self.port))
         self.frontend.setsockopt(zmq.LINGER, 0)
+        self.frontend.set_hwm(0)
         
         # The backend is where we queue the requests that the workers
         # will start working on in round robbin fashion
         self.backend = self.context.socket(zmq.DEALER)
         self.backend.bind('inproc://backend')
         self.backend.setsockopt(zmq.LINGER, 0)
+        self.backend.set_hwm(0)
         
         self.backend_client = self.context.socket(zmq.DEALER)
         self.backend_client.bind('inproc://backend-client')
         self.backend_client.setsockopt(zmq.LINGER, 0)
+        self.backend_client.set_hwm(0)
         
         # The poller is used to poll for incomming messages for both
         # the frontend (internet) and the backend (scheduling)
@@ -367,6 +370,8 @@ class TCPServerZMQWorker(threading.Thread, TCPHandler):
         self.context = context
         self.worker = self.context.socket(zmq.DEALER)
         self.worker.RCVTIMEO = 1000
+        self.worker.setsockopt(zmq.LINGER, 0)
+        self.worker.set_hwm(0)
         
         # Some thread related stuff
         self.daemon = True
