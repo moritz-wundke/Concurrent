@@ -52,8 +52,7 @@ class MandlebrotNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        self.image = np.zeros((self.height, self.width), dtype = np.uint8)
-        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.image, self.iters, self.factor)
+        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.height, self.width, self.iters, self.factor)
         return self.system
     
     def work_finished(self, result, task_system):
@@ -65,6 +64,7 @@ class MandlebrotNode(ApplicationNode):
         self.shutdown_main_loop()
         # Reassamble result to be processed further
         try:
+            self.system.image = np.zeros((self.height, self.width), dtype = np.uint8)
             self.system.do_post_run(result)
         except:
             traceback.print_exc()
@@ -244,7 +244,7 @@ class MandlebrotTaskSystem(ITaskSystem):
     The task system that is executed on the MasterNode and controls what jobs are required to be performed
     """
     
-    def __init__(self, min_x, max_x, min_y, max_y, image, iters, factor):
+    def __init__(self, min_x, max_x, min_y, max_y, height, width, iters, factor):
         """
         Default constructor used to initialize the base values. The ctor is
         executed on the ApplicationNode and not called on the MasterNode so we can 
@@ -257,12 +257,12 @@ class MandlebrotTaskSystem(ITaskSystem):
         self.max_x = max_x
         self.min_y = min_y
         self.max_y = max_y
-        self.image = image
+        self.image = None
         self.iters = iters
         self.factor = factor
         
-        self.height = self.image.shape[0]
-        self.width = self.image.shape[1]        
+        self.height = height
+        self.width = width        
         self.pixel_size_x = (self.max_x - self.min_x) / self.width
         self.pixel_size_y = (self.max_y - self.min_y) / self.height
         

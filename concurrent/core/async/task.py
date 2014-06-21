@@ -133,12 +133,13 @@ class TaskProcess(multiprocessing.Process):
                     break
                 result = None
                 try:
-                    start = time.time()
+                    #start = time.time()
+                    print("Received")
                     result = next_task()
                     self.task_queue.task_done()
-                    ellapsed = time.time() - start
+                    #ellapsed = time.time() - start
                     error = None
-                    self.stats.add_avg("task-time",ellapsed)
+                    #self.stats.add_avg("task-time",ellapsed)
                     #self.log("Finished [%s:%s]" % (next_task.name, next_task.task_id))
                 except Exception as err:
                     result = None
@@ -213,6 +214,7 @@ class GenericTaskManager(Component):
         """
         for i in xrange(self._num_workers):
             #send_to_zmq_zipped(self.ventilator_send, None)
+            print("Adding task")
             self.tasks.put(None)
         # Poison for result listener
         self.results.put(None)
@@ -565,7 +567,7 @@ class ZMQTaskManager(Component, threading.Thread):
         while not self.kill_switch:
             try:
                 next_task = receive_from_zmq_zipped(self.socket)
-                #tprint("Receiving task")
+                tprint("Receiving task")
                 self.push_task(next_task)
             except zmq.ContextTerminated:
                 break
@@ -643,13 +645,21 @@ class ZMQTaskScheduler(Component, threading.Thread):
         self.context = zmq.Context()
         self.frontend = self.context.socket(zmq.PULL)
         self.frontend.bind('tcp://*:{port}'.format(port=self.frontend_port))
+        self.frontend.setsockopt(zmq.LINGER, 0)
         self.backend = self.context.socket(zmq.PUSH)
         self.backend.bind('tcp://*:{port}'.format(port=self.backend_port))
+        self.backend.setsockopt(zmq.LINGER, 0)
+        
+        # The poller is used to poll for incomming messages for both
+        # the frontend (internet) and the backend (scheduling)
+        self.poll = zmq.Poller()
+        self.poll.register(self.frontend, zmq.POLLIN)
         
         # Connected socket locally to frontend to send tasks, this socket
         # provides a lock to be able to be thread-safe
         self.frontend_push = self.context.socket(zmq.PUSH)
         self.frontend_push.connect('tcp://localhost:{port}'.format(port=self.frontend_port))
+        self.frontend_push.setsockopt(zmq.LINGER, 0)
         
         # Our lock used to protect the frontend_push socket
         self.lock = threading.Lock()
@@ -660,24 +670,44 @@ class ZMQTaskScheduler(Component, threading.Thread):
     
     def run(self):
         self.log.info("ZMQTaskScheduler started")
+        
         # Start receiving messages
-        try:
-            zmq.proxy(self.frontend, self.backend)
-        except zmq.ContextTerminated:
-            pass
-        except zmq.ZMQError:
-            pass
-        except:
-            traceback.print_exc()
+        while not self.kill_switch:
+            try:
+                sockets = dict(self.poll.poll(1000))
+                if self.frontend in sockets:
+                    msg = self.frontend.recv(flags=zmq.NOBLOCK)
+                    #tprint('Server received message from %s' % (ident))
+                    self.backend.send(msg, flags=zmq.NOBLOCK)
+            except zmq.Again:
+                # Timeouy just fired, no problem!
+                pass
+            except KeyboardInterrupt:
+                break
+            except zmq.ContextTerminated:
+                break
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EAGAIN:
+                    pass  # no message was ready
+                else:
+                    break
+            except:
+                traceback.print_exc()
+                # Not really good to just pass but saver for now!
+                pass
 
         self.frontend.close()
         self.backend.close()
         with self.lock:
             self.frontend_push.close()
+        self.context.term()
         self.log.info("ZMQTaskScheduler stopped")
     
     def stop(self):
-        self.context.term()
+        self.log.info("Shutting down ZMQTaskScheduler")
+        self.kill_switch = True
+        self.join(5000)
+        self.log.info("ZMQTaskScheduler shutdown finished")
             
     def start_system(self, task_system):
         """
