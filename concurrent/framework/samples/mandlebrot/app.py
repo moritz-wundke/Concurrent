@@ -25,6 +25,9 @@ class MandlebrotNode(ApplicationNode):
     """
     implements(IApp)
     
+    use_optimized_task = BoolItem('mandlebrotsample', 'use_optimized_task', True,
+        """Should we use the data optimized task or the lazy task""")
+    
     factor = IntItem('mandlebrotsample', 'factor', 1,
         """How many workloads does a single task get assigned, in our a workload is considered a row""")
     
@@ -52,7 +55,7 @@ class MandlebrotNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.height, self.width, self.iters, self.factor)
+        self.system = MandlebrotTaskSystem(-2.0, 1.0, -1.0, 1.0, self.height, self.width, self.iters, self.factor, self.use_optimized_task)
         return self.system
     
     def work_finished(self, result, task_system):
@@ -89,6 +92,9 @@ class MandlebrotSimpleNode(ApplicationNode):
     Application node distributing the computation of the mandlebrot set using just tasks
     """
     implements(IApp)
+    
+    use_optimized_task = BoolItem('mandlebrotsample', 'use_optimized_task', True,
+        """Should we use the data optimized task or the lazy task""")
     
     send_task_batch = BoolItem('mandlebrotsample', 'task_batch', True,
         """Should we send all tasks one by one or should we batch them into a hughe list""")
@@ -153,35 +159,51 @@ class MandlebrotSimpleNode(ApplicationNode):
         rows = 0
         x = 0
         
-        for x in range(self.width):
-            # Distribute using rows
-            rows += 1
-            
-            real = self.min_x + x * self.pixel_size_x
-            for y in range(self.height):
-                imag = self.min_y + y * self.pixel_size_y
-                workload.append((x, y, real, imag, self.iters))
-            
-            # every self.factor rows create a task with the workload. Note that in this case we will force the system_id to be None while setting the client id
-            if rows == self.factor:
+        if self.use_optimized_task:
+            num_tasks, reminder = divmod(self.width, self.factor)
+            self.jobs = num_tasks + reminder
+
+            for i in xrange(0, self.jobs):
+                if self.send_task_batch:
+                    job_list.append(MandlebrotTaskOptimized("m", None, self.node_id_str, 
+                        iters = self.iters, start_x = i, rows = self.factor, cols = self.height, 
+                        pixel_size_x = self.pixel_size_x, pixel_size_y = self.pixel_size_y,
+                        min_x = self.min_x, min_y = self.min_y))
+                else:
+                    self.push_task(MandlebrotTaskOptimized("m", None, self.node_id_str, 
+                        iters = self.iters, start_x = i, rows = self.factor, cols = self.height, 
+                        pixel_size_x = self.pixel_size_x, pixel_size_y = self.pixel_size_y,
+                        min_x = self.min_x, min_y = self.min_y))
+        else:
+            for x in range(self.width):
+                # Distribute using rows
+                rows += 1
+                
+                real = self.min_x + x * self.pixel_size_x
+                for y in range(self.height):
+                    imag = self.min_y + y * self.pixel_size_y
+                    workload.append((x, y, real, imag, self.iters))
+                
+                # every self.factor rows create a task with the workload. Note that in this case we will force the system_id to be None while setting the client id
+                if rows == self.factor:
+                    if self.send_task_batch:
+                        job_list.append(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
+                    else:
+                        self.push_task(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
+                        self.jobs += 1
+                    workload = []
+                    rows = 0
+                    
+            # Add last task with rest of workload
+            if len(workload) > 0:
                 if self.send_task_batch:
                     job_list.append(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
                 else:
                     self.push_task(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
                     self.jobs += 1
-                workload = []
-                rows = 0
-                
-        # Add last task with rest of workload
-        if len(workload) > 0:
+            
             if self.send_task_batch:
-                job_list.append(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
-            else:
-                self.push_task(MandlebrotTask("mandle_{}".format(x), None, self.node_id_str, iters = self.iters, workload = workload))
-                self.jobs += 1
-        
-        if self.send_task_batch:
-            self.jobs = len(job_list)
+                self.jobs = len(job_list)
         
         # Send batch or check for eventual end condition
         if self.send_task_batch:
@@ -244,7 +266,7 @@ class MandlebrotTaskSystem(ITaskSystem):
     The task system that is executed on the MasterNode and controls what jobs are required to be performed
     """
     
-    def __init__(self, min_x, max_x, min_y, max_y, height, width, iters, factor):
+    def __init__(self, min_x, max_x, min_y, max_y, height, width, iters, factor, optimized):
         """
         Default constructor used to initialize the base values. The ctor is
         executed on the ApplicationNode and not called on the MasterNode so we can 
@@ -260,6 +282,7 @@ class MandlebrotTaskSystem(ITaskSystem):
         self.image = None
         self.iters = iters
         self.factor = factor
+        self.optimized = optimized
         
         self.height = height
         self.width = width        
@@ -298,25 +321,34 @@ class MandlebrotTaskSystem(ITaskSystem):
         
         rows = 0
         x = 0
+        if self.optimized:
+            num_tasks, reminder = divmod(self.width, self.factor)
+            self.jobs = num_tasks + reminder
 
-        for x in range(self.width):
-            # Distribute using rows
-            rows += 1
+            for i in xrange(0, self.jobs):
+                job_list.append(MandlebrotTaskOptimized("m", self.system_id, None, 
+                        iters = self.iters, start_x = i, rows = self.factor, cols = self.height, 
+                        pixel_size_x = self.pixel_size_x, pixel_size_y = self.pixel_size_y,
+                        min_x = self.min_x, min_y = self.min_y))
+        else:
+            for x in range(self.width):
+                # Distribute using rows
+                rows += 1
+                
+                real = self.min_x + x * self.pixel_size_x
+                for y in range(self.height):
+                    imag = self.min_y + y * self.pixel_size_y
+                    workload.append((x, y, real, imag, self.iters))
+                
+                # every self.factor rows create a task with the workload
+                if rows == self.factor:
+                    job_list.append(MandlebrotTask("mandle_{}".format(x), self.system_id, None, iters = self.iters, workload = workload))
+                    workload = []
+                    rows = 0
             
-            real = self.min_x + x * self.pixel_size_x
-            for y in range(self.height):
-                imag = self.min_y + y * self.pixel_size_y
-                workload.append((x, y, real, imag, self.iters))
-            
-            # every self.factor rows create a task with the workload
-            if rows == self.factor:
+            # Add last task with rest of workload
+            if len(workload) > 0:
                 job_list.append(MandlebrotTask("mandle_{}".format(x), self.system_id, None, iters = self.iters, workload = workload))
-                workload = []
-                rows = 0
-        
-        # Add last task with rest of workload
-        if len(workload) > 0:
-            job_list.append(MandlebrotTask("mandle_{}".format(x), self.system_id, None, iters = self.iters, workload = workload))
             
         self.jobs = len(job_list)
         self.start_time = time.time()
@@ -393,4 +425,50 @@ class MandlebrotTask(Task):
         to optimize our network and to cleanup the tasks input data
         """
         self.workload = None
+        self.iters = None
+
+class MandlebrotTaskOptimized(Task):
+    
+    def __init__(self, name, system_id, client_id, **kwargs):
+        Task.__init__(self, name, system_id, client_id)
+        self.start_x = kwargs['start_x']
+        self.rows = kwargs['rows']
+        self.cols = kwargs['cols']
+        self.min_y = kwargs['min_y']
+        self.min_x = kwargs['min_x']
+        self.pixel_size_y = kwargs['pixel_size_y']
+        self.pixel_size_x = kwargs['pixel_size_x']
+        self.iters = kwargs['iters']
+        
+    def __call__(self):
+        """
+        Calculate assigned work
+        """
+        result = {}
+        for x in xrange(self.start_x, self.start_x+self.rows):
+            real = self.min_x + x * self.pixel_size_x
+            for y in xrange(0, self.cols):
+                if not x in result:
+                    result[x] = {}
+                imag = self.min_y + y * self.pixel_size_y
+                result[x][y] = do_mandel(real, imag, self.iters)
+        return result
+    
+    def finished(self, result, error):
+        """
+        Once the task is finished. Called on the MasterNode within the main thread once
+        the node has recovered the result data.
+        """
+        pass
+    
+    def clean_up(self):
+        """
+        Called once a task has been performed and its results are about to be sent back. This is used
+        to optimize our network and to cleanup the tasks input data
+        """
+        self.start_x = None
+        self.rows = None
+        self.cols = None
+        self.min_y = None
+        self.pixel_size_y = None
         self.iters = None

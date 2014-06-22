@@ -135,8 +135,8 @@ class MD5HashReverseTaskSystem(ITaskSystem):
 
 class MD5ReverseTask(Task):
     
-    def __init__(self, name, system_id, **kwargs):
-        Task.__init__(self, name, system_id)
+    def __init__(self, name, system_id, client_id, **kwargs):
+        Task.__init__(self, name, system_id, client_id)
         #print("Created task: %s" % str(self.task_id))
         
         self.target_hash = kwargs['target_hash']
