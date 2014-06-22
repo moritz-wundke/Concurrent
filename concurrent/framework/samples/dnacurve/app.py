@@ -15,6 +15,7 @@ from concurrent.core.async.task import Task
 from concurrent.core.async.api import ITaskSystem
 from concurrent.core.util.utils import is_digit, tprint
 from concurrent.core.util.stats import time_push, time_pop
+from concurrent.core.config.config import IntItem
 
 import sys
 import os
@@ -39,6 +40,9 @@ class DNACurveNode(ApplicationNode):
     """
     implements(IApp)
     
+    factor = IntItem('dnasample', 'factor', 1,
+        """How many workloads does a single task get assigned, in our a workload is considered a row""")
+    
     def app_init(self):
         """
         Called just before the main entry. Used as the initialization point instead of the ctor
@@ -57,7 +61,7 @@ class DNACurveNode(ApplicationNode):
         able to send computation tasks over
         """
         self.start_time = time.time()
-        self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024)
+        self.dna_system = DNACurveTaskSystem("ATGCAAATTG"*1000, "trifonov", name="Example", maxlen=1024*1024, factor=self.factor)
         return self.dna_system
     
     def work_finished(self, result, task_system):
@@ -99,7 +103,7 @@ class DNACurveTaskSystem(ITaskSystem):
     
     def __init__(self, sequence, model="trifonov", name="Untitled",
                  curvature_window=10, bend_window=2, curve_window=15,
-                 maxlen=MAXLEN):
+                 maxlen=MAXLEN, factor=1):
         """
         Default constructor used to initialize the base values. The ctor is
         executed on the ApplicationNode and not called on the MasterNode so we can 
@@ -131,6 +135,7 @@ class DNACurveTaskSystem(ITaskSystem):
         self.coordinates = numpy.zeros((5, len(self), 4), dtype=numpy.float64)
         self.curvature = numpy.zeros((3, len(self)), dtype=numpy.float64)
         self.scales = numpy.ones((3, 1), dtype=numpy.float64)
+        self.factor = factor
         
         # Create a number of jobs that will be processed
         self.jobs = 0
@@ -172,7 +177,7 @@ class DNACurveTaskSystem(ITaskSystem):
             workload.append(( xyz[:4, :i+1, :] , matrices[seq]))
             
             # Collect a set of 166 workloads
-            if len(workload) == 1:
+            if len(workload) == self.factor:
                 job_list.append(DNACurveTask("dna_curve_{}".format(i), self.system_id, None, start = i, workload = workload))
                 workload = []
         
@@ -182,6 +187,7 @@ class DNACurveTaskSystem(ITaskSystem):
 
         self.jobs = len(job_list)
         self.start_time = time.time()
+        print("Number of tasks %s" % self.jobs)
         return job_list
         
     def task_finished(self, master, task, result, error):
@@ -207,6 +213,8 @@ class DNACurveTaskSystem(ITaskSystem):
         """
         #print("%d -> %d" % (self.finished_jobs,self.jobs))
         # Wait for all tasks to finish
+        if self.finished_jobs == self.jobs:
+            print("Number of tasks %s" % self.finished_jobs)
         return self.finished_jobs == self.jobs
     
     def __len__(self):
@@ -321,8 +329,8 @@ class DNACurveTaskSystem(ITaskSystem):
 
 class DNACurveTask(Task):
     
-    def __init__(self, name, system_id, **kwargs):
-        Task.__init__(self, name, system_id)
+    def __init__(self, name, system_id, client_id, **kwargs):
+        Task.__init__(self, name, system_id, client_id)
         self.start = kwargs['start']
         self.workload = kwargs['workload']
         
