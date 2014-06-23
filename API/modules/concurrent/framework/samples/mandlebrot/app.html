@@ -6,24 +6,24 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.framework.samples.mandlebrot.app &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.framework.samples.mandlebrot.app &mdash; Concurrent 0.1.2 documentation</title>
     
-    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../../',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../../index.html" />
+    <script type="text/javascript" src="../../../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="../../../../../index.html" />
     <link rel="up" title="Module code" href="../../../../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="../../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,7 +59,7 @@
 <span class="kn">from</span> <span class="nn">concurrent.core.components.component</span> <span class="kn">import</span> <span class="n">implements</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.async.task</span> <span class="kn">import</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskSystem</span>
-<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">BoolItem</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">BoolItem</span><span class="p">,</span> <span class="n">IntItem</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">imshow</span><span class="p">,</span> <span class="n">show</span>
@@ -73,6 +73,18 @@
 <span class="sd">    Application node distributing the computation of the mandlebrot set using an autonomous task system</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
+    
+    <span class="n">use_optimized_task</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;use_optimized_task&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Should we use the data optimized task or the lazy task&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;factor&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;How many workloads does a single task get assigned, in our a workload is considered a row&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">iters</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;iters&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Mandlebrot iterations per pixel&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">height</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;height&#39;</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Height of the mandlebrot set image&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">width</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;width&#39;</span><span class="p">,</span> <span class="mi">1536</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Width of the mandlebrot set image&quot;&quot;&quot;</span><span class="p">)</span>
     
 <div class="viewcode-block" id="MandlebrotNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -92,8 +104,7 @@
 <span class="sd">        able to send computation tasks over</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1536</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">MandlebrotTaskSystem</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">MandlebrotTaskSystem</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_optimized_task</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span>
     </div>
 <div class="viewcode-block" id="MandlebrotNode.work_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.work_finished">[docs]</a>    <span class="k">def</span> <span class="nf">work_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
@@ -105,6 +116,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shutdown_main_loop</span><span class="p">()</span>
         <span class="c"># Reassamble result to be processed further</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">do_post_run</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
@@ -130,8 +142,20 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
     
+    <span class="n">use_optimized_task</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;use_optimized_task&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;Should we use the data optimized task or the lazy task&quot;&quot;&quot;</span><span class="p">)</span>
+    
     <span class="n">send_task_batch</span> <span class="o">=</span> <span class="n">BoolItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;task_batch&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span>
         <span class="sd">&quot;&quot;&quot;Should we send all tasks one by one or should we batch them into a hughe list&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;factor&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;How many workloads does a single task get assigned, in our a workload is considered a row&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">iters</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;iters&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Mandlebrot iterations per pixel&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">height</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;height&#39;</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Height of the mandlebrot set image&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">width</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;mandlebrotsample&#39;</span><span class="p">,</span> <span class="s">&#39;width&#39;</span><span class="p">,</span> <span class="mi">1536</span><span class="p">,</span> <span class="s">&quot;&quot;&quot;Width of the mandlebrot set image&quot;&quot;&quot;</span><span class="p">)</span>
     
 <div class="viewcode-block" id="MandlebrotSimpleNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -161,19 +185,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Starting computation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot; Task batching enabled&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1536</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
         
         <span class="c"># Init task related stuff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">=</span>  <span class="mf">1.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="mi">20</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>        
+              
         <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
         
@@ -187,36 +208,51 @@
         <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
         
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
-            <span class="c"># Distribute using rows</span>
-            <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
-            
-            <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
-            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
-                <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
-                <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
-            
-            <span class="c"># every self.factor rows create a task with the workload. Note that in this case we will force the system_id to be None while setting the client id</span>
-            <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_optimized_task</span><span class="p">:</span>
+            <span class="n">num_tasks</span><span class="p">,</span> <span class="n">reminder</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="n">num_tasks</span> <span class="o">+</span> <span class="n">reminder</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+                    <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTaskOptimized</span><span class="p">(</span><span class="s">&quot;m&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> 
+                        <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">start_x</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> 
+                        <span class="n">pixel_size_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span><span class="p">,</span> <span class="n">pixel_size_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span><span class="p">,</span>
+                        <span class="n">min_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTaskOptimized</span><span class="p">(</span><span class="s">&quot;m&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> 
+                        <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">start_x</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> 
+                        <span class="n">pixel_size_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span><span class="p">,</span> <span class="n">pixel_size_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span><span class="p">,</span>
+                        <span class="n">min_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+                <span class="c"># Distribute using rows</span>
+                <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+                    <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
+                    <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
+                
+                <span class="c"># every self.factor rows create a task with the workload. Note that in this case we will force the system_id to be None while setting the client id</span>
+                <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
+                        <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+                    
+            <span class="c"># Add last task with rest of workload</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
                     <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
-                
-        <span class="c"># Add last task with rest of workload</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
-                <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id_str</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">+=</span> <span class="mi">1</span>
-        
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
         
         <span class="c"># Send batch or check for eventual end condition</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_task_batch</span><span class="p">:</span>
@@ -279,7 +315,7 @@
 <span class="sd">    The task system that is executed on the MasterNode and controls what jobs are required to be performed</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">iters</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">iters</span><span class="p">,</span> <span class="n">factor</span><span class="p">,</span> <span class="n">optimized</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Default constructor used to initialize the base values. The ctor is</span>
 <span class="sd">        executed on the ApplicationNode and not called on the MasterNode so we can </span>
@@ -292,12 +328,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">=</span> <span class="n">max_x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="n">min_y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">=</span> <span class="n">max_y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="n">iters</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimized</span> <span class="o">=</span> <span class="n">optimized</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
         
@@ -333,25 +370,34 @@
         
         <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimized</span><span class="p">:</span>
+            <span class="n">num_tasks</span><span class="p">,</span> <span class="n">reminder</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="n">num_tasks</span> <span class="o">+</span> <span class="n">reminder</span>
 
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
-            <span class="c"># Distribute using rows</span>
-            <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="p">):</span>
+                <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTaskOptimized</span><span class="p">(</span><span class="s">&quot;m&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> 
+                        <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">start_x</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> 
+                        <span class="n">pixel_size_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span><span class="p">,</span> <span class="n">pixel_size_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span><span class="p">,</span>
+                        <span class="n">min_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+                <span class="c"># Distribute using rows</span>
+                <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+                    <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
+                    <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
+                
+                <span class="c"># every self.factor rows create a task with the workload</span>
+                <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+                    <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
+                    <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
             
-            <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
-            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
-                <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
-                <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span>
-            
-            <span class="c"># every self.factor rows create a task with the workload</span>
-            <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
+            <span class="c"># Add last task with rest of workload</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
-                <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
-        
-        <span class="c"># Add last task with rest of workload</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MandlebrotTask</span><span class="p">(</span><span class="s">&quot;mandle_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
             
         <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -428,6 +474,52 @@
 <span class="sd">        to optimize our network and to cleanup the tasks input data</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="bp">None</span>
+</div></div>
+<div class="viewcode-block" id="MandlebrotTaskOptimized"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized">[docs]</a><span class="k">class</span> <span class="nc">MandlebrotTaskOptimized</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;start_x&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;rows&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;cols&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;min_y&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;min_x&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;pixel_size_y&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;pixel_size_x&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;iters&#39;</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate assigned work</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_x</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">do_mandel</span><span class="p">(</span><span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    
+<div class="viewcode-block" id="MandlebrotTaskOptimized.finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.finished">[docs]</a>    <span class="k">def</span> <span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the task is finished. Called on the MasterNode within the main thread once</span>
+<span class="sd">        the node has recovered the result data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="MandlebrotTaskOptimized.clean_up"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.mandlebrot.html#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called once a task has been performed and its results are about to be sent back. This is used</span>
+<span class="sd">        to optimize our network and to cleanup the tasks input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_x</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="bp">None</span></div></div>
 </pre></div>
 
@@ -462,7 +554,7 @@
         <li class="right" >
           <a href="../../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

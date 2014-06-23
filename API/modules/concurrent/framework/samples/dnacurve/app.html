@@ -6,24 +6,24 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.framework.samples.dnacurve.app &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.framework.samples.dnacurve.app &mdash; Concurrent 0.1.2 documentation</title>
     
-    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../../',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../../index.html" />
+    <script type="text/javascript" src="../../../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="../../../../../index.html" />
     <link rel="up" title="Module code" href="../../../../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="../../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -64,6 +64,7 @@
 <span class="kn">from</span> <span class="nn">concurrent.core.async.api</span> <span class="kn">import</span> <span class="n">ITaskSystem</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.util.utils</span> <span class="kn">import</span> <span class="n">is_digit</span><span class="p">,</span> <span class="n">tprint</span>
 <span class="kn">from</span> <span class="nn">concurrent.core.util.stats</span> <span class="kn">import</span> <span class="n">time_push</span><span class="p">,</span> <span class="n">time_pop</span>
+<span class="kn">from</span> <span class="nn">concurrent.core.config.config</span> <span class="kn">import</span> <span class="n">IntItem</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -88,6 +89,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">IApp</span><span class="p">)</span>
     
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">IntItem</span><span class="p">(</span><span class="s">&#39;dnasample&#39;</span><span class="p">,</span> <span class="s">&#39;factor&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="sd">&quot;&quot;&quot;How many workloads does a single task get assigned, in our a workload is considered a row&quot;&quot;&quot;</span><span class="p">)</span>
+    
 <div class="viewcode-block" id="DNACurveNode.app_init"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.app_init">[docs]</a>    <span class="k">def</span> <span class="nf">app_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Called just before the main entry. Used as the initialization point instead of the ctor</span>
@@ -106,7 +110,7 @@
 <span class="sd">        able to send computation tasks over</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dna_system</span> <span class="o">=</span> <span class="n">DNACurveTaskSystem</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Example&quot;</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dna_system</span> <span class="o">=</span> <span class="n">DNACurveTaskSystem</span><span class="p">(</span><span class="s">&quot;ATGCAAATTG&quot;</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Example&quot;</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dna_system</span>
     </div>
 <div class="viewcode-block" id="DNACurveNode.work_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveNode.work_finished">[docs]</a>    <span class="k">def</span> <span class="nf">work_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
@@ -148,7 +152,7 @@
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&quot;trifonov&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Untitled&quot;</span><span class="p">,</span>
                  <span class="n">curvature_window</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bend_window</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">curve_window</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
-                 <span class="n">maxlen</span><span class="o">=</span><span class="n">MAXLEN</span><span class="p">):</span>
+                 <span class="n">maxlen</span><span class="o">=</span><span class="n">MAXLEN</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Default constructor used to initialize the base values. The ctor is</span>
 <span class="sd">        executed on the ApplicationNode and not called on the MasterNode so we can </span>
@@ -180,6 +184,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">curvature</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span>
         
         <span class="c"># Create a number of jobs that will be processed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="mi">0</span>
@@ -221,7 +226,7 @@
             <span class="n">workload</span><span class="o">.</span><span class="n">append</span><span class="p">((</span> <span class="n">xyz</span><span class="p">[:</span><span class="mi">4</span><span class="p">,</span> <span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="p">,</span> <span class="n">matrices</span><span class="p">[</span><span class="n">seq</span><span class="p">]))</span>
             
             <span class="c"># Collect a set of 166 workloads</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workload</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">:</span>
                 <span class="n">job_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DNACurveTask</span><span class="p">(</span><span class="s">&quot;dna_curve_{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">workload</span> <span class="o">=</span> <span class="n">workload</span><span class="p">))</span>
                 <span class="n">workload</span> <span class="o">=</span> <span class="p">[]</span>
         
@@ -231,6 +236,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job_list</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Number of tasks </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">job_list</span>
         </div>
 <div class="viewcode-block" id="DNACurveTaskSystem.task_finished"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTaskSystem.task_finished">[docs]</a>    <span class="k">def</span> <span class="nf">task_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
@@ -256,6 +262,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;%d -&gt; %d&quot; % (self.finished_jobs,self.jobs))</span>
         <span class="c"># Wait for all tasks to finish</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Number of tasks </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_jobs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span>
     </div>
     <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -370,8 +378,8 @@
 </div></div>
 <div class="viewcode-block" id="DNACurveTask"><a class="viewcode-back" href="../../../../../concurrent.framework.samples.dnacurve.html#concurrent.framework.samples.dnacurve.app.DNACurveTask">[docs]</a><span class="k">class</span> <span class="nc">DNACurveTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
     
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">client_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;start&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">workload</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;workload&#39;</span><span class="p">]</span>
         
@@ -962,7 +970,7 @@
         <li class="right" >
           <a href="../../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

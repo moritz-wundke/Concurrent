@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.core.async package &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.core.async package &mdash; Concurrent 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Concurrent 0.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -284,7 +284,7 @@ the node has recovered the result data.</p>
 
 <dl class="class">
 <dt id="concurrent.core.async.task.GenericTaskManager">
-<em class="property">class </em><tt class="descclassname">concurrent.core.async.task.</tt><tt class="descname">GenericTaskManager</tt><big>(</big><em>compmgr</em>, <em>init=&lt;function __init__ at 0x00000000056434A8&gt;</em>, <em>cls=&lt;class 'concurrent.core.async.task.GenericTaskManager'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/task.html#GenericTaskManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.task.</tt><tt class="descname">GenericTaskManager</tt><big>(</big><em>compmgr</em>, <em>init=&lt;function __init__ at 0x0000000004FEDE48&gt;</em>, <em>cls=&lt;class 'concurrent.core.async.task.GenericTaskManager'&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/task.html#GenericTaskManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.task.GenericTaskManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.components.html#concurrent.core.components.component.Component" title="concurrent.core.components.component.Component"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.components.component.Component</span></tt></a></p>
 <dl class="method">
 <dt id="concurrent.core.async.task.GenericTaskManager.get_num_workers">
@@ -475,7 +475,7 @@ RuntimeError is thrown.</p>
 
 <dl class="function">
 <dt id="concurrent.core.async.threads.makeRequests">
-<tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">makeRequests</tt><big>(</big><em>callable_</em>, <em>args_list</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x00000000055F8828&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/threads.html#makeRequests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.makeRequests" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">makeRequests</tt><big>(</big><em>callable_</em>, <em>args_list</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x0000000004FA4208&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/threads.html#makeRequests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.makeRequests" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create several work requests for same callable with different arguments.</p>
 <p>Convenience function for creating several work requests for the same
 callable where each invocation of the callable receives different values
@@ -550,7 +550,7 @@ requests.</p>
 
 <dl class="class">
 <dt id="concurrent.core.async.threads.WorkRequest">
-<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">WorkRequest</tt><big>(</big><em>callable_</em>, <em>args=None</em>, <em>kwds=None</em>, <em>requestID=None</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x00000000055F8828&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/threads.html#WorkRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkRequest" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.core.async.threads.</tt><tt class="descname">WorkRequest</tt><big>(</big><em>callable_</em>, <em>args=None</em>, <em>kwds=None</em>, <em>requestID=None</em>, <em>callback=None</em>, <em>exc_callback=&lt;function _handle_thread_exception at 0x0000000004FA4208&gt;</em><big>)</big><a class="reference internal" href="modules/concurrent/core/async/threads.html#WorkRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.core.async.threads.WorkRequest" title="Permalink to this definition">¶</a></dt>
 <dd><p>A request to execute a callable for putting in the request queue later.</p>
 <p>See the module function <tt class="docutils literal"><span class="pre">makeRequests</span></tt> for the common case
 where you want to build several <tt class="docutils literal"><span class="pre">WorkRequest</span></tt> objects for the same
@@ -633,7 +633,7 @@ one queue and puts the results in another until it is dismissed.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Concurrent 0.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

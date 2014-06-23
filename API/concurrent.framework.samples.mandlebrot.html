@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.framework.samples.mandlebrot package &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.framework.samples.mandlebrot package &mdash; Concurrent 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="index.html" /> 
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Concurrent 0.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -70,11 +70,29 @@
 <dd><p>Applications main entry</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.factor">
+<tt class="descname">factor</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many workloads does a single task get assigned, in our a workload is considered a row</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system">
 <tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.height">
+<tt class="descname">height</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Height of the mandlebrot set image</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.iters">
+<tt class="descname">iters</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.iters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mandlebrot iterations per pixel</p>
 </dd></dl>
 
 <dl class="method">
@@ -87,6 +105,18 @@ able to send computation tasks over</p>
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response">
 <tt class="descname">push_tasksystem_response</tt><big>(</big><em>result</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotNode.push_tasksystem_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.push_tasksystem_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>We just added a ITaskSystem on the framwork. Check result for more info</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.use_optimized_task">
+<tt class="descname">use_optimized_task</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.use_optimized_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should we use the data optimized task or the lazy task</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotNode.width">
+<tt class="descname">width</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotNode.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Width of the mandlebrot set image</p>
 </dd></dl>
 
 <dl class="method">
@@ -121,11 +151,29 @@ sent back to us. Check resukt for more info</p>
 <dd><p>Check if we finsihed all computation or not</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.factor">
+<tt class="descname">factor</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many workloads does a single task get assigned, in our a workload is considered a row</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system">
 <tt class="descname">get_task_system</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotSimpleNode.get_task_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.get_task_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called from the base class when we are connected to a MasterNode and we are 
 able to send computation tasks over</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.height">
+<tt class="descname">height</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Height of the mandlebrot set image</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.iters">
+<tt class="descname">iters</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.iters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mandlebrot iterations per pixel</p>
 </dd></dl>
 
 <dl class="method">
@@ -171,6 +219,18 @@ will take care of the task flow itself</p>
 <dd><p>Called when a task has been done</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.use_optimized_task">
+<tt class="descname">use_optimized_task</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.use_optimized_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should we use the data optimized task or the lazy task</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.width">
+<tt class="descname">width</tt><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotSimpleNode.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Width of the mandlebrot set image</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -194,8 +254,28 @@ the node has recovered the result data.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized">
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTaskOptimized</tt><big>(</big><em>name</em>, <em>system_id</em>, <em>client_id</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskOptimized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.task.Task" title="concurrent.core.async.task.Task"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.task.Task</span></tt></a></p>
+<dl class="method">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.clean_up">
+<tt class="descname">clean_up</tt><big>(</big><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskOptimized.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called once a task has been performed and its results are about to be sent back. This is used
+to optimize our network and to cleanup the tasks input data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.finished">
+<tt class="descname">finished</tt><big>(</big><em>result</em>, <em>error</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskOptimized.finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskOptimized.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once the task is finished. Called on the MasterNode within the main thread once
+the node has recovered the result data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem">
-<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTaskSystem</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>image</em>, <em>iters</em>, <em>factor</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">concurrent.framework.samples.mandlebrot.app.</tt><tt class="descname">MandlebrotTaskSystem</tt><big>(</big><em>min_x</em>, <em>max_x</em>, <em>min_y</em>, <em>max_y</em>, <em>height</em>, <em>width</em>, <em>iters</em>, <em>factor</em>, <em>optimized</em><big>)</big><a class="reference internal" href="modules/concurrent/framework/samples/mandlebrot/app.html#MandlebrotTaskSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#concurrent.framework.samples.mandlebrot.app.MandlebrotTaskSystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="concurrent.core.async.html#concurrent.core.async.api.ITaskSystem" title="concurrent.core.async.api.ITaskSystem"><tt class="xref py py-class docutils literal"><span class="pre">concurrent.core.async.api.ITaskSystem</span></tt></a></p>
 <p>The task system that is executed on the MasterNode and controls what jobs are required to be performed</p>
 <dl class="method">
@@ -326,7 +406,7 @@ set given a fixed number of iterations.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">Concurrent 0.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Concurrent 0.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

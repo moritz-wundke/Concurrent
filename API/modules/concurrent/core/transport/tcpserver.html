@@ -6,24 +6,24 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.core.transport.tcpserver &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.core.transport.tcpserver &mdash; Concurrent 0.1.2 documentation</title>
     
-    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <script type="text/javascript" src="../../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="../../../../index.html" />
     <link rel="up" title="Module code" href="../../../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -311,16 +311,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">ROUTER</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;tcp://*:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="c"># The backend is where we queue the requests that the workers</span>
         <span class="c"># will start working on in round robbin fashion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">DEALER</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;inproc://backend&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">DEALER</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;inproc://backend-client&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="c"># The poller is used to poll for incomming messages for both</span>
         <span class="c"># the frontend (internet) and the backend (scheduling)</span>
@@ -361,17 +364,17 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">sockets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="mi">1000</span><span class="p">))</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
-                    <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
+                    <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                     <span class="c">#tprint(&#39;Server received message from %s&#39; % (ident))</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
-                    <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
+                    <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                     <span class="c">#tprint(&#39;Sending message back to %s&#39; % (ident))</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
                     <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_client</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
                     <span class="c">#tprint(&#39;Sending message back to %s&#39; % (ident))</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">send_multipart</span><span class="p">([</span><span class="n">ident</span><span class="p">,</span> <span class="n">msg</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
                 <span class="c"># Timeouy just fired, no problem!</span>
                 <span class="k">pass</span>
@@ -389,8 +392,11 @@
                 <span class="k">break</span>
             <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
-                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># no message was ready</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
                 <span class="c"># Not really good to just pass but saver for now!</span>
@@ -413,6 +419,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">worker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">DEALER</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="o">.</span><span class="n">RCVTIMEO</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="c"># Some thread related stuff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
@@ -425,7 +433,7 @@
         <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="c"># Receive message and unpickle it</span>
-                <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
+                <span class="n">ident</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="n">unpickle_message</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="c">#tprint(&#39;Worker received %s from %s&#39; % (msg, ident))</span>
                 
@@ -451,8 +459,11 @@
                 <span class="k">break</span>
             <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
-                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># no message was ready</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
                 <span class="c"># Not really good to just pass but saver for now!</span>
@@ -521,14 +532,14 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">sockets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="mi">1000</span><span class="p">))</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="n">unpickle_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="n">unpickle_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">))</span>
                     <span class="c">#tprint(&#39;From server&#39;)</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
                     <span class="n">send_to_zmq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="o">*</span><span class="n">result</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
                     <span class="c">#tprint(&#39;To Server&#39;)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
                 <span class="c"># Timeouy just fired, no problem!</span>
                 <span class="k">pass</span>
@@ -546,8 +557,11 @@
                 <span class="k">break</span>
             <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
-                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># no message was ready</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
                 <span class="c"># Not really good to just pass but saver for now!</span>
@@ -647,7 +661,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

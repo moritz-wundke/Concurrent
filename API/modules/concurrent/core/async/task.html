@@ -6,24 +6,24 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>concurrent.core.async.task &mdash; Concurrent 0.1.1 documentation</title>
+    <title>concurrent.core.async.task &mdash; Concurrent 0.1.2 documentation</title>
     
-    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-    <link rel="top" title="Concurrent 0.1.1 documentation" href="../../../../index.html" />
+    <script type="text/javascript" src="../../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../static/doctools.js"></script>
+    <link rel="top" title="Concurrent 0.1.2 documentation" href="../../../../index.html" />
     <link rel="up" title="Module code" href="../../../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -182,12 +182,12 @@
                     <span class="k">break</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="c">#start = time.time()</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">next_task</span><span class="p">()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
-                    <span class="n">ellapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+                    <span class="c">#ellapsed = time.time() - start</span>
                     <span class="n">error</span> <span class="o">=</span> <span class="bp">None</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">add_avg</span><span class="p">(</span><span class="s">&quot;task-time&quot;</span><span class="p">,</span><span class="n">ellapsed</span><span class="p">)</span>
+                    <span class="c">#self.stats.add_avg(&quot;task-time&quot;,ellapsed)</span>
                     <span class="c">#self.log(&quot;Finished [%s:%s]&quot; % (next_task.name, next_task.task_id))</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
@@ -262,6 +262,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_workers</span><span class="p">):</span>
             <span class="c">#send_to_zmq_zipped(self.ventilator_send, None)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Adding task&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
         <span class="c"># Poison for result listener</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
@@ -608,19 +609,24 @@
         
         <span class="c"># Create and connect to our scheduler socket</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;tcp://{host}:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_backend_port</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_backend_port</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         
         <span class="c"># Start receiving messages</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span><span class="p">:</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
                 <span class="n">next_task</span> <span class="o">=</span> <span class="n">receive_from_zmq_zipped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">push_task</span><span class="p">(</span><span class="n">next_task</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># no message was ready</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
             
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskManager stopped&quot;</span><span class="p">)</span>
@@ -688,13 +694,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;tcp://*:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend_port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&#39;tcp://*:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c"># The poller is used to poll for incomming messages for both</span>
+        <span class="c"># the frontend (internet) and the backend (scheduling)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poll</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Poller</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">)</span>
         
         <span class="c"># Connected socket locally to frontend to send tasks, this socket</span>
         <span class="c"># provides a lock to be able to be thread-safe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;tcp://localhost:{port}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend_port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">set_hwm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
         
         <span class="c"># Our lock used to protect the frontend_push socket</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
@@ -705,24 +723,44 @@
     
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskScheduler started&quot;</span><span class="p">)</span>
+        
         <span class="c"># Start receiving messages</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">zmq</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sockets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="mi">1000</span><span class="p">))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span> <span class="ow">in</span> <span class="n">sockets</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
+                    <span class="c">#tprint(&#39;Server received message from %s&#39; % (ident))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">zmq</span><span class="o">.</span><span class="n">NOBLOCK</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+                <span class="c"># Timeouy just fired, no problem!</span>
+                <span class="k">pass</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ContextTerminated</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># no message was ready</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="c"># Not really good to just pass but saver for now!</span>
+                <span class="k">pass</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">frontend</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">frontend_push</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskScheduler stopped&quot;</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Shutting down ZMQTaskScheduler&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_switch</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;ZMQTaskScheduler shutdown finished&quot;</span><span class="p">)</span>
             
     <span class="k">def</span> <span class="nf">start_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_system</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -847,7 +885,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">Concurrent 0.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">Concurrent 0.1.2 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
