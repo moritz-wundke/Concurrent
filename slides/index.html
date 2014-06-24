@@ -95,9 +95,9 @@
 					<section>
 						<h2>Why? - Stable</h2>
 						<ul>
-							<li>Fault tolerrance</li>
+							<li>Fault tolerance</li>
 							<li>Consistency</li>
-							<li>We sacrify availability</li>
+							<li>We scarify availability</li>
 						</ul>
 						<aside class="notes">
 							Talk about the PAC theorem, we have chosen to sacrify availability
@@ -181,7 +181,7 @@
 					<section>
 						<h2>Concurrent</h2>
 						<ul>
-							<li>Distrubuted task execution framework which tries to solve the GIL issue</li>
+							<li>Distributed task execution framework which tries to solve the GIL issue</li>
 							<li>Does not use threads when executing processes</li>
 							<li>Features different ways to implement IPC calls</li>
 							<li>All nodes in the system communicate through RPC calls or using HTTP or low-level TCP</li>
@@ -192,8 +192,8 @@
 					<section>
 						<h2>Other frame works</h2>
 						<ul>
-							<li><b>Dispy:</b> Fork based system, not applciation or cloud oriented as concurrent, problems with TCP congestions</li>
-							<li><b>ParallelPython:</b>  Thread based based system, not applciation or cloud oriented as concurrent, problems with TCP congestions</li>
+							<li><b>Dispy:</b> Fork based system, not applciation or cloud oriented as concurrent, problems with TCP congestion</li>
+							<li><b>ParallelPython:</b>  Thread based based system, not applciation or cloud oriented as concurrent, problems with TCP congestion</li>
 							<li><b>Superpy:</b> Similar to concurrent but does not feature a high-performance transport layer. Only for windows.</li>
 							<li><a href="https://wiki.python.org/moin/ParallelProcessing">More libraries</a></li>
 						</ul>
@@ -205,10 +205,10 @@
 						<h2>Architecture</h2>
 						
 						<p>
-							Concurrent is build upon a flexible plugable component framework. Most of the framework is plugable in few steps and can be tweaked isntalling plugins.
+							Concurrent is build upon a flexible plug-able component framework. Most of the framework is plug-able in few steps and can be tweaked installing plug-ins.
 						</p>
 						<p>
-							Applications themselfs are plugins that are then load on the environment and executed
+							Applications themselves are plug-ins that are then load on the environment and executed
 						</p>
 					</section>
 
@@ -218,7 +218,7 @@
 						<p><img src="images/Concurrent_Components.png"></p>
 						
 						<p>
-							<i>Component</i>s are singleton instances per <i>ComponentMananer</i>. They implement the functionality of a given <i>Interface</i> and talk to each other through an ExtensionPoint
+							<i>Component</i>s are singleton instances per <i>ComponentMananer</i>. They implement the functionality of a given <i>Interface</i> and talk to each other through an <i>ExtensionPoint</i>
 						</p>
 					</section>
 
@@ -263,11 +263,11 @@
 						<h2>Task Scheduling</h2>
 						
 						<p>
-							Concurrent comes with two task scheduling policies, one optmized for heterogeneous systems and another for homogeneous systems.
+							Concurrent comes with two task scheduling policies, one optimized for heterogeneous systems and another for homogeneous systems.
 						</p>
 						<ul>
 							<li><b>Generic:</b> For heterogeneous systems. Sends work to the best slave for the given work. Comes with slightly more overhead</li>
-							<li><b>ZMQ:</b> ZMQ push/pull scheduling, for homogenous systems. Slave requests task from a global socket. Less overhead but prone to stalls if heardware is not the same on all slaves.</li>
+							<li><b>ZMQ:</b> ZMQ push/pull scheduling, for homogenous systems. Slave requests task from a global socket. Less overhead but prone to stalls if hardware is not the same on all slaves.</li>
 						</ul>
 					</section>
 
@@ -309,10 +309,10 @@
 						<p>Concurrent comes with a complex transport module that features TCP and ZMQ sockets clients, servers and proxies.</p>
 						<ul>
 							<li><b>TCPServer:</b> multithreaded TCP socket server.</li>
-							<li><b>TCPServerZMQ:</b> multithreaded ZMQ server using a imited number of pooled workers.</li>
+							<li><b>TCPServerZMQ:</b> multithreaded ZMQ server using a limited number of pooled workers.</li>
 							<li><b>TCPClient:</b> TCP client used to establish connection to a <i>TCPSocket</i>.</li>
 							<li><b>Proxies:</b> proxies are used to implement RPC like calling mechanisms between servers and clients.</li>
-							<li><b>TCPHandler:</b> containter andling registrartion of RPC methods.</li>
+							<li><b>TCPHandler:</b> container handling registration of RPC methods.</li>
 						</ul>
 					</section>
 
@@ -348,13 +348,13 @@ def register_slave_tcp(handler, request, node_id):
 						<ul>
 							<li><b>No-GIL:</b> no GIL on our tasks.</li>
 							<li><b>Balancing:</b> tasks are balanced using load balancing.</li>
-							<li><b>Nice to TCP:</b> internal buffering to avoid TCP congestions.</li>
-							<li><b>Delployment:</b> easy to deploy application onto concurrent.</li>
-							<li><b>Fast development:</b> easy application framework to build concurrent applciaitons that work on a high number of machines in minutes.</li>
-							<li><b>Batching:</b> task batching to simple task schemas.</li>
-							<li><b>TaskSystem approach:</b> autonomous systems control tasks. Easy to implement concurrency in an organize fashion.</li>
-							<li><b>Plugable:</b> all components are plugable, felxible development and adding new features.</li>
-							<li><b>API:</b> RESTful JSON API and TCP/ZMQ API in the same fashion. From the programmer calling a high-performance TCP method is the same as colling a web-service</li>
+							<li><b>Nice to TCP:</b> internal buffering to avoid TCP congestion.</li>
+							<li><b>Deployment:</b> easy to deploy application onto concurrent.</li>
+							<li><b>Fast development:</b> easy application framework to build concurrent applications that work on a high number of machines in minutes.</li>
+							<li><b>Batching:</b> task batching to simple task schemes.</li>
+							<li><b>ITaskSystem approach:</b> autonomous systems control tasks. Easy to implement concurrency in an organize fashion.</li>
+							<li><b>Plug-able:</b> all components are plug-able, flexible in development and favor adding new features.</li>
+							<li><b>API:</b> RESTful JSON API and TCP/ZMQ API in the same fashion. From the programmer calling a high-performance TCP method is the same as calling a web-service</li>
 						</ul>
 					</section>
 
@@ -367,7 +367,7 @@ def register_slave_tcp(handler, request, node_id):
 							<li><b>Sandboxing:</b> include a sandboxing feature so that tasks from different applications do not collide.</li>
 							<li><b>Security:</b> add cerificates and encryption layers on the ZMQ compute channel.</li>
 							<li><b>Statistics and monitoring:</b> include statistics and real-time task monitoring into the web interfaces of each node.</li>
-							<li><b>Asyn I/O:</b> optmize servers to use async I/O for optimal task distribution.</li>
+							<li><b>Asyn I/O:</b> optimize servers to use async I/O for optimal task distribution.</li>
 							<li><b>Multi-master:</b> implement a multi-master environment using a DHT and a NCS (Network Coordinate System).</li>
 						</ul>
 					</section>
@@ -378,38 +378,162 @@ def register_slave_tcp(handler, request, node_id):
 						<h2>Samples</h2>
 
 						<p>
+							Concurrent with a set of samples that should outline the power of the framework. They also outline how an application for concurrent should be created and what has to be avoided.
+						</p>
+						<ul>
+							<li>Mandelbrot</li>
+							<li>Benchmark</li>
+							<li>MD5 hash reverse</li>
+							<li>DNA curve analysis</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Mandelbrot Sample</h2>
+						<p>
+							Sample implanted using plain tasks and an ITaskSystem. Comes in two flavors of tasks, an optimized and a non-optimized tasks on the data usage side.
 						</p>
 					</section>
 
 					<section>
-						<h2>MD5 Hash Reverse</h2>
+						<h2>Mandelbrot Sample cont'd</h2>
+
+						<p><img src="images/mandle_1.png"></p>
+
+						<p>
+							Execution time between an <i>ITaskSystem</i> and a plain task implementation using the non-optimized tasks.
+						</p>
 					</section>
 
 					<section>
-						<h2>Mandlebrot Set</h2>
+						<h2>Mandelbrot Sample cont'd</h2>
+
+						<p><img src="images/mandle_2.png"></p>
+
+						<p>
+							Execution time between an <i>ITaskSystem</i> and a plain task implementation using optimized tasks. Both ways gain but the plain tasks experience the main boost.
+						</p>
 					</section>
 
 					<section>
-						<h2>DNA Curve Analysis</h2>
+						<h2>Benchmark Sample</h2>
+
+						<p>
+							Sample using plain tasks and an ITaskSystem. A simple active wait task used to compare the framework and its setup to <a href="https://www.princeton.edu/~achaney/tmve/wiki100k/docs/Amdahl_s_law.html">Amdahl's Law</a>.
+						</p>
 					</section>
 
 					<section>
-						<h2>Benchmark example</h2>
+						<h2>Benchmark Sample cont'd</h2>
+
+						<p><img src="images/bench_1.png"></p>
+
+						<p>
+							Execution time between an <i>ITaskSystem</i> and a plain task implementation. Both are nearly identical.
+						</p>
 					</section>
+
+					<section>
+						<h2>Benchmark Sample cont'd</h2>
+
+						<p><img src="images/bench_2.png"></p>
+						<p><img src="images/bench_3.png"></p>
+
+						<p>
+							CPU usage of the sample indicating that we are using all available CPU power for the benchmark.
+						</p>
+					</section>
+					
+
+					<section>
+						<h2>MD5 Hash Reverse Sample</h2>
+
+						<p>
+							Very simple sample with low data transmission. Uses bruteforce to reverse a numerical MD5 hash knowing the range of numbers.
+						</p>
+					</section>
+
+					
+
+					<section>
+						<h2>DNA Curve Analysis Sample</h2>
+
+						<p>
+							The DNA sample is just a simple way to try to overload the system with over 10 thousand separate tasks. Each task requires a considerable amount of data and so sending it all at once has its drawbacks.
+The tests and benchmarks has been performed on a single machine and so we setup the worst possible distributed network resulting in network overloads. This the sample is not intended for real use, it outlines the stability of the framework.
+						</p>
+					</section>
+
+					<section>
+						<h2>DNA Curve Analysis Sample cont'd</h2>
+
+						<p><img src="images/dna_1.png"></p>
+
+						<p>
+							As for the other samples the amount of data send through the network is considerable, the sample itself reaches a high memory load up to 3 GB on the master.
+						</p>
+
+						<p>
+							Sending huge amounts of data is the real bottleneck of any distributed task framework. We spend more time sending data then performing the actual computation. While in some cases sending less tasks with more data for each one is better then sending thousands of small tasks.
+						</p>
+					</section>
+
+					
 				</section>
 
 				<section>
 					<section>
 						<h2>Conclusion</h2>
+
+						<ul>
+							<li><b>Complexity:</b> building a distributed task system is an extremely complex endeavor.</li>
+							<li><b>Python:</b> Python has proven to be a perfect choice for both its flexibility, ease of development and speed using native modules.</li>
+							<li><b>ITaskSystem vs plain tasks:</b> depending on the problem each way fits in its own way while in most cases we experienced better results using the ITaskSystem approach.</li>
+							<li><b>Fair network usage:</b> fair network usage avoiding congestion is vital to maintain a reliable system, sending too much data over the same socket will result in package loss and so in turn in resending of the data.</li>
+							<li><b>Data locality:</b> sending data, specially over the MTU (maximum transmission unit) size, has a great impact in the overall performance. Sending less data or performing local reeds boosts the processing considerably.</li>
+						</ul>
 					</section>
 
 					<section>
-						<h2>Which type of concurrent tasks are perfect for Concurrent</h2>
+						<h2>Conclusion cont'd</h2>
+
+						<ul>
+							<li><b>GIL:</b> threading in Python is a no-go, the GIL impacts heavy on the overall performance. Our master server implementations (TCPServer and TCPServerZMQ) are currently the bottleneck, while this can be addressed using async I/O and processes instead of threads.</li>
+							<li><b>Sequential vs Parallel:</b> we achieved a very good parallelization proportion for our samples, the benchmark sample achieved a speedup of about 740% and the Mandelbrot by 175% and 240% depending on the implementation. See next slide for details.</li>
+						</ul>
 					</section>
 
 					<section>
-						<h2>Amdahls Law</h2>
+						<h2>Conclusion cont'd</h2>
+
+						<p>
+							A main law creating any concurrent computing system is <i>Amdahl's Law</i>. Analyzing the performance from our samples, specially the Mandelbrot and the benchmark sample gives is fairly good speed up compared to the maximum speedup that could be achieved applying the law.
+						</p>
+
+						<p><img src="images/amdahl.png" style="background: rgba(255, 255, 255, 1);"></p>
+						<p><small>Image courtesy of <a href="http://en.wikipedia.org/wiki/Amdahl's_law">Wikipedia</a></small></p>
+
+						
+						<ul>
+							<li>
+								<b>Mandelbrot:</b>
+								<p style="text-indent: 5em;">
+									<b>2.4</b> = 1/((1-P)+(P/N)) where P = 0.67 and N = 8
+								</p>
+							</li>
+							<li>
+								<b>Benchmark:</b><p style="text-indent: 5em;">
+									<b>7.02</b> = 1/((1-P)+(P/N)) where P = 0.98 and N = 8									
+								</p>
+							</li>
+							<li>
+								<b>Max Speedup:</b><p style="text-indent: 5em;">
+									<b>8</b> = 1/((1-P)+(P/N)) where P = 1 and N = 8
+								</p>
+							</li>
+						</ul>
 					</section>
+
 				</section>
 
 				<section>
@@ -424,7 +548,7 @@ def register_slave_tcp(handler, request, node_id):
 
 				<section>
 					<h1>THE END</h1>
-					<h3>BY Moritz Wundke / <a href="http://moritz-wundke.github.io">moritzwundke.com</a></h3>
+					<h3>by Moritz Wundke / <a href="http://moritz-wundke.github.io">moritzwundke.com</a></h3>
 					<small>Build with <a href="https://github.com/hakimel/reveal.js">reveal.js</a></small>
 				</section>
 
